@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import React from 'react';
-import { Dashboard, Event, AttachMoney, Assessment, Sync } from '@material-ui/icons';
+import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
@@ -114,7 +114,9 @@ import KoboETLAdminPage from './pages/KoboETLAdminPage';
 // Constants
 import {
   ROUTE_PAYMENT_REQUEST,
+  ROUTE_PAYMENT_NEW_PAYMENT,
   RIGHT_PAYROLL_SEARCH,
+  RIGHT_PAYROLL_CREATE,
   RIGHT_BENEFIT_PLAN_SEARCH,
   RIGHT_MONETARY_TRANSFER_SEARCH,
   RIGHT_KOBO_ETL_VIEW,
@@ -226,6 +228,25 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_KOBO_ETL_ADMIN, component: KoboETLAdminPage },
   ],
 
+
+  // Payment menu items (contributed to PaymentMainMenu via 'payment.MainMenu' key
+  // so they appear in getMenuEntries() for DB menu config matching)
+  'payment.MainMenu': [
+    {
+      text: <FormattedMessage module="payroll" id="menu.payment.payments" />,
+      icon: <ListAlt />,
+      route: `/${ROUTE_PAYMENT_REQUEST}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'mainMenuPayment.paymentrequests',
+    },
+    {
+      text: <FormattedMessage module="payroll" id="menu.paymentrequest.add" />,
+      icon: <AddCircleOutline />,
+      route: `/${ROUTE_PAYMENT_NEW_PAYMENT}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_CREATE),
+      id: 'mainMenuPayment.paymentrequest.add',
+    },
+  ],
 
   // M&E Menu items
   'me.MainMenu': [
