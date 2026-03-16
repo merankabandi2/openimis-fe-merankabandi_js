@@ -24,7 +24,7 @@ import {
   deleteIndicatorAchievement,
 } from '../../actions';
 import IndicatorAchievementDialog from './IndicatorAchievementDialog';
-import { ACTION_TYPE } from '../../reducer';
+import { ACTION_TYPE } from '../../actions';
 
 const styles = (theme) => ({
   paper: theme.paper.paper,

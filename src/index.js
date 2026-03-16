@@ -59,7 +59,7 @@ import SectionPicker from './pickers/SectionPicker';
 import WorkflowsPicker from './pickers/WorkflowsPicker';
 
 // M&E Menus
-import MEMainMenu from './menus/MEMainMenu';
+import MEMainMenu from './menu/MEMainMenu';
 
 // M&E Dashboard
 import HomePageContainer from './components/dashboard/HomePageContainer';

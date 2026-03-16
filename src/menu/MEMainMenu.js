@@ -9,8 +9,8 @@ import { formatMessage, MainMenuContribution, withModulesManager } from '@openim
 import {
   RIGHT_BENEFIT_PLAN_SEARCH,
   ME_MAIN_MENU_CONTRIBUTION_KEY,
-  MONETARY_TRANSFERS_ROUTE,
-  RESULT_FRAMEWORK_ROUTE,
+  ROUTE_ME_MONETARY_TRANSFERS,
+  ROUTE_ME_RESULT_FRAMEWORK,
   RIGHT_MONETARY_TRANSFER_SEARCH,
 } from '../constants';
 
@@ -19,7 +19,7 @@ function MEMainMenu(props) {
     {
       text: formatMessage(props.intl, 'merankabandi', 'menu.merankabandi.resultFrameWork'),
       icon: <Assessment />,
-      route: `/${RESULT_FRAMEWORK_ROUTE}`,
+      route: `/${ROUTE_ME_RESULT_FRAMEWORK}`,
       filter: (rights) => rights.includes(RIGHT_MONETARY_TRANSFER_SEARCH),
       id: 'merankabandi.me.resultFrameWork',
     },
@@ -33,7 +33,7 @@ function MEMainMenu(props) {
     {
       text: formatMessage(props.intl, 'merankabandi', 'menu.merankabandi.monetaryTransfer'),
       icon: <AttachMoney />,
-      route: `/${MONETARY_TRANSFERS_ROUTE}`,
+      route: `/${ROUTE_ME_MONETARY_TRANSFERS}`,
       filter: (rights) => rights.includes(RIGHT_MONETARY_TRANSFER_SEARCH),
       id: 'merankabandi.me.monetaryTransfers',
     },

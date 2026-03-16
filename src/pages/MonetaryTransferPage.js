@@ -25,8 +25,8 @@ import {
   MODULE_NAME,
   RIGHT_MONETARY_TRANSFER_UPDATE,
 } from '../constants';
-import { ACTION_TYPE } from '../reducer';
-import { mutationLabel, pageTitle } from '../util/string-utils';
+import { ACTION_TYPE } from '../actions';
+import { mutationLabel, pageTitle } from '../utils/string-utils';
 import MonetaryTransferHeadPanel from '../components/me/MonetaryTransferHeadPanel';
 
 const useStyles = makeStyles((theme) => ({

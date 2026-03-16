@@ -17,7 +17,7 @@ import {
 } from '@openimis/fe-core';
 import { fetchSections, deleteSection } from '../../actions';
 import { RIGHT_SECTION_SEARCH, RIGHT_SECTION_UPDATE, SECTION_ROUTE } from '../../constants';
-import { ACTION_TYPE } from '../../reducer';
+import { ACTION_TYPE } from '../../actions';
 
 function SectionSearcher({
   fetchSections,

@@ -36,7 +36,7 @@ import {
 } from '../../constants';
 import MonetaryTransferFilter from './MonetaryTransferFilter';
 import MonetaryTransferUploadDialog from '../dialogs/MonetaryTransferUploadDialog';
-import { mutationLabel, pageTitle } from '../../util/string-utils';
+import { mutationLabel, pageTitle } from '../../utils/string-utils';
 
 function MonetaryTransferSearcher({
   fetchMonetaryTransfers,

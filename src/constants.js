@@ -43,6 +43,15 @@ export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
 export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_DEBOUNCE_TIME = 500;
 export const CONTAINS_LOOKUP = 'Icontains';
+export const CLEARED_STATE_FILTER = {
+  field: '', filter: '', type: '', value: '',
+};
+
+export const BENEFIT_PLAN_TYPE = {
+  INDIVIDUAL: 'INDIVIDUAL',
+  GROUP: 'GROUP',
+  EVERY_TYPE: 'EVERY_TYPE',
+};
 
 // Benefit Plan Provinces tab
 export const BENEFIT_PLAN_PROVINCES_TAB_VALUE = 'BenefitPlanProvincesTab';

@@ -26,8 +26,8 @@ import {
   RIGHT_INDICATOR_CREATE,
   RIGHT_INDICATOR_UPDATE,
 } from '../constants';
-import { ACTION_TYPE } from '../reducer';
-import { mutationLabel, pageTitle } from '../util/string-utils';
+import { ACTION_TYPE } from '../actions';
+import { mutationLabel, pageTitle } from '../utils/string-utils';
 import IndicatorForm from '../components/indicators/IndicatorForm';
 import IndicatorAchievementsPanel from '../components/indicators/IndicatorAchievementsPanel';
 

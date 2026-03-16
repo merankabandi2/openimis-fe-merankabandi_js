@@ -18,7 +18,7 @@ import {
 } from '@openimis/fe-core';
 import { fetchIndicators, deleteIndicator } from '../../actions';
 import { INDICATOR_ROUTE, RIGHT_INDICATOR_UPDATE } from '../../constants';
-import { ACTION_TYPE } from '../../reducer';
+import { ACTION_TYPE } from '../../actions';
 
 function IndicatorSearcher({
   fetchIndicators,
