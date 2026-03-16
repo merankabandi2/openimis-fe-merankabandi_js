@@ -48,10 +48,6 @@ import {
   PaymentRequestRejectedTabLabel,
   PaymentRequestRejectedTabPanel,
 } from './components/payroll/PaymentRequestRejectedTabPanel';
-import {
-  PayrollTaskTableHeaders,
-  PayrollTaskItemFormatters,
-} from '@openimis/fe-payroll/src/components/tasks/PayrollTasks';
 
 // M&E Pickers
 import ActivityPicker from './pickers/ActivityPicker';
@@ -224,13 +220,6 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_KOBO_ETL_ADMIN, component: KoboETLAdminPage },
   ],
 
-  // Payroll verification task source
-  'tasksManagement.tasks': [{
-    text: <FormattedMessage module="payroll" id="payroll.tasks.verify.title" />,
-    tableHeaders: PayrollTaskTableHeaders,
-    itemFormatters: PayrollTaskItemFormatters,
-    taskSource: ['payroll_verification'],
-  }],
 
   // M&E Menu items
   'me.MainMenu': [

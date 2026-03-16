@@ -15,9 +15,9 @@ import {
   clearConfirm,
   journalize,
 } from '@openimis/fe-core';
-import { fetchPayrolls, deletePayrolls } from '@openimis/fe-payroll/src/actions';
-import PayrollFilter from '@openimis/fe-payroll/src/components/payroll/PayrollFilter';
-import { mutationLabel, pageTitle } from '@openimis/fe-payroll/src/utils/string-utils';
+import { fetchPayrolls, deletePayrolls } from '../../payroll-actions';
+import PayrollFilter from './PayrollFilter';
+import { mutationLabel, pageTitle } from '../../utils/string-utils';
 import {
   DEFAULT_PAGE_SIZE,
   PAYROLL_MODULE_NAME,

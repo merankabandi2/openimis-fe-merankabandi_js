@@ -24,8 +24,8 @@ import {
   APPROVED,
 } from '../../../constants';
 import { fetchTask, resolveTask } from '../../../actions';
-import { closePayroll, fetchPayroll, rejectPayroll } from '@openimis/fe-payroll/src/actions';
-import { mutationLabel } from '@openimis/fe-payroll/src/utils/string-utils';
+import { closePayroll, fetchPayroll, rejectPayroll } from '../../../payroll-actions';
+import { mutationLabel } from '../../../utils/string-utils';
 import { formatFrenchThousands } from '../../../utils/string-utils';
 
 function downloadPayroll(payrollId, payrollFileName, blank = true) {
