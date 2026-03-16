@@ -431,6 +431,12 @@
   "filter.clear": "Clear",
   "filter.apply": "Apply",
 
+  "socialProtection.benefitPlan.beneficiaries.tabGroup.label": "Beneficiaries",
+  "socialProtection.projects.label": "Projects",
+  "socialProtection.benefitPlanChangelog.label": "Changelog",
+  "socialProtection.benefitPlanTasks.label": "Tasks",
+  "socialProtection.benefitPlan.benefitPlanBeneficiariesGraduated.label": "Graduated",
+
   "menu.selectionWizard": "Beneficiary Selection",
   "wizard.title": "Beneficiary Selection Wizard",
   "wizard.step.geographic": "Geographic Targeting",
