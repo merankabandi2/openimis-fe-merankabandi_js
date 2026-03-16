@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import React from 'react';
-import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline } from '@material-ui/icons';
+import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, PlayArrow } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
@@ -110,6 +110,7 @@ import MonetaryTransfersListPage from './pages/MonetaryTransfersListPage';
 import MonetaryTransfersDashboardPage from './pages/MonetaryTransfersDashboardPage';
 import MonetaryTransferPage from './pages/MonetaryTransferPage';
 import KoboETLAdminPage from './pages/KoboETLAdminPage';
+import BeneficiarySelectionWizardPage from './pages/BeneficiarySelectionWizardPage';
 
 // Constants
 import {
@@ -134,6 +135,7 @@ import {
   ROUTE_KOBO_ETL_ADMIN,
   ROUTE_ME_MONETARY_TRANSFERS_LIST,
   ROUTE_ME_MONETARY_TRANSFERS_DASHBOARD,
+  ROUTE_BENEFICIARY_SELECTION_WIZARD,
 } from './constants';
 
 // Reducer
@@ -226,6 +228,7 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_ME_INDICATORS, component: MEIndicatorsPage },
     { path: ROUTE_ACTIVITIES_DASHBOARD, component: ActivitiesDashboard },
     { path: ROUTE_KOBO_ETL_ADMIN, component: KoboETLAdminPage },
+    { path: `${ROUTE_BENEFICIARY_SELECTION_WIZARD}/:benefit_plan_uuid?`, component: BeneficiarySelectionWizardPage },
   ],
 
 
@@ -294,8 +297,15 @@ const DEFAULT_CONFIG = {
     },
   ],
 
-  // KoboETL admin menu item (contributed to social protection menu)
+  // Items contributed to social protection menu
   'socialProtection.MainMenu': [
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.selectionWizard" />,
+      icon: <PlayArrow />,
+      route: `/${ROUTE_BENEFICIARY_SELECTION_WIZARD}`,
+      filter: (rights) => rights.includes(RIGHT_BENEFIT_PLAN_SEARCH),
+      id: 'merankabandi.selectionWizard',
+    },
     {
       text: <FormattedMessage module="merankabandi" id="menu.socialProtection.koboETLAdmin" />,
       icon: <Sync />,
@@ -360,6 +370,7 @@ const DEFAULT_CONFIG = {
     { key: 'merankabandi.MultiChannelPicker', ref: MultiChannelPicker },
     { key: 'merankabandi.BeneficiaryPhotoPanel', ref: BeneficiaryPhotoPanel },
     { key: 'merankabandi.MerankabandiPayrollSearcher', ref: MerankabandiPayrollSearcher },
+    { key: 'merankabandi.route.selectionWizard', ref: ROUTE_BENEFICIARY_SELECTION_WIZARD },
   ],
 };
 

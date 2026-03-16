@@ -432,5 +432,25 @@
   "filter.startDate": "Date de début",
   "filter.endDate": "Date de fin",
   "filter.clear": "Effacer",
-  "filter.apply": "Appliquer"
+  "filter.apply": "Appliquer",
+
+  "menu.selectionWizard": "Sélection des Bénéficiaires",
+  "wizard.title": "Assistant de Sélection des Bénéficiaires",
+  "wizard.step.geographic": "Ciblage Géographique",
+  "wizard.step.pmt": "Classement PMT",
+  "wizard.step.validation": "Validation Communautaire",
+  "wizard.step.summary": "Résumé",
+  "wizard.geographic.title": "Sélection de la zone géographique",
+  "wizard.geographic.description": "Sélectionnez la zone géographique pour ce cycle de recrutement.",
+  "wizard.pmt.title": "Classement par score PMT",
+  "wizard.pmt.description": "Aperçu des ménages classés par score PMT. Les ménages éligibles sont mis en évidence.",
+  "wizard.validation.title": "Validation Communautaire",
+  "wizard.validation.description": "Enregistrez les résultats de la validation communautaire. Vous pouvez retenir ou rejeter des ménages en masse.",
+  "wizard.summary.title": "Résumé de la cohorte",
+  "wizard.summary.allLocations": "Toutes les localisations",
+  "wizard.action.importSurvey": "Importer les données d'enquête",
+  "wizard.action.calculatePMT": "Calculer les scores PMT",
+  "wizard.back": "Précédent",
+  "wizard.next": "Suivant",
+  "wizard.finish": "Terminer"
 }

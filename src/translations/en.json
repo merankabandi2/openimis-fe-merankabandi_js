@@ -429,5 +429,25 @@
   "filter.startDate": "Start Date",
   "filter.endDate": "End Date",
   "filter.clear": "Clear",
-  "filter.apply": "Apply"
+  "filter.apply": "Apply",
+
+  "menu.selectionWizard": "Beneficiary Selection",
+  "wizard.title": "Beneficiary Selection Wizard",
+  "wizard.step.geographic": "Geographic Targeting",
+  "wizard.step.pmt": "PMT Ranking",
+  "wizard.step.validation": "Community Validation",
+  "wizard.step.summary": "Summary",
+  "wizard.geographic.title": "Geographic Area Selection",
+  "wizard.geographic.description": "Select the geographic area for this recruitment cycle.",
+  "wizard.pmt.title": "PMT Score Ranking",
+  "wizard.pmt.description": "Overview of households ranked by PMT score. Eligible households are highlighted.",
+  "wizard.validation.title": "Community Validation",
+  "wizard.validation.description": "Record community validation results. You can retain or reject households in bulk.",
+  "wizard.summary.title": "Cohort Summary",
+  "wizard.summary.allLocations": "All locations",
+  "wizard.action.importSurvey": "Import Survey Data",
+  "wizard.action.calculatePMT": "Calculate PMT Scores",
+  "wizard.back": "Back",
+  "wizard.next": "Next",
+  "wizard.finish": "Finish"
 }

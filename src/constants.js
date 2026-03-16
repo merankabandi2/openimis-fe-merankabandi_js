@@ -68,6 +68,9 @@ export const BENEFIT_PLAN_TYPE = {
 // Benefit Plan Provinces tab
 export const BENEFIT_PLAN_PROVINCES_TAB_VALUE = 'BenefitPlanProvincesTab';
 
+// Beneficiary Selection Wizard
+export const ROUTE_BENEFICIARY_SELECTION_WIZARD = 'benefitPlans/selectionWizard';
+
 // --- M&E Menu ---
 export const ME_MAIN_MENU_CONTRIBUTION_KEY = 'me.MainMenu';
 export const SOCIAL_PROTECTION_MAIN_MENU_CONTRIBUTION_KEY = 'socialProtection.MainMenu';
