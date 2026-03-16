@@ -18,6 +18,9 @@ import FlagPicker from './pickers/FlagPicker';
 // Individual module extensions
 import BeneficiaryPhotoPanel from './components/individual/BeneficiaryPhotoPanel';
 
+// AppBar contribution (centered title in header)
+import AppBarTitle from './components/AppBarTitle';
+
 // Social protection extensions (Benefit Plan Provinces tab)
 import {
   BenefitPlanProvincesTabLabel,
@@ -149,6 +152,9 @@ const DEFAULT_CONFIG = {
   // Head panel contribution for beneficiary photo.
   // Requires upstream PR: activate headPanelContributionsKey in IndividualPage.jsx
   'individual.Individual.headPanel': [BeneficiaryPhotoPanel],
+
+  // Centered app title in the header bar
+  'core.AppBar': [AppBarTitle],
 
   // Custom home page dashboard
   'home.HomePage.customDashboard': HomePageContainer,
