@@ -118,6 +118,8 @@
   "provincePaymentPoint.dialog.delete.error": "Une erreur s'est produite lors de la suppression de l'assignation du point de paiement.",
   "provincePaymentPoint.mutation.add": "Ajout du point de paiement à la province",
 
+  "grievanceSocialProtection.mainMenuGrievance": "Gestions des Plaintes",
+  "grievanceSocialProtection.menu.grievance.grievances": "Plaintes",
   "mainMenu.me": "Suivi-Evaluation",
   "menu.me.dashboard": "Tableau de Bord M&E",
   "menu.me.activities": "Activités",
