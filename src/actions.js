@@ -62,6 +62,9 @@ export const ACTION_TYPE = {
 
   // Mutation
   MUTATION: 'MERANKABANDI_MUTATION',
+
+  // Grievance config (dispatches into grievanceSocialProtection reducer)
+  GET_GRIEVANCE_CONFIGURATION: 'GET_GRIEVANCE_CONFIGURATION',
 };
 
 export const MUTATION_SERVICE = {
@@ -540,4 +543,21 @@ export function fetchWorkflows() {
     WORKFLOWS_FULL_PROJECTION(),
   );
   return graphql(payload, ACTION_TYPE.GET_WORKFLOWS);
+}
+
+// Grievance configuration (dispatches into grievanceSocialProtection reducer)
+const GRIEVANCE_CONFIGURATION_PROJECTION = () => [
+  'grievanceTypes',
+  'grievanceFlags',
+  'grievanceChannels',
+  'grievanceDefaultResolutionsByCategory{category, resolutionTime}',
+  'grievanceCategoriesHierarchical{name, fullName, priority, permissions, defaultFlags, children{name, fullName, priority, permissions, defaultFlags, children{name, fullName, priority, permissions, defaultFlags}}}',
+  'grievanceFlagsDetailed{name, priority, permissions}',
+  'accessibleCategories',
+  'accessibleFlags',
+];
+
+export function fetchGrievanceConfiguration(params) {
+  const payload = formatQuery('grievanceConfig', params, GRIEVANCE_CONFIGURATION_PROJECTION());
+  return graphql(payload, ACTION_TYPE.GET_GRIEVANCE_CONFIGURATION);
 }

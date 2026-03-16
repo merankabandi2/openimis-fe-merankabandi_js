@@ -16,9 +16,7 @@ import {
 import { formatMessage, withModulesManager } from '@openimis/fe-core';
 import { injectIntl } from 'react-intl';
 
-// Cross-module dependency: uses grievance module's action and reducer state.
-// The grievance module must be loaded for this component to work.
-import { fetchGrievanceConfiguration } from '@openimis/fe-grievance_social_protection/src/actions';
+import { fetchGrievanceConfiguration } from '../../actions';
 
 const styles = (theme) => ({
   formControl: {
