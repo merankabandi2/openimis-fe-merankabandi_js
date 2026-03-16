@@ -118,12 +118,13 @@
   "provincePaymentPoint.dialog.delete.error": "Une erreur s'est produite lors de la suppression de l'assignation du point de paiement.",
   "provincePaymentPoint.mutation.add": "Ajout du point de paiement à la province",
 
+  "mainMenu.me": "Suivi-Evaluation",
   "menu.me.dashboard": "Tableau de Bord M&E",
   "menu.me.activities": "Activités",
   "menu.me.monetaryTransfers": "Transferts Monétaires",
   "menu.me.resultsFramework": "Cadre de Résultats",
   "menu.me.resultsFrameworkDashboard": "Tableau de Bord - Cadre de Résultats",
-  "menu.me.activitiesDashboard": "Tableau de Bord des Activités",
+  "menu.me.activitiesDashboard": "Tableau de Bord - Activités",
   "menu.socialProtection.koboETLAdmin": "Administration ETL Kobo",
 
   "developmentIndicators.label": "Objectifs de développement",
