@@ -24,6 +24,7 @@ const PAYROLL_ACTION_TYPE = {
   DELETE_PAYROLL: 'PAYROLL_MUTATION_DELETE_PAYROLL',
   CLOSE_PAYROLL: 'PAYROLL_MUTATION_CLOSE_PAYROLL',
   REJECT_PAYROLL: 'PAYROLL_MUTATION_REJECT_PAYROLL',
+  REJECT_BENEFIT_CONSUMPTION: 'BENEFIT_CONSUMPTION_MUTATION_REJECT_BENEFIT_CONSUMPTION',
 };
 
 // Mutation service names (must match payroll reducer's MUTATION_SERVICE)
@@ -136,6 +137,16 @@ export function rejectPayroll(payroll, clientMutationLabel) {
     PAYROLL_MUTATION_SERVICE.REJECT,
     payrollUuids,
     PAYROLL_ACTION_TYPE.REJECT_PAYROLL,
+    clientMutationLabel,
+  );
+}
+
+export function rejectBenefitConsumption(ids, clientMutationLabel) {
+  const idsStr = ids.map((id) => `"${id}"`).join(', ');
+  return PERFORM_MUTATION(
+    'rejectBenefitConsumption',
+    `ids: [${idsStr}]`,
+    PAYROLL_ACTION_TYPE.REJECT_BENEFIT_CONSUMPTION,
     clientMutationLabel,
   );
 }
