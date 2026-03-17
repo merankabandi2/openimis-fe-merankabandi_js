@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import {
-  Stepper, Step, StepLabel, Button, Typography, Box, Paper,
+  Stepper, Step, StepLabel, Button, Typography, Box,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { injectIntl } from 'react-intl';
 import {
-  withModulesManager, formatMessage, PublishedComponent, journalize,
+  withModulesManager, formatMessage, PublishedComponent,
 } from '@openimis/fe-core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import AssessmentIcon from '@material-ui/icons/Assessment';
 import { importSurveyData, triggerPmtCalculation } from '../../wizard-actions';
 import { MODULE_NAME } from '../../constants';
+import WizardBeneficiaryList from './WizardBeneficiaryList';
+import WizardValidationPanel from './WizardValidationPanel';
+import WizardSummaryPanel from './WizardSummaryPanel';
 
 const styles = (theme) => ({
   root: { width: '100%', padding: theme.spacing(3) },
@@ -30,7 +33,6 @@ const styles = (theme) => ({
 
 function BeneficiarySelectionWizard({
   intl, classes, benefitPlan, dispatch,
-  importSurveyData, triggerPmtCalculation,
 }) {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -47,7 +49,6 @@ function BeneficiarySelectionWizard({
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
   const handleImportSurvey = () => {
-    // TODO: add file upload or path input UI
     setSubmitting(true);
     dispatch(importSurveyData(benefitPlan.id, '/data/survey.csv'));
     setSubmitting(false);
@@ -97,8 +98,7 @@ function BeneficiarySelectionWizard({
             <Typography variant="body2" color="textSecondary" paragraph>
               {formatMessage(intl, MODULE_NAME, 'wizard.pmt.description')}
             </Typography>
-            {/* TODO: embed BenefitPlanBeneficiariesSearcher filtered by POTENTIAL status */}
-            <Box mt={2}>
+            <Box mt={2} mb={2}>
               <Button
                 variant="contained"
                 color="secondary"
@@ -109,6 +109,10 @@ function BeneficiarySelectionWizard({
                 {formatMessage(intl, MODULE_NAME, 'wizard.action.calculatePMT')}
               </Button>
             </Box>
+            <WizardBeneficiaryList
+              benefitPlanId={benefitPlan?.id}
+              dispatch={dispatch}
+            />
           </Box>
         );
       case 2:
@@ -120,7 +124,10 @@ function BeneficiarySelectionWizard({
             <Typography variant="body2" color="textSecondary" paragraph>
               {formatMessage(intl, MODULE_NAME, 'wizard.validation.description')}
             </Typography>
-            {/* TODO: embed BenefitPlanBeneficiariesSearcher with bulk retain/reject */}
+            <WizardValidationPanel
+              benefitPlanId={benefitPlan?.id}
+              dispatch={dispatch}
+            />
           </Box>
         );
       case 3:
@@ -129,14 +136,11 @@ function BeneficiarySelectionWizard({
             <Typography variant="h6" gutterBottom>
               {formatMessage(intl, MODULE_NAME, 'wizard.summary.title')}
             </Typography>
-            <Paper style={{ padding: 16, marginTop: 8 }}>
-              <Typography variant="body1">
-                <strong>{benefitPlan?.name}</strong> ({benefitPlan?.code})
-              </Typography>
-              <Typography variant="body2">
-                {selectedLocation?.name || formatMessage(intl, MODULE_NAME, 'wizard.summary.allLocations')}
-              </Typography>
-            </Paper>
+            <WizardSummaryPanel
+              benefitPlan={benefitPlan}
+              selectedLocation={selectedLocation}
+              dispatch={dispatch}
+            />
           </Box>
         );
       default:
@@ -175,10 +179,10 @@ function BeneficiarySelectionWizard({
   );
 }
 
-const mapDispatchToProps = (dispatch) => bindActionCreators(
-  { importSurveyData, triggerPmtCalculation },
+const mapDispatchToProps = (dispatch) => ({
   dispatch,
-);
+  ...bindActionCreators({ importSurveyData, triggerPmtCalculation }, dispatch),
+});
 
 export default withModulesManager(
   injectIntl(withStyles(styles)(connect(null, mapDispatchToProps)(BeneficiarySelectionWizard)))
