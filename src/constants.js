@@ -101,6 +101,7 @@ export const INDICATOR_ROUTE = 'merankabandi.route.indicator';
 
 // --- Rights (shared with social protection) ---
 export const RIGHT_BENEFIT_PLAN_SEARCH = 160001;
+export const RIGHT_BENEFIT_PLAN_CREATE = 160002;
 
 // --- M&E Rights ---
 // TODO: All three activity types share the same right code 190901 — assign distinct codes

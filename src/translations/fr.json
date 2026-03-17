@@ -587,6 +587,7 @@
   "wizard.summary.validated": "Validés",
   "wizard.summary.notSelected": "Non retenus",
   "wizard.summary.active": "Inscrits",
+  "wizard.launchButton": "Assistant de sélection",
   "wizard.action.confirmEnrollment": "Confirmer l'inscription",
   "wizard.action.enrolling": "Inscription en cours...",
 

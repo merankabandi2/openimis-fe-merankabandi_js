@@ -474,6 +474,7 @@
   "wizard.summary.validated": "Validated",
   "wizard.summary.notSelected": "Not Selected",
   "wizard.summary.active": "Enrolled",
+  "wizard.launchButton": "Selection Wizard",
   "wizard.action.confirmEnrollment": "Confirm Enrollment",
   "wizard.action.enrolling": "Enrolling...",
 

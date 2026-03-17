@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import React from 'react';
-import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, PlayArrow } from '@material-ui/icons';
+import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
@@ -27,6 +27,7 @@ import {
   BenefitPlanProvincesTabPanel,
 } from './components/social-protection/BenefitPlanProvincesTab';
 import BurundiLocationHierarchyPanel from './components/social-protection/BurundiLocationHierarchyPanel';
+import WizardLaunchButton from './components/social-protection/WizardLaunchButton';
 
 // Payroll / Payment Request extensions
 import PaymentMainMenu from './menu/PaymentMainMenu';
@@ -164,6 +165,9 @@ const DEFAULT_CONFIG = {
   // Custom home page dashboard
   'home.HomePage.customDashboard': HomePageContainer,
 
+  // Wizard launch button on benefit plan detail page (Bénéficiaires tab action bar)
+  'deduplication.deduplicationFieldSelectionDialog': [WizardLaunchButton],
+
   // Benefit plan provinces tab (Burundi location hierarchy with card generation & payroll)
   'benefitPlan.TabPanel.label': [BenefitPlanProvincesTabLabel],
   'benefitPlan.TabPanel.panel': [BenefitPlanProvincesTabPanel],
@@ -300,13 +304,6 @@ const DEFAULT_CONFIG = {
 
   // Items contributed to social protection menu
   'socialProtection.MainMenu': [
-    {
-      text: <FormattedMessage module="merankabandi" id="menu.selectionWizard" />,
-      icon: <PlayArrow />,
-      route: `/${ROUTE_BENEFICIARY_SELECTION_WIZARD}`,
-      filter: (rights) => rights.includes(RIGHT_BENEFIT_PLAN_SEARCH),
-      id: 'merankabandi.selectionWizard',
-    },
     {
       text: <FormattedMessage module="merankabandi" id="menu.socialProtection.koboETLAdmin" />,
       icon: <Sync />,
