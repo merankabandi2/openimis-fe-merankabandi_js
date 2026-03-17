@@ -568,5 +568,34 @@
   "wizard.action.calculatePMT": "Calculer les scores PMT",
   "wizard.back": "Précédent",
   "wizard.next": "Suivant",
-  "wizard.finish": "Terminer"
+  "wizard.finish": "Terminer",
+
+  "wizard.pmt.totalBeneficiaries": "Total des bénéficiaires",
+  "wizard.pmt.noBeneficiaries": "Aucun bénéficiaire trouvé. Importez d'abord les données d'enquête.",
+  "wizard.action.exportCsv": "Exporter CSV",
+  "wizard.column.lastName": "Nom",
+  "wizard.column.firstName": "Prénom",
+  "wizard.column.dob": "Date de naissance",
+  "wizard.column.pmtScore": "Score PMT",
+  "wizard.column.status": "Statut",
+
+  "wizard.validation.selected": "sélectionné(s)",
+  "wizard.action.retain": "Retenir",
+  "wizard.action.reject": "Rejeter",
+
+  "wizard.summary.potential": "En attente",
+  "wizard.summary.validated": "Validés",
+  "wizard.summary.notSelected": "Non retenus",
+  "wizard.summary.active": "Inscrits",
+  "wizard.action.confirmEnrollment": "Confirmer l'inscription",
+  "wizard.action.enrolling": "Inscription en cours...",
+
+  "location.hierarchy.title": "Localisation",
+  "location.province": "Province",
+  "location.commune": "Commune",
+  "location.colline": "Colline",
+
+  "benefitConsumption.action.reject": "Rejeter",
+  "benefitConsumption.confirmReject": "Voulez-vous rejeter les consommations sélectionnées ?",
+  "benefitConsumption.rejectSuccess": "Consommations rejetées avec succès"
 }
