@@ -28,6 +28,7 @@ import {
 } from './components/social-protection/BenefitPlanProvincesTab';
 import BurundiLocationHierarchyPanel from './components/social-protection/BurundiLocationHierarchyPanel';
 import WizardLaunchButton from './components/social-protection/WizardLaunchButton';
+import MerankabaniBenefitPlanSearcher from './components/social-protection/MerankabaniBenefitPlanSearcher';
 
 // Payroll / Payment Request extensions
 import PaymentMainMenu from './menu/PaymentMainMenu';
@@ -328,6 +329,9 @@ const DEFAULT_CONFIG = {
     // Location hierarchy override: Burundi uses 3 levels (Province/Commune/Colline)
     { key: 'location.Location.MaxLevels', ref: '3' },
     { key: 'merankabandi.BurundiLocationHierarchyPanel', ref: BurundiLocationHierarchyPanel },
+
+    // BenefitPlanSearcher override (adds wizard launch icon per row)
+    { key: 'socialProtection.BenefitPlanSearcher', ref: MerankabaniBenefitPlanSearcher },
 
     // Payroll searcher override (adds paymentRequestStatus filtering, status formatting)
     { key: 'payroll.benefitConsumptionPayrollSearcher', ref: MerankabandiPayrollSearcher },

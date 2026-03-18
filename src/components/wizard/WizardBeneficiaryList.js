@@ -8,7 +8,7 @@ import { injectIntl } from 'react-intl';
 import { graphql, formatMessage } from '@openimis/fe-core';
 import { MODULE_NAME, DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../../constants';
 
-function WizardBeneficiaryList({ intl, benefitPlanId, dispatch }) {
+function WizardBeneficiaryList({ intl, benefitPlanId, selectedLocation, dispatch }) {
   const [loading, setLoading] = useState(false);
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -21,20 +21,27 @@ function WizardBeneficiaryList({ intl, benefitPlanId, dispatch }) {
     const offset = currentPage * currentPageSize;
     const filters = [
       `benefitPlan_Id: "${benefitPlanId}"`,
-      `status: "POTENTIAL"`,
       `first: ${first}`,
       `offset: ${offset}`,
       `orderBy: ["-json_ext__pmt_score"]`,
     ];
+    if (selectedLocation?.uuid && selectedLocation?.type) {
+      const levelMap = { D: 0, W: 1, V: 2 };
+      const level = levelMap[selectedLocation.type];
+      if (level !== undefined) {
+        filters.push(`parentLocation: "${selectedLocation.uuid}"`);
+        filters.push(`parentLocationLevel: ${level}`);
+      }
+    }
     const query = `{
-      groupBeneficiaries(${filters.join(', ')}) {
-        edges{node{id individual{firstName lastName dob}group{id jsonExt}jsonExt status}}
+      groupBeneficiary(${filters.join(', ')}) {
+        edges{node{id group{id head{firstName lastName dob} jsonExt}jsonExt status}}
         totalCount
       }
     }`;
     dispatch(graphql(query, 'MERANKABANDI_WIZARD_BENEFICIARIES'))
       .then((result) => {
-        const data = result?.payload?.data?.groupBeneficiaries;
+        const data = result?.payload?.data?.groupBeneficiary;
         if (data) {
           setBeneficiaries((data.edges || []).map((e) => e.node));
           setTotalCount(data.totalCount || 0);
@@ -45,16 +52,17 @@ function WizardBeneficiaryList({ intl, benefitPlanId, dispatch }) {
 
   useEffect(() => {
     if (benefitPlanId) fetchBeneficiaries(page, pageSize);
-  }, [benefitPlanId, page, pageSize]);
+  }, [benefitPlanId, selectedLocation?.uuid, selectedLocation?.type, page, pageSize]);
 
   const handleExportCsv = () => {
-    const headers = ['ID', 'Nom', 'Prenom', 'DateNaissance', 'ScorePMT'];
+    const headers = ['ID', 'Nom', 'Prenom', 'DateNaissance', 'ScorePMT', 'Statut'];
     const rows = beneficiaries.map((b) => [
       b.id,
-      b.individual?.lastName || '',
-      b.individual?.firstName || '',
-      b.individual?.dob || '',
+      b.group?.head?.lastName || '',
+      b.group?.head?.firstName || '',
+      b.group?.head?.dob || '',
       b.jsonExt?.pmt_score ?? '',
+      b.status || '',
     ]);
     const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -104,9 +112,9 @@ function WizardBeneficiaryList({ intl, benefitPlanId, dispatch }) {
           <TableBody>
             {beneficiaries.map((b) => (
               <TableRow key={b.id}>
-                <TableCell>{b.individual?.lastName}</TableCell>
-                <TableCell>{b.individual?.firstName}</TableCell>
-                <TableCell>{b.individual?.dob}</TableCell>
+                <TableCell>{b.group?.head?.lastName}</TableCell>
+                <TableCell>{b.group?.head?.firstName}</TableCell>
+                <TableCell>{b.group?.head?.dob}</TableCell>
                 <TableCell align="right">{b.jsonExt?.pmt_score ?? '-'}</TableCell>
                 <TableCell>{b.status}</TableCell>
               </TableRow>

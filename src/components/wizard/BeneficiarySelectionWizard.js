@@ -111,6 +111,7 @@ function BeneficiarySelectionWizard({
             </Box>
             <WizardBeneficiaryList
               benefitPlanId={benefitPlan?.id}
+              selectedLocation={selectedLocation}
               dispatch={dispatch}
             />
           </Box>
@@ -126,6 +127,7 @@ function BeneficiarySelectionWizard({
             </Typography>
             <WizardValidationPanel
               benefitPlanId={benefitPlan?.id}
+              selectedLocation={selectedLocation}
               dispatch={dispatch}
             />
           </Box>

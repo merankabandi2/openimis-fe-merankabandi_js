@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { withHistory, withModulesManager, graphql, formatPageQuery } from '@openimis/fe-core';
+import { withHistory, withModulesManager, graphql, formatPageQuery, decodeId } from '@openimis/fe-core';
 import { injectIntl } from 'react-intl';
 import { withStyles } from '@material-ui/core/styles';
 import { CircularProgress, Box } from '@material-ui/core';
@@ -34,7 +34,8 @@ function BeneficiarySelectionWizardPage({
         .then((resp) => {
           const edges = resp?.payload?.data?.benefitPlan?.edges;
           if (edges?.length) {
-            setBenefitPlan(edges[0].node);
+            const node = edges[0].node;
+            setBenefitPlan({ ...node, id: decodeId(node.id) });
           }
           setLoading(false);
         })

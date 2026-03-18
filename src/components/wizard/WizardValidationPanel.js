@@ -7,11 +7,11 @@ import {
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import CancelIcon from '@material-ui/icons/Cancel';
 import { injectIntl } from 'react-intl';
-import { graphql, formatMessage } from '@openimis/fe-core';
+import { graphql, formatMessage, decodeId } from '@openimis/fe-core';
 import { MODULE_NAME, DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../../constants';
 import { bulkUpdateBeneficiaryStatus } from '../../wizard-actions';
 
-function WizardValidationPanel({ intl, benefitPlanId, dispatch }) {
+function WizardValidationPanel({ intl, benefitPlanId, selectedLocation, dispatch }) {
   const [loading, setLoading] = useState(false);
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -26,27 +26,35 @@ function WizardValidationPanel({ intl, benefitPlanId, dispatch }) {
     const offset = currentPage * currentPageSize;
     const filters = [
       `benefitPlan_Id: "${benefitPlanId}"`,
-      `status: "POTENTIAL"`,
+      `status: POTENTIAL`,
       `first: ${first}`,
       `offset: ${offset}`,
       `orderBy: ["-json_ext__pmt_score"]`,
     ];
+    if (selectedLocation?.uuid && selectedLocation?.type) {
+      const levelMap = { D: 0, W: 1, V: 2 };
+      const level = levelMap[selectedLocation.type];
+      if (level !== undefined) {
+        filters.push(`parentLocation: "${selectedLocation.uuid}"`);
+        filters.push(`parentLocationLevel: ${level}`);
+      }
+    }
     const query = `{
-      groupBeneficiaries(${filters.join(', ')}) {
-        edges{node{id individual{firstName lastName dob}jsonExt status}}
+      groupBeneficiary(${filters.join(', ')}) {
+        edges{node{id group{head{firstName lastName dob}}jsonExt status}}
         totalCount
       }
     }`;
     dispatch(graphql(query, 'MERANKABANDI_WIZARD_VALIDATION'))
       .then((result) => {
-        const data = result?.payload?.data?.groupBeneficiaries;
+        const data = result?.payload?.data?.groupBeneficiary;
         if (data) {
           setBeneficiaries((data.edges || []).map((e) => e.node));
           setTotalCount(data.totalCount || 0);
         }
       })
       .finally(() => setLoading(false));
-  }, [benefitPlanId, dispatch]);
+  }, [benefitPlanId, selectedLocation, dispatch]);
 
   useEffect(() => {
     if (benefitPlanId) fetchBeneficiaries(page, pageSize);
@@ -69,10 +77,24 @@ function WizardValidationPanel({ intl, benefitPlanId, dispatch }) {
     }
   };
 
-  const handleBulkAction = (status) => {
+  const handleBulkAction = (action) => {
     if (selected.size === 0) return;
     setSubmitting(true);
-    dispatch(bulkUpdateBeneficiaryStatus(benefitPlanId, [...selected], status))
+    const ids = [...selected].map((id) => decodeId(id));
+    const today = new Date().toISOString().slice(0, 10);
+    let promise;
+    if (action === 'VALIDATED') {
+      promise = dispatch(bulkUpdateBeneficiaryStatus(
+        benefitPlanId, ids, 'VALIDATED',
+        { community_validation: { status: 'VALIDATED', date: today } },
+      ));
+    } else {
+      promise = dispatch(bulkUpdateBeneficiaryStatus(
+        benefitPlanId, ids, 'POTENTIAL',
+        { community_validation: { status: 'REJECTED', date: today } },
+      ));
+    }
+    promise
       .then(() => {
         setSelected(new Set());
         fetchBeneficiaries(page, pageSize);
@@ -107,7 +129,7 @@ function WizardValidationPanel({ intl, benefitPlanId, dispatch }) {
             color="secondary"
             size="small"
             startIcon={<CancelIcon />}
-            onClick={() => handleBulkAction('NOT_SELECTED')}
+            onClick={() => handleBulkAction('REJECTED')}
             disabled={selected.size === 0 || submitting}
           >
             {formatMessage(intl, MODULE_NAME, 'wizard.action.reject')}
@@ -140,8 +162,8 @@ function WizardValidationPanel({ intl, benefitPlanId, dispatch }) {
                     onChange={() => handleToggle(b.id)}
                   />
                 </TableCell>
-                <TableCell>{b.individual?.lastName}</TableCell>
-                <TableCell>{b.individual?.firstName}</TableCell>
+                <TableCell>{b.group?.head?.lastName}</TableCell>
+                <TableCell>{b.group?.head?.firstName}</TableCell>
                 <TableCell align="right">{b.jsonExt?.pmt_score ?? '-'}</TableCell>
                 <TableCell>
                   <Chip label={b.status} size="small" />

@@ -9,22 +9,22 @@ import { MODULE_NAME } from '../../constants';
 import { enrollValidatedBeneficiaries } from '../../wizard-actions';
 
 function WizardSummaryPanel({ intl, benefitPlan, selectedLocation, dispatch }) {
-  const [counts, setCounts] = useState({ potential: 0, validated: 0, notSelected: 0, active: 0 });
+  const [counts, setCounts] = useState({ potential: 0, validated: 0, suspended: 0, active: 0 });
   const [loading, setLoading] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     if (!benefitPlan?.id) return;
     setLoading(true);
-    const statuses = ['POTENTIAL', 'VALIDATED', 'NOT_SELECTED', 'ACTIVE'];
+    const statuses = ['POTENTIAL', 'VALIDATED', 'SUSPENDED', 'ACTIVE'];
     Promise.all(
       statuses.map((status) => {
-        const query = `{ groupBeneficiaries(benefitPlan_Id: "${benefitPlan.id}", status: "${status}", first: 0) { totalCount } }`;
+        const query = `{ groupBeneficiary(benefitPlan_Id: "${benefitPlan.id}", status: ${status}, first: 0) { totalCount } }`;
         return dispatch(graphql(query, `MERANKABANDI_WIZARD_COUNT_${status}`))
-          .then((r) => r?.payload?.data?.groupBeneficiaries?.totalCount || 0);
+          .then((r) => r?.payload?.data?.groupBeneficiary?.totalCount || 0);
       }),
-    ).then(([potential, validated, notSelected, active]) => {
-      setCounts({ potential, validated, notSelected, active });
+    ).then(([potential, validated, suspended, active]) => {
+      setCounts({ potential, validated, suspended, active });
     }).finally(() => setLoading(false));
   }, [benefitPlan?.id, dispatch]);
 
@@ -67,9 +67,9 @@ function WizardSummaryPanel({ intl, benefitPlan, selectedLocation, dispatch }) {
         </Grid>
         <Grid item xs={3}>
           <Paper style={{ padding: 16, textAlign: 'center' }}>
-            <Typography variant="h4" style={{ color: '#f44336' }}>{counts.notSelected}</Typography>
+            <Typography variant="h4" style={{ color: '#f44336' }}>{counts.suspended}</Typography>
             <Typography variant="body2" color="textSecondary">
-              {formatMessage(intl, MODULE_NAME, 'wizard.summary.notSelected')}
+              {formatMessage(intl, MODULE_NAME, 'wizard.summary.suspended')}
             </Typography>
           </Paper>
         </Grid>

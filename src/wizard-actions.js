@@ -29,11 +29,15 @@ export function triggerPmtCalculation(benefitPlanId) {
   });
 }
 
-export function bulkUpdateBeneficiaryStatus(benefitPlanId, ids, status) {
+export function bulkUpdateBeneficiaryStatus(benefitPlanId, ids, status, jsonExtUpdate) {
   const idsStr = ids.map((id) => `"${id}"`).join(', ');
+  let params = `benefitPlanId: "${benefitPlanId}", ids: [${idsStr}], status: "${status}"`;
+  if (jsonExtUpdate) {
+    params += `, jsonExtUpdate: ${JSON.stringify(JSON.stringify(jsonExtUpdate))}`;
+  }
   const mutation = formatMutation(
     'bulkUpdateGroupBeneficiaryStatus',
-    `benefitPlanId: "${benefitPlanId}", ids: [${idsStr}], status: "${status}"`,
+    params,
     ['clientMutationId'],
   );
   return graphql(mutation.payload, WIZARD_ACTION_TYPE.BULK_UPDATE_STATUS, {
