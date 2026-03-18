@@ -131,6 +131,19 @@ const STORE_STATE = {
   workflows: [],
   errorWorkflows: null,
 
+  // PMT Formulas
+  fetchingPmtFormulas: false,
+  fetchedPmtFormulas: false,
+  pmtFormulas: [],
+  pmtFormulasPageInfo: {},
+  pmtFormulasTotalCount: 0,
+  errorPmtFormulas: null,
+
+  fetchingPmtFormula: false,
+  fetchedPmtFormula: false,
+  pmtFormula: null,
+  errorPmtFormula: null,
+
   // Result Framework
   fetchingResultFrameworkSnapshots: false,
   fetchedResultFrameworkSnapshots: false,
@@ -618,6 +631,87 @@ function reducer(state = STORE_STATE, action) {
       return dispatchMutationResp(state, MUTATION_SERVICE.INDICATOR_ACHIEVEMENT.UPDATE, action);
     case SUCCESS(ACTION_TYPE.DELETE_INDICATOR_ACHIEVEMENT):
       return dispatchMutationResp(state, MUTATION_SERVICE.INDICATOR_ACHIEVEMENT.DELETE, action);
+
+    // ─── PMT Formulas ────────────────────────────────────────────────────────
+    case REQUEST(ACTION_TYPE.SEARCH_PMT_FORMULAS):
+      return {
+        ...state,
+        fetchingPmtFormulas: true,
+        fetchedPmtFormulas: false,
+        pmtFormulas: [],
+        pmtFormulasPageInfo: {},
+        pmtFormulasTotalCount: 0,
+        errorPmtFormulas: null,
+      };
+    case SUCCESS(ACTION_TYPE.SEARCH_PMT_FORMULAS):
+      return {
+        ...state,
+        fetchingPmtFormulas: false,
+        fetchedPmtFormulas: true,
+        pmtFormulas: parseData(action.payload.data.pmtFormula)?.map((f) => ({
+          ...f,
+          id: decodeId(f.id),
+        })),
+        pmtFormulasPageInfo: pageInfo(action.payload.data.pmtFormula),
+        pmtFormulasTotalCount: action.payload.data.pmtFormula?.totalCount ?? 0,
+        errorPmtFormulas: formatGraphQLError(action.payload),
+      };
+    case ERROR(ACTION_TYPE.SEARCH_PMT_FORMULAS):
+      return {
+        ...state,
+        fetchingPmtFormulas: false,
+        errorPmtFormulas: formatServerError(action.payload),
+      };
+    case REQUEST(ACTION_TYPE.GET_PMT_FORMULA):
+      return {
+        ...state,
+        fetchingPmtFormula: true,
+        fetchedPmtFormula: false,
+        pmtFormula: null,
+        errorPmtFormula: null,
+      };
+    case SUCCESS(ACTION_TYPE.GET_PMT_FORMULA): {
+      const formulas = parseData(action.payload.data.pmtFormula);
+      return {
+        ...state,
+        fetchingPmtFormula: false,
+        fetchedPmtFormula: true,
+        pmtFormula: formulas?.length > 0
+          ? { ...formulas[0], id: decodeId(formulas[0].id) }
+          : null,
+        errorPmtFormula: formatGraphQLError(action.payload),
+      };
+    }
+    case ERROR(ACTION_TYPE.GET_PMT_FORMULA):
+      return {
+        ...state,
+        fetchingPmtFormula: false,
+        errorPmtFormula: formatServerError(action.payload),
+      };
+    case CLEAR(ACTION_TYPE.PMT_FORMULA):
+      return {
+        ...state,
+        fetchingPmtFormula: false,
+        fetchedPmtFormula: false,
+        pmtFormula: null,
+        errorPmtFormula: null,
+      };
+
+    // PMT Formula mutations
+    case REQUEST(ACTION_TYPE.CREATE_PMT_FORMULA):
+    case REQUEST(ACTION_TYPE.UPDATE_PMT_FORMULA):
+    case REQUEST(ACTION_TYPE.DELETE_PMT_FORMULA):
+      return dispatchMutationReq(state, action);
+    case ERROR(ACTION_TYPE.CREATE_PMT_FORMULA):
+    case ERROR(ACTION_TYPE.UPDATE_PMT_FORMULA):
+    case ERROR(ACTION_TYPE.DELETE_PMT_FORMULA):
+      return dispatchMutationErr(state, action);
+    case SUCCESS(ACTION_TYPE.CREATE_PMT_FORMULA):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PMT_FORMULA.CREATE, action);
+    case SUCCESS(ACTION_TYPE.UPDATE_PMT_FORMULA):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PMT_FORMULA.UPDATE, action);
+    case SUCCESS(ACTION_TYPE.DELETE_PMT_FORMULA):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PMT_FORMULA.DELETE, action);
 
     // ─── Workflows ─────────────────────────────────────────────────────────────
     case REQUEST(ACTION_TYPE.GET_WORKFLOWS):

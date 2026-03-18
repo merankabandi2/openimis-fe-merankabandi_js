@@ -114,6 +114,8 @@ import MonetaryTransfersDashboardPage from './pages/MonetaryTransfersDashboardPa
 import MonetaryTransferPage from './pages/MonetaryTransferPage';
 import KoboETLAdminPage from './pages/KoboETLAdminPage';
 import BeneficiarySelectionWizardPage from './pages/BeneficiarySelectionWizardPage';
+import PmtFormulasPage from './pages/PmtFormulasPage';
+import PmtFormulaPage from './pages/PmtFormulaPage';
 
 // Constants
 import {
@@ -139,6 +141,8 @@ import {
   ROUTE_ME_MONETARY_TRANSFERS_LIST,
   ROUTE_ME_MONETARY_TRANSFERS_DASHBOARD,
   ROUTE_BENEFICIARY_SELECTION_WIZARD,
+  ROUTE_PMT_FORMULAS,
+  ROUTE_PMT_FORMULA,
 } from './constants';
 
 // Reducer
@@ -235,6 +239,8 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_ACTIVITIES_DASHBOARD, component: ActivitiesDashboard },
     { path: ROUTE_KOBO_ETL_ADMIN, component: KoboETLAdminPage },
     { path: `${ROUTE_BENEFICIARY_SELECTION_WIZARD}/:benefit_plan_uuid?`, component: BeneficiarySelectionWizardPage },
+    { path: ROUTE_PMT_FORMULAS, component: PmtFormulasPage },
+    { path: `${ROUTE_PMT_FORMULA}/:formula_id?`, component: PmtFormulaPage },
   ],
 
 
@@ -305,6 +311,13 @@ const DEFAULT_CONFIG = {
 
   // Items contributed to social protection menu
   'socialProtection.MainMenu': [
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.socialProtection.pmtFormulas" />,
+      icon: <Assessment />,
+      route: `/${ROUTE_PMT_FORMULAS}`,
+      filter: (rights) => rights.includes(RIGHT_BENEFIT_PLAN_SEARCH),
+      id: 'merankabandi.pmtFormulas',
+    },
     {
       text: <FormattedMessage module="merankabandi" id="menu.socialProtection.koboETLAdmin" />,
       icon: <Sync />,

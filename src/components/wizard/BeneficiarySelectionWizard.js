@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Stepper, Step, StepLabel, Button, Typography, Box,
 } from '@material-ui/core';
@@ -11,11 +11,15 @@ import {
 } from '@openimis/fe-core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import AssessmentIcon from '@material-ui/icons/Assessment';
-import { importSurveyData, triggerPmtCalculation } from '../../wizard-actions';
+import {
+  importSurveyData, triggerPmtCalculation, promoteToBeneficiary,
+} from '../../wizard-actions';
 import { MODULE_NAME } from '../../constants';
 import WizardBeneficiaryList from './WizardBeneficiaryList';
 import WizardValidationPanel from './WizardValidationPanel';
 import WizardSummaryPanel from './WizardSummaryPanel';
+import WizardPreCollectePanel from './WizardPreCollectePanel';
+import WizardQuotaSelectionPanel from './WizardQuotaSelectionPanel';
 
 const styles = (theme) => ({
   root: { width: '100%', padding: theme.spacing(3) },
@@ -38,12 +42,35 @@ function BeneficiarySelectionWizard({
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const steps = [
-    formatMessage(intl, MODULE_NAME, 'wizard.step.geographic'),
-    formatMessage(intl, MODULE_NAME, 'wizard.step.pmt'),
-    formatMessage(intl, MODULE_NAME, 'wizard.step.validation'),
-    formatMessage(intl, MODULE_NAME, 'wizard.step.summary'),
-  ];
+  const targeting = benefitPlan?.jsonExt?.targeting || {};
+  const {
+    use_precollecte: usePrecollecte = false,
+    use_quotas: useQuotas = false,
+    require_community_validation: requireCommunityValidation = false,
+    selection_method: selectionMethod = 'all',
+  } = targeting;
+
+  const steps = useMemo(() => {
+    const s = [];
+    if (usePrecollecte) {
+      s.push({ key: 'precollecte', label: formatMessage(intl, MODULE_NAME, 'wizard.step.precollecte') });
+    }
+    s.push({ key: 'geographic', label: formatMessage(intl, MODULE_NAME, 'wizard.step.geographic') });
+    if (selectionMethod === 'pmt') {
+      s.push({ key: 'pmt', label: formatMessage(intl, MODULE_NAME, 'wizard.step.pmt') });
+    }
+    if (useQuotas) {
+      s.push({ key: 'quota', label: formatMessage(intl, MODULE_NAME, 'wizard.step.quota') });
+    }
+    if (selectionMethod === 'criteria') {
+      s.push({ key: 'criteria', label: formatMessage(intl, MODULE_NAME, 'wizard.step.criteria') });
+    }
+    if (requireCommunityValidation) {
+      s.push({ key: 'validation', label: formatMessage(intl, MODULE_NAME, 'wizard.step.validation') });
+    }
+    s.push({ key: 'summary', label: formatMessage(intl, MODULE_NAME, 'wizard.step.summary') });
+    return s;
+  }, [intl, usePrecollecte, useQuotas, requireCommunityValidation, selectionMethod]);
 
   const handleNext = () => setActiveStep((prev) => prev + 1);
   const handleBack = () => setActiveStep((prev) => prev - 1);
@@ -60,9 +87,27 @@ function BeneficiarySelectionWizard({
     setSubmitting(false);
   };
 
-  const renderStep = (step) => {
-    switch (step) {
-      case 0:
+  const currentStepKey = steps[activeStep]?.key;
+
+  const renderStep = () => {
+    switch (currentStepKey) {
+      case 'precollecte':
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              {formatMessage(intl, MODULE_NAME, 'wizard.precollecte.title')}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              {formatMessage(intl, MODULE_NAME, 'wizard.precollecte.description')}
+            </Typography>
+            <WizardPreCollectePanel
+              benefitPlanId={benefitPlan?.id}
+              selectedLocation={selectedLocation}
+              dispatch={dispatch}
+            />
+          </Box>
+        );
+      case 'geographic':
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -89,7 +134,7 @@ function BeneficiarySelectionWizard({
             </Box>
           </Box>
         );
-      case 1:
+      case 'pmt':
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -116,7 +161,38 @@ function BeneficiarySelectionWizard({
             />
           </Box>
         );
-      case 2:
+      case 'quota':
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              {formatMessage(intl, MODULE_NAME, 'wizard.quota.title')}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              {formatMessage(intl, MODULE_NAME, 'wizard.quota.description')}
+            </Typography>
+            <WizardQuotaSelectionPanel
+              benefitPlanId={benefitPlan?.id}
+              dispatch={dispatch}
+            />
+          </Box>
+        );
+      case 'criteria':
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              {formatMessage(intl, MODULE_NAME, 'wizard.criteria.title')}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              {formatMessage(intl, MODULE_NAME, 'wizard.criteria.description')}
+            </Typography>
+            <WizardBeneficiaryList
+              benefitPlanId={benefitPlan?.id}
+              selectedLocation={selectedLocation}
+              dispatch={dispatch}
+            />
+          </Box>
+        );
+      case 'validation':
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -132,7 +208,7 @@ function BeneficiarySelectionWizard({
             />
           </Box>
         );
-      case 3:
+      case 'summary':
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -156,11 +232,11 @@ function BeneficiarySelectionWizard({
         {formatMessage(intl, MODULE_NAME, 'wizard.title')}
       </Typography>
       <Stepper activeStep={activeStep} className={classes.stepper} alternativeLabel>
-        {steps.map((label) => (
-          <Step key={label}><StepLabel>{label}</StepLabel></Step>
+        {steps.map((step) => (
+          <Step key={step.key}><StepLabel>{step.label}</StepLabel></Step>
         ))}
       </Stepper>
-      <div className={classes.content}>{renderStep(activeStep)}</div>
+      <div className={classes.content}>{renderStep()}</div>
       <div className={classes.actions}>
         <Button disabled={activeStep === 0} onClick={handleBack} className={classes.button}>
           {formatMessage(intl, MODULE_NAME, 'wizard.back')}
@@ -183,7 +259,7 @@ function BeneficiarySelectionWizard({
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch,
-  ...bindActionCreators({ importSurveyData, triggerPmtCalculation }, dispatch),
+  ...bindActionCreators({ importSurveyData, triggerPmtCalculation, promoteToBeneficiary }, dispatch),
 });
 
 export default withModulesManager(

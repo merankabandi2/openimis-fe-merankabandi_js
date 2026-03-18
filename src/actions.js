@@ -60,6 +60,14 @@ export const ACTION_TYPE = {
   // Workflows
   GET_WORKFLOWS: 'MERANKABANDI_GET_WORKFLOWS',
 
+  // PMT Formulas
+  SEARCH_PMT_FORMULAS: 'MERANKABANDI_SEARCH_PMT_FORMULAS',
+  GET_PMT_FORMULA: 'MERANKABANDI_GET_PMT_FORMULA',
+  PMT_FORMULA: 'MERANKABANDI_PMT_FORMULA',
+  CREATE_PMT_FORMULA: 'MERANKABANDI_CREATE_PMT_FORMULA',
+  UPDATE_PMT_FORMULA: 'MERANKABANDI_UPDATE_PMT_FORMULA',
+  DELETE_PMT_FORMULA: 'MERANKABANDI_DELETE_PMT_FORMULA',
+
   // Mutation
   MUTATION: 'MERANKABANDI_MUTATION',
 
@@ -94,6 +102,11 @@ export const MUTATION_SERVICE = {
     CREATE: 'createIndicatorAchievement',
     UPDATE: 'updateIndicatorAchievement',
     DELETE: 'deleteIndicatorAchievement',
+  },
+  PMT_FORMULA: {
+    CREATE: 'createPmtFormula',
+    UPDATE: 'updatePmtFormula',
+    DELETE: 'deletePmtFormula',
   },
 };
 
@@ -543,6 +556,74 @@ export function fetchWorkflows() {
     WORKFLOWS_FULL_PROJECTION(),
   );
   return graphql(payload, ACTION_TYPE.GET_WORKFLOWS);
+}
+
+// ─── PMT Formula actions ──────────────────────────────────────────────────────
+
+const PMT_FORMULA_FULL_PROJECTION = () => [
+  'id',
+  'name',
+  'description',
+  'baseScoreUrban',
+  'baseScoreRural',
+  'variables',
+  'geographicAdjustments',
+  'isActive',
+];
+
+export function fetchPmtFormulas(params) {
+  const payload = formatPageQueryWithCount('pmtFormula', params, PMT_FORMULA_FULL_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_PMT_FORMULAS);
+}
+
+export function fetchPmtFormula(params) {
+  const payload = formatPageQuery('pmtFormula', params, PMT_FORMULA_FULL_PROJECTION());
+  return graphql(payload, ACTION_TYPE.GET_PMT_FORMULA);
+}
+
+export function clearPmtFormula() {
+  return (dispatch) => {
+    dispatch({ type: CLEAR(ACTION_TYPE.PMT_FORMULA) });
+  };
+}
+
+const formatPmtFormulaGQL = (formula) => `
+  ${formula?.id ? `id: ${formula.id}` : ''}
+  ${formula?.name ? `name: "${formatGQLString(formula.name)}"` : ''}
+  ${formula?.description ? `description: "${formatGQLString(formula.description)}"` : ''}
+  ${formula?.baseScoreUrban != null ? `baseScoreUrban: "${formula.baseScoreUrban}"` : ''}
+  ${formula?.baseScoreRural != null ? `baseScoreRural: "${formula.baseScoreRural}"` : ''}
+  ${formula?.variables ? `variables: ${JSON.stringify(JSON.stringify(formula.variables))}` : ''}
+  ${formula?.geographicAdjustments ? `geographicAdjustments: ${JSON.stringify(JSON.stringify(formula.geographicAdjustments))}` : ''}
+  ${formula?.isActive != null ? `isActive: ${formula.isActive}` : ''}
+`;
+
+export function createPmtFormula(formula, clientMutationLabel) {
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PMT_FORMULA.CREATE,
+    formatPmtFormulaGQL(formula),
+    ACTION_TYPE.CREATE_PMT_FORMULA,
+    clientMutationLabel,
+  );
+}
+
+export function updatePmtFormula(formula, clientMutationLabel) {
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PMT_FORMULA.UPDATE,
+    formatPmtFormulaGQL(formula),
+    ACTION_TYPE.UPDATE_PMT_FORMULA,
+    clientMutationLabel,
+  );
+}
+
+export function deletePmtFormula(formula, clientMutationLabel) {
+  const formulaUuids = `ids: ["${formula?.id}"]`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PMT_FORMULA.DELETE,
+    formulaUuids,
+    ACTION_TYPE.DELETE_PMT_FORMULA,
+    clientMutationLabel,
+  );
 }
 
 // Grievance configuration (dispatches into grievanceSocialProtection reducer)

@@ -5,6 +5,11 @@ export const WIZARD_ACTION_TYPE = {
   TRIGGER_PMT: 'MERANKABANDI_TRIGGER_PMT',
   BULK_UPDATE_STATUS: 'MERANKABANDI_BULK_UPDATE_STATUS',
   ENROLL_BENEFICIARIES: 'MERANKABANDI_ENROLL_BENEFICIARIES',
+  APPLY_QUOTA_SELECTION: 'MERANKABANDI_APPLY_QUOTA_SELECTION',
+  APPLY_CRITERIA_SELECTION: 'MERANKABANDI_APPLY_CRITERIA_SELECTION',
+  SELECT_ALL: 'MERANKABANDI_SELECT_ALL',
+  PROMOTE_TO_BENEFICIARY: 'MERANKABANDI_PROMOTE_TO_BENEFICIARY',
+  PROMOTE_FROM_WAITING_LIST: 'MERANKABANDI_PROMOTE_FROM_WAITING_LIST',
 };
 
 export function importSurveyData(benefitPlanId, csvPath) {
@@ -41,6 +46,61 @@ export function bulkUpdateBeneficiaryStatus(benefitPlanId, ids, status, jsonExtU
     ['clientMutationId'],
   );
   return graphql(mutation.payload, WIZARD_ACTION_TYPE.BULK_UPDATE_STATUS, {
+    clientMutationId: mutation.clientMutationId,
+  });
+}
+
+export function applyQuotaSelection(benefitPlanId, targetingRound = 1) {
+  const mutation = formatMutation(
+    'applyQuotaSelection',
+    `benefitPlanId: "${benefitPlanId}", targetingRound: ${targetingRound}`,
+    ['clientMutationId'],
+  );
+  return graphql(mutation.payload, WIZARD_ACTION_TYPE.APPLY_QUOTA_SELECTION, {
+    clientMutationId: mutation.clientMutationId,
+  });
+}
+
+export function applyCriteriaSelection(benefitPlanId) {
+  const mutation = formatMutation(
+    'applyCriteriaSelection',
+    `benefitPlanId: "${benefitPlanId}"`,
+    ['clientMutationId'],
+  );
+  return graphql(mutation.payload, WIZARD_ACTION_TYPE.APPLY_CRITERIA_SELECTION, {
+    clientMutationId: mutation.clientMutationId,
+  });
+}
+
+export function selectAll(benefitPlanId) {
+  const mutation = formatMutation(
+    'selectAll',
+    `benefitPlanId: "${benefitPlanId}"`,
+    ['clientMutationId'],
+  );
+  return graphql(mutation.payload, WIZARD_ACTION_TYPE.SELECT_ALL, {
+    clientMutationId: mutation.clientMutationId,
+  });
+}
+
+export function promoteToBeneficiary(benefitPlanId) {
+  const mutation = formatMutation(
+    'promoteToBeneficiary',
+    `benefitPlanId: "${benefitPlanId}"`,
+    ['clientMutationId'],
+  );
+  return graphql(mutation.payload, WIZARD_ACTION_TYPE.PROMOTE_TO_BENEFICIARY, {
+    clientMutationId: mutation.clientMutationId,
+  });
+}
+
+export function promoteFromWaitingList(benefitPlanId, collineId, count) {
+  const mutation = formatMutation(
+    'promoteFromWaitingList',
+    `benefitPlanId: "${benefitPlanId}", collineId: ${collineId}, count: ${count}`,
+    ['clientMutationId'],
+  );
+  return graphql(mutation.payload, WIZARD_ACTION_TYPE.PROMOTE_FROM_WAITING_LIST, {
     clientMutationId: mutation.clientMutationId,
   });
 }

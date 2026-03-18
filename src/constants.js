@@ -71,6 +71,21 @@ export const BENEFIT_PLAN_PROVINCES_TAB_VALUE = 'BenefitPlanProvincesTab';
 // Beneficiary Selection Wizard
 export const ROUTE_BENEFICIARY_SELECTION_WIZARD = 'benefitPlans/selectionWizard';
 
+// PMT Formula admin
+export const ROUTE_PMT_FORMULAS = 'configurations/pmt-formulas';
+export const ROUTE_PMT_FORMULA = 'configurations/pmt-formulas/formula';
+
+// Selection status values (mirrors Group.json_ext.selection_status)
+export const SELECTION_STATUS = {
+  SURVEYED: 'SURVEYED',
+  PMT_SCORED: 'PMT_SCORED',
+  SELECTED: 'SELECTED',
+  WAITING_LIST: 'WAITING_LIST',
+  NOT_SELECTED: 'NOT_SELECTED',
+  COMMUNITY_VALIDATED: 'COMMUNITY_VALIDATED',
+  COMMUNITY_REJECTED: 'COMMUNITY_REJECTED',
+};
+
 // --- M&E Menu ---
 export const ME_MAIN_MENU_CONTRIBUTION_KEY = 'me.MainMenu';
 export const SOCIAL_PROTECTION_MAIN_MENU_CONTRIBUTION_KEY = 'socialProtection.MainMenu';
