@@ -490,6 +490,8 @@
   "wizard.action.reject": "Reject",
 
   "wizard.summary.potential": "Pending",
+  "wizard.summary.selected": "Selected",
+  "wizard.summary.waitingList": "Waiting List",
   "wizard.summary.validated": "Validated",
   "wizard.summary.notSelected": "Not Selected",
   "wizard.summary.active": "Enrolled",

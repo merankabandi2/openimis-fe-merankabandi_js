@@ -749,6 +749,8 @@
   "wizard.action.retain": "Retenir",
   "wizard.action.reject": "Rejeter",
   "wizard.summary.potential": "En attente",
+  "wizard.summary.selected": "Sélectionnés",
+  "wizard.summary.waitingList": "Liste d'attente",
   "wizard.summary.validated": "Validés",
   "wizard.summary.suspended": "Suspendus",
   "wizard.summary.active": "Inscrits",

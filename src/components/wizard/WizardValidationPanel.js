@@ -8,8 +8,8 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import CancelIcon from '@material-ui/icons/Cancel';
 import { injectIntl } from 'react-intl';
 import { graphql, formatMessage, decodeId } from '@openimis/fe-core';
-import { MODULE_NAME, DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../../constants';
-import { bulkUpdateBeneficiaryStatus } from '../../wizard-actions';
+import { MODULE_NAME, DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS, SELECTION_STATUS } from '../../constants';
+import { bulkUpdateBeneficiaryStatus, promoteFromWaitingList } from '../../wizard-actions';
 
 function WizardValidationPanel({ intl, benefitPlanId, selectedLocation, dispatch }) {
   const [loading, setLoading] = useState(false);
@@ -24,32 +24,34 @@ function WizardValidationPanel({ intl, benefitPlanId, selectedLocation, dispatch
     setLoading(true);
     const first = currentPageSize;
     const offset = currentPage * currentPageSize;
+    // Query groups with SELECTED or COMMUNITY_VALIDATED status for community validation
+    const statusFilter = `"selection_status": "${SELECTION_STATUS.SELECTED}"`;
     const filters = [
       `benefitPlan_Id: "${benefitPlanId}"`,
-      `status: POTENTIAL`,
+      `jsonExt_Icontains: "${statusFilter.replace(/"/g, '\\"')}"`,
       `first: ${first}`,
       `offset: ${offset}`,
-      `orderBy: ["-json_ext__pmt_score"]`,
     ];
-    if (selectedLocation?.uuid && selectedLocation?.type) {
-      const levelMap = { D: 0, W: 1, V: 2 };
-      const level = levelMap[selectedLocation.type];
-      if (level !== undefined) {
-        filters.push(`parentLocation: "${selectedLocation.uuid}"`);
-        filters.push(`parentLocationLevel: ${level}`);
-      }
+    if (selectedLocation?.uuid) {
+      filters.push(`location_Parent_Id: "${selectedLocation.uuid}"`);
     }
     const query = `{
-      groupBeneficiary(${filters.join(', ')}) {
-        edges{node{id group{head{firstName lastName dob}}jsonExt status}}
+      individualGroup(${filters.join(', ')}) {
+        edges { node { id group { id head { firstName lastName } jsonExt } } }
         totalCount
       }
     }`;
     dispatch(graphql(query, 'MERANKABANDI_WIZARD_VALIDATION'))
       .then((result) => {
-        const data = result?.payload?.data?.groupBeneficiary;
+        const data = result?.payload?.data?.individualGroup;
         if (data) {
-          setBeneficiaries((data.edges || []).map((e) => e.node));
+          setBeneficiaries((data.edges || []).map((e) => ({
+            id: e.node.id,
+            groupId: e.node.group?.id,
+            head: e.node.group?.head,
+            jsonExt: e.node.group?.jsonExt || {},
+            selectionStatus: (e.node.group?.jsonExt || {}).selection_status || '-',
+          })));
           setTotalCount(data.totalCount || 0);
         }
       })
@@ -85,14 +87,30 @@ function WizardValidationPanel({ intl, benefitPlanId, selectedLocation, dispatch
     let promise;
     if (action === 'VALIDATED') {
       promise = dispatch(bulkUpdateBeneficiaryStatus(
-        benefitPlanId, ids, 'VALIDATED',
-        { community_validation: { status: 'VALIDATED', date: today } },
+        benefitPlanId, ids, 'POTENTIAL',
+        { selection_status: SELECTION_STATUS.COMMUNITY_VALIDATED, community_validation: { status: 'VALIDATED', date: today } },
       ));
     } else {
+      // Reject: mark as COMMUNITY_REJECTED, then trigger waiting list promotion
       promise = dispatch(bulkUpdateBeneficiaryStatus(
         benefitPlanId, ids, 'POTENTIAL',
-        { community_validation: { status: 'REJECTED', date: today } },
-      ));
+        { selection_status: SELECTION_STATUS.COMMUNITY_REJECTED, community_validation: { status: 'REJECTED', date: today } },
+      )).then(() => {
+        // For each rejected beneficiary, promote one from waiting list in the same colline
+        const rejectedBeneficiaries = beneficiaries.filter((b) => selected.has(b.id));
+        const collinePromotions = rejectedBeneficiaries.reduce((acc, b) => {
+          const collineId = b.jsonExt?.location_id;
+          if (collineId) {
+            acc[collineId] = (acc[collineId] || 0) + 1;
+          }
+          return acc;
+        }, {});
+        return Promise.all(
+          Object.entries(collinePromotions).map(([collineId, count]) =>
+            dispatch(promoteFromWaitingList(benefitPlanId, collineId, count)),
+          ),
+        );
+      });
     }
     promise
       .then(() => {
@@ -162,11 +180,11 @@ function WizardValidationPanel({ intl, benefitPlanId, selectedLocation, dispatch
                     onChange={() => handleToggle(b.id)}
                   />
                 </TableCell>
-                <TableCell>{b.group?.head?.lastName}</TableCell>
-                <TableCell>{b.group?.head?.firstName}</TableCell>
+                <TableCell>{b.head?.lastName}</TableCell>
+                <TableCell>{b.head?.firstName}</TableCell>
                 <TableCell align="right">{b.jsonExt?.pmt_score ?? '-'}</TableCell>
                 <TableCell>
-                  <Chip label={b.status} size="small" />
+                  <Chip label={b.selectionStatus} size="small" />
                 </TableCell>
               </TableRow>
             ))}
