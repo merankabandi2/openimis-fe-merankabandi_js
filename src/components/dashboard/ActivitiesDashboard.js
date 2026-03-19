@@ -29,6 +29,7 @@ import {
   TableHead,
   TableRow,
   Badge,
+  TextField,
 } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
 import { baseApiUrl, apiHeaders, formatMessage, decodeId } from '@openimis/fe-core';
@@ -340,16 +341,6 @@ const loadActivitiesData = async (filters = {}) => {
   const behaviorFilterString = buildFilter(filters, 'reportDate');
   const microProjectFilterString = buildFilter(filters, 'reportDate');
   
-  // Debug: Log filter strings
-  console.log('Filter strings:', {
-    dashboardFilters,
-    sensitization: sensitizationFilterString,
-    behavior: behaviorFilterString,
-    microProject: microProjectFilterString,
-    filters: filters,
-    decodedProvinceId: filters.provinces?.length > 0 ? parseInt(decodeId(filters.provinces[0])) : null
-  });
-
   const graphqlQuery = `
     query ActivitiesDashboard($filters: DashboardFiltersInput) {
       optimizedActivitiesDashboard(filters: $filters) {
@@ -501,8 +492,6 @@ const loadActivitiesData = async (filters = {}) => {
     }
   `;
 
-  console.log('Full GraphQL Query:', graphqlQuery);
-
   const response = await fetch(`${baseApiUrl}/graphql`, {
     method: 'post',
     headers: { ...baseHeaders, 'X-Requested-With': REQUESTED_WITH, 'X-CSRFToken': csrfToken },
@@ -614,32 +603,6 @@ const loadActivitiesData = async (filters = {}) => {
     // Monthly trends from optimized data
     monthlyTrends: dashboardData.monthlyTrends
   };
-  
-  // Debug: Log response counts
-  console.log('Response counts from optimized query:', {
-    sensitizationTrainingTotal: dashboardData.byType.sensitizationTraining.total,
-    behaviorChangePromotionTotal: dashboardData.byType.behaviorChangePromotion.total,
-    microProjectTotal: dashboardData.byType.microProject.total,
-    totalActivities: dashboardData.overall.totalActivities,
-    participants: {
-      total: dashboardData.overall.totalParticipants,
-      male: dashboardData.overall.totalMale,
-      female: dashboardData.overall.totalFemale,
-      twa: dashboardData.overall.totalTwa,
-    },
-    validationStats: {
-      validated: dashboardData.overall.totalValidated,
-      pending: dashboardData.overall.totalPending,
-      rejected: dashboardData.overall.totalRejected,
-    },
-    latestRecords: {
-      sensitizationTraining: data.sensitizationTrainingLatest?.edges?.length || 0,
-      behaviorChangePromotion: data.behaviorChangePromotionLatest?.edges?.length || 0,
-      microProject: data.microProjectLatest?.edges?.length || 0,
-    },
-    monthlyTrends: dashboardData.monthlyTrends?.length || 0,
-    lastUpdated: dashboardData.lastUpdated
-  });
   
   return transformedData;
 };
@@ -847,28 +810,39 @@ function ActivitiesDashboard() {
           stats.totalMicroProjects
         ]
       }],
-      labels: ['Sensibilisation/Formation', 'Changement de comportement', 'Micro-projets']
+      labels: [
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sensitization'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.behaviorChange'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.microProjects'),
+      ]
     };
 
     // Participants by Gender
     const participantsByGender = {
       series: [stats.totalMale, stats.totalFemale],
-      labels: ['Hommes', 'Femmes']
+      labels: [
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.men'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.women'),
+      ]
     };
 
     // Validation Status
     const validationStatus = {
       series: [{
-        name: 'Validé',
+        name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.validated'),
         data: [stats.trainingValidated, stats.behaviorValidated, stats.microProjectValidated]
       }, {
-        name: 'En attente',
+        name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.pending'),
         data: [stats.trainingPending, stats.behaviorPending, stats.microProjectPending]
       }, {
-        name: 'Rejeté',
+        name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.rejected'),
         data: [stats.trainingRejected, stats.behaviorRejected, stats.microProjectRejected]
       }],
-      categories: ['Formation', 'Comportement', 'Micro-projets']
+      categories: [
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sensitization'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.behaviorChange'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.microProjects'),
+      ]
     };
 
     // Activities by Month - Use optimized monthly trends data if available
@@ -885,13 +859,12 @@ function ActivitiesDashboard() {
       const sortedMonths = Object.keys(trendsByMonth).sort();
       monthlyData = {
         series: [{
-          name: 'Activités',
+          name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.activities'),
           data: sortedMonths.map(month => trendsByMonth[month])
         }],
         categories: sortedMonths.map(month => {
           const [year, monthNum] = month.split('-');
-          const monthName = new Date(year, monthNum - 1).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-          return monthName;
+          return new Date(year, monthNum - 1).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
         })
       };
     } else {
@@ -906,13 +879,12 @@ function ActivitiesDashboard() {
       const sortedMonths = Object.keys(activitiesByMonth).sort();
       monthlyData = {
         series: [{
-          name: 'Activités',
+          name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.activities'),
           data: sortedMonths.map(month => activitiesByMonth[month])
         }],
         categories: sortedMonths.map(month => {
           const [year, monthNum] = month.split('-');
-          const monthName = new Date(year, monthNum - 1).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-          return monthName;
+          return new Date(year, monthNum - 1).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
         })
       };
     }
@@ -920,13 +892,17 @@ function ActivitiesDashboard() {
     // Minority Participation by Activity Type
     const minorityParticipation = {
       series: [{
-        name: 'Participants Twa',
+        name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.twaParticipants'),
         data: [stats.trainingTwa, stats.behaviorTwa, stats.microProjectTwa]
       }, {
-        name: 'Total Participants',
+        name: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.totalParticipants'),
         data: [stats.trainingParticipants, stats.behaviorParticipants, stats.microProjectParticipants]
       }],
-      categories: ['Formation', 'Comportement', 'Micro-projets']
+      categories: [
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sensitization'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.behaviorChange'),
+        formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.microProjects'),
+      ]
     };
 
     return { activitiesByType, participantsByGender, validationStatus, monthlyData, minorityParticipation };
@@ -947,12 +923,12 @@ function ActivitiesDashboard() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Localité</TableCell>
-              <TableCell>Catégorie</TableCell>
-              <TableCell>Animateur</TableCell>
-              <TableCell align="center">Participants</TableCell>
-              <TableCell align="center">Statut</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.date')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.location')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.category')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.facilitator')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.participants')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.status')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -1006,11 +982,11 @@ function ActivitiesDashboard() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Localité</TableCell>
-              <TableCell align="center">Participants</TableCell>
-              <TableCell>Commentaires</TableCell>
-              <TableCell align="center">Statut</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.date')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.location')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.participants')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.comments')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.status')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -1063,11 +1039,11 @@ function ActivitiesDashboard() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Localité</TableCell>
-              <TableCell align="center">Participants</TableCell>
-              <TableCell align="center">Type de Projets</TableCell>
-              <TableCell align="center">Statut</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.date')}</TableCell>
+              <TableCell>{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.location')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.participants')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.projectTypes')}</TableCell>
+              <TableCell align="center">{formatMessage(intl, MODULE_NAME, 'dashboard.activities.table.status')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -1137,9 +1113,9 @@ function ActivitiesDashboard() {
           <div className={classes.pageHeader}>
             <Typography className={classes.pageTitle}>
               <GroupWorkIcon className={classes.titleIcon} />
-              Tableau de Bord des Activités
+              {formatMessage(intl, MODULE_NAME, 'dashboard.activities.title')}
             </Typography>
-            <Tooltip title="Actualiser les données">
+            <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.activities.refresh')}>
               <IconButton 
                 className={classes.refreshButton}
                 onClick={loadData}
@@ -1167,7 +1143,7 @@ function ActivitiesDashboard() {
                     {stats.totalActivities}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Activités Total
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.stat.totalActivities')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -1175,7 +1151,7 @@ function ActivitiesDashboard() {
                     {stats.totalParticipants.toLocaleString('fr-FR')}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Participants Total
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.stat.totalParticipants')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -1183,7 +1159,7 @@ function ActivitiesDashboard() {
                     {Math.round((stats.totalFemale / (stats.totalMale + stats.totalFemale)) * 100) || 0}%
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Participation Féminine
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.stat.femaleParticipation')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -1191,7 +1167,7 @@ function ActivitiesDashboard() {
                     {stats.totalTwa.toLocaleString('fr-FR')}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Participants Twa (Minorité)
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.stat.twaParticipants')}
                   </Typography>
                 </div>
               </div>
@@ -1205,7 +1181,7 @@ function ActivitiesDashboard() {
                 <CardContent>
                   <div className={classes.statsCardHeader}>
                     <Typography className={classes.statsCardTitle}>
-                      Sensibilisation/Formation
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sensitization')}
                     </Typography>
                     <Avatar style={{ backgroundColor: '#5a8dee' }}>
                       <SchoolIcon />
@@ -1215,16 +1191,16 @@ function ActivitiesDashboard() {
                     {stats.totalTrainings}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    Sessions réalisées
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sessionsCompleted')}
                   </Typography>
                   <Box mt={2}>
-                    <LinearProgress 
-                      variant="determinate" 
+                    <LinearProgress
+                      variant="determinate"
                       value={(stats.trainingValidated / stats.totalTrainings) * 100 || 0}
                       style={{ height: 8, borderRadius: 4 }}
                     />
                     <Typography variant="caption" color="textSecondary">
-                      {stats.trainingValidated} validées sur {stats.totalTrainings}
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.validatedOf').replace('{validated}', stats.trainingValidated).replace('{total}', stats.totalTrainings)}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -1236,7 +1212,7 @@ function ActivitiesDashboard() {
                 <CardContent>
                   <div className={classes.statsCardHeader}>
                     <Typography className={classes.statsCardTitle}>
-                      Changement de Comportement
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.behaviorChange')}
                     </Typography>
                     <Avatar style={{ backgroundColor: '#ff8f00' }}>
                       <TrendingUpIcon />
@@ -1246,16 +1222,16 @@ function ActivitiesDashboard() {
                     {stats.totalBehaviorChanges}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    Activités réalisées
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.activitiesCompleted')}
                   </Typography>
                   <Box mt={2}>
-                    <LinearProgress 
-                      variant="determinate" 
+                    <LinearProgress
+                      variant="determinate"
                       value={(stats.behaviorValidated / stats.totalBehaviorChanges) * 100 || 0}
                       style={{ height: 8, borderRadius: 4 }}
                     />
                     <Typography variant="caption" color="textSecondary">
-                      {stats.behaviorValidated} validées sur {stats.totalBehaviorChanges}
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.validatedOf').replace('{validated}', stats.behaviorValidated).replace('{total}', stats.totalBehaviorChanges)}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -1267,7 +1243,7 @@ function ActivitiesDashboard() {
                 <CardContent>
                   <div className={classes.statsCardHeader}>
                     <Typography className={classes.statsCardTitle}>
-                      Micro-projets
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.microProjects')}
                     </Typography>
                     <Avatar style={{ backgroundColor: '#00d0bd' }}>
                       <BuildIcon />
@@ -1277,16 +1253,16 @@ function ActivitiesDashboard() {
                     {stats.totalMicroProjects}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    Projets appuyés
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.projectsSupported')}
                   </Typography>
                   <Box mt={2}>
-                    <LinearProgress 
-                      variant="determinate" 
+                    <LinearProgress
+                      variant="determinate"
                       value={(stats.microProjectValidated / stats.totalMicroProjects) * 100 || 0}
                       style={{ height: 8, borderRadius: 4 }}
                     />
                     <Typography variant="caption" color="textSecondary">
-                      {stats.microProjectValidated} validés sur {stats.totalMicroProjects}
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.validatedOfMasc').replace('{validated}', stats.microProjectValidated).replace('{total}', stats.totalMicroProjects)}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -1299,7 +1275,7 @@ function ActivitiesDashboard() {
             <Grid item xs={12} md={6}>
               <Paper style={{ padding: 24 }}>
                 <Typography variant="h6" gutterBottom>
-                  Répartition des Participants par Genre
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.genderBreakdown')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -1321,7 +1297,7 @@ function ActivitiesDashboard() {
             <Grid item xs={12} md={6}>
               <Paper style={{ padding: 24 }}>
                 <Typography variant="h6" gutterBottom>
-                  Statut de Validation par Type d'Activité
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.validationByType')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -1342,7 +1318,7 @@ function ActivitiesDashboard() {
             <Grid item xs={12} md={6}>
               <Paper style={{ padding: 24 }}>
                 <Typography variant="h6" gutterBottom>
-                  Participation des Minorités (Twa) par Activité
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.twaByActivity')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -1361,7 +1337,7 @@ function ActivitiesDashboard() {
                       xaxis: { categories: chartData.minorityParticipation.categories },
                       yaxis: {
                         title: {
-                          text: 'Nombre de participants'
+                          text: formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.participantCount')
                         }
                       },
                       colors: ['#e3f2fd', '#5a8dee'],
@@ -1377,7 +1353,7 @@ function ActivitiesDashboard() {
                       tooltip: {
                         y: {
                           formatter: function (val) {
-                            return val + " participants"
+                            return val + ' ' + formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.participants')
                           }
                         }
                       }
@@ -1393,7 +1369,7 @@ function ActivitiesDashboard() {
             <Grid item xs={12} md={6}>
               <Paper style={{ padding: 24 }}>
                 <Typography variant="h6" gutterBottom>
-                  Évolution Mensuelle des Activités
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.monthlyTrend')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -1434,15 +1410,15 @@ function ActivitiesDashboard() {
               }}
             >
               <TimelineIcon style={{ verticalAlign: 'middle', marginRight: theme.spacing(1), color: theme.palette.primary.main }} />
-              Activités Récentes
+              {formatMessage(intl, MODULE_NAME, 'dashboard.activities.recent.title')}
             </Typography>
-            <Typography 
-              variant="body2" 
-              align="center" 
+            <Typography
+              variant="body2"
+              align="center"
               color="textSecondary"
               style={{ marginBottom: theme.spacing(3) }}
             >
-              Les 10 dernières activités enregistrées par type
+              {formatMessage(intl, MODULE_NAME, 'dashboard.activities.recent.subtitle')}
             </Typography>
           </Box>
 
@@ -1455,26 +1431,26 @@ function ActivitiesDashboard() {
               textColor="primary"
               variant="fullWidth"
             >
-              <Tab 
+              <Tab
                 label={
                   <Badge badgeContent={stats.totalTrainings} color="primary">
-                    Sensibilisation/Formation
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.sensitization')}
                   </Badge>
-                } 
+                }
               />
-              <Tab 
+              <Tab
                 label={
                   <Badge badgeContent={stats.totalBehaviorChanges} color="primary">
-                    Changement de Comportement
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.behaviorChange')}
                   </Badge>
-                } 
+                }
               />
-              <Tab 
+              <Tab
                 label={
                   <Badge badgeContent={stats.totalMicroProjects} color="primary">
-                    Micro-projets
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.activities.card.microProjects')}
                   </Badge>
-                } 
+                }
               />
             </Tabs>
             
@@ -1490,7 +1466,7 @@ function ActivitiesDashboard() {
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >
-                      Affichage des 10 activités les plus récentes sur {data.sensitizationTraining.length} au total
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.recent.showingOf').replace('{total}', data.sensitizationTraining.length)}
                     </Typography>
                   )}
                 </>
@@ -1506,7 +1482,7 @@ function ActivitiesDashboard() {
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >
-                      Affichage des 10 activités les plus récentes sur {data.behaviorChangePromotion.length} au total
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.recent.showingOf').replace('{total}', data.behaviorChangePromotion.length)}
                     </Typography>
                   )}
                 </>
@@ -1522,7 +1498,7 @@ function ActivitiesDashboard() {
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >
-                      Affichage des 10 projets les plus récents sur {data.microProject.length} au total
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.activities.recent.showingProjectsOf').replace('{total}', data.microProject.length)}
                     </Typography>
                   )}
                 </>
@@ -1534,9 +1510,6 @@ function ActivitiesDashboard() {
     </ThemeProvider>
   );
 }
-
-// Add missing import
-import { TextField } from '@material-ui/core';
 
 const mapStateToProps = () => ({});
 const mapDispatchToProps = (dispatch) => bindActionCreators({}, dispatch);

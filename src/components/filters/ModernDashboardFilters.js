@@ -28,10 +28,9 @@ import {
   Slider,
   Grid,
   Tooltip,
-  alpha,
   CircularProgress,
 } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, alpha } from '@material-ui/core/styles';
 import {
   FilterList,
   Close,
@@ -85,8 +84,8 @@ const useStyles = makeStyles((theme) => ({
     zIndex: 1200,
   },
   filterChips: {
-    marginLeft: theme.menu.drawer.width,
-    marginRight: theme.jrnlDrawer.close.width,
+    marginLeft: theme.menu?.drawer?.width || 0,
+    marginRight: theme.jrnlDrawer?.close?.width || 0,
     position: 'fixed',
     top: theme.spacing(1),
     left: theme.spacing(2),

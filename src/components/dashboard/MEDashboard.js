@@ -111,21 +111,22 @@ function MEDashboard({ rights, locations }) {
       if (filters.endDate) params.append('end_date', filters.endDate);
       if (filters.locationId) params.append('location_id', filters.locationId);
 
+      const headers = apiHeaders();
       const [summaryResponse, beneficiaryResponse, refugeeHostResponse, quarterlyResponse, twaResponse] = await Promise.all([
         fetch(`${baseApiUrl}/merankabandi/dashboard/summary/?${params}`, {
-          headers: apiHeaders,
+          headers,
         }),
         fetch(`${baseApiUrl}/merankabandi/dashboard/beneficiary-breakdown/?${params}`, {
-          headers: apiHeaders,
+          headers,
         }),
         fetch(`${baseApiUrl}/merankabandi/dashboard/refugee-host-breakdown/?${params}`, {
-          headers: apiHeaders,
+          headers,
         }),
         fetch(`${baseApiUrl}/merankabandi/dashboard/quarterly-rollup/?year=${filters.year}`, {
-          headers: apiHeaders,
+          headers,
         }),
         fetch(`${baseApiUrl}/merankabandi/dashboard/twa-metrics/?${params}`, {
-          headers: apiHeaders,
+          headers,
         }),
       ]);
 
@@ -162,7 +163,7 @@ function MEDashboard({ rights, locations }) {
       if (filters.locationId) params.append('location_id', filters.locationId);
 
       const response = await fetch(`${baseApiUrl}/merankabandi/export/excel/${reportType}/?${params}`, {
-        headers: apiHeaders,
+        headers: apiHeaders(),
       });
 
       if (response.ok) {
@@ -190,7 +191,7 @@ function MEDashboard({ rights, locations }) {
       const response = await fetch(`${baseApiUrl}/merankabandi/indicators/auto-aggregate/`, {
         method: 'POST',
         headers: {
-          ...apiHeaders,
+          ...apiHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -201,8 +202,7 @@ function MEDashboard({ rights, locations }) {
 
       const data = await response.json();
       if (data.success) {
-        alert(`Auto-aggregation successful: ${data.message}`);
-        fetchDashboardData(); // Refresh data
+        fetchDashboardData();
       } else {
         throw new Error(data.error);
       }
@@ -211,10 +211,10 @@ function MEDashboard({ rights, locations }) {
     }
   };
 
-  // Load data on component mount and filter change
+  // Load data on component mount only — use Actualiser button for manual refresh
   useEffect(() => {
     fetchDashboardData();
-  }, [filters]);
+  }, []);
 
   // Prepare chart data
   const getGenderChartData = () => {
@@ -223,8 +223,8 @@ function MEDashboard({ rights, locations }) {
     const { planned } = dashboardData.beneficiaryBreakdown.gender_summary;
     // Only show gender breakdown (men vs women)
     return [
-      { name: 'Hommes', value: planned.men || 0 },
-      { name: 'Femmes', value: planned.women || 0 },
+      { name: formatMessage('dashboard.me.chart.men'), value: planned.men || 0 },
+      { name: formatMessage('dashboard.me.chart.women'), value: planned.women || 0 },
     ].filter(item => item.value > 0);
   };
 
@@ -236,8 +236,8 @@ function MEDashboard({ rights, locations }) {
     const twaValue = planned.twa || 0;
     
     return [
-      { name: 'Twa', value: twaValue },
-      { name: 'Non-Twa', value: totalNonTwa },
+      { name: formatMessage('dashboard.me.chart.twa'), value: twaValue },
+      { name: formatMessage('dashboard.me.chart.nonTwa'), value: totalNonTwa },
     ].filter(item => item.value > 0);
   };
 
@@ -246,8 +246,8 @@ function MEDashboard({ rights, locations }) {
     
     const { host_community, refugee_community } = dashboardData.refugeeHostBreakdown;
     return [
-      { name: 'Communautés d\'accueil', value: host_community?.planned_beneficiaries || 0 },
-      { name: 'Réfugiés', value: refugee_community?.planned_beneficiaries || 0 },
+      { name: formatMessage('dashboard.me.chart.hostCommunity'), value: host_community?.planned_beneficiaries || 0 },
+      { name: formatMessage('dashboard.me.chart.refugees'), value: refugee_community?.planned_beneficiaries || 0 },
     ].filter(item => item.value > 0);
   };
 
@@ -277,7 +277,7 @@ function MEDashboard({ rights, locations }) {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={2}>
             <TextField
-              label="Date de début"
+              label={formatMessage('dashboard.me.filter.startDate')}
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
@@ -287,7 +287,7 @@ function MEDashboard({ rights, locations }) {
           </Grid>
           <Grid item xs={12} md={2}>
             <TextField
-              label="Date de fin"
+              label={formatMessage('dashboard.me.filter.endDate')}
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
@@ -297,12 +297,12 @@ function MEDashboard({ rights, locations }) {
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Localisation</InputLabel>
+              <InputLabel>{formatMessage('dashboard.me.filter.location')}</InputLabel>
               <Select
                 value={filters.locationId}
                 onChange={(e) => setFilters({ ...filters, locationId: e.target.value })}
               >
-                <MenuItem value="">Toutes</MenuItem>
+                <MenuItem value="">{formatMessage('dashboard.me.filter.location.all')}</MenuItem>
                 {locations?.map((location) => (
                   <MenuItem key={location.id} value={location.id}>
                     {location.name}
@@ -313,38 +313,39 @@ function MEDashboard({ rights, locations }) {
           </Grid>
           <Grid item xs={12} md={2}>
             <TextField
-              label="Année"
+              label={formatMessage('dashboard.me.filter.year')}
               type="number"
               value={filters.year}
-              onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
+              onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) || new Date().getFullYear() })}
               fullWidth
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <Button
-              variant="outlined"
+              variant="contained"
+              color="primary"
               onClick={fetchDashboardData}
               startIcon={<RefreshIcon />}
               className={classes.exportButton}
+              disabled={loading}
             >
-              Actualiser
+              {formatMessage('dashboard.me.action.refresh')}
             </Button>
             <Button
-              variant="contained"
-              color="primary"
+              variant="outlined"
               onClick={() => handleExport('monetary_transfers')}
               startIcon={<ExportIcon />}
               className={classes.exportButton}
             >
-              Export Transferts
+              {formatMessage('dashboard.me.action.exportTransfers')}
             </Button>
             <Button
-              variant="contained"
+              variant="outlined"
               color="secondary"
               onClick={() => handleAutoAggregate('household_registration')}
               className={classes.exportButton}
             >
-              Auto-Agrégation
+              {formatMessage('dashboard.me.action.autoAggregate')}
             </Button>
           </Grid>
         </Grid>
@@ -366,7 +367,7 @@ function MEDashboard({ rights, locations }) {
                   {dashboardData.summary?.overview?.total_planned_beneficiaries?.toLocaleString() || 0}
                 </Typography>
                 <Typography className={classes.statLabel}>
-                  Bénéficiaires Prévus
+                  {formatMessage('dashboard.me.stat.plannedBeneficiaries')}
                 </Typography>
               </CardContent>
             </Card>
@@ -378,7 +379,7 @@ function MEDashboard({ rights, locations }) {
                   {dashboardData.summary?.overview?.female_percentage || 0}%
                 </Typography>
                 <Typography className={classes.statLabel}>
-                  Pourcentage Femmes
+                  {formatMessage('dashboard.me.stat.femalePercentage')}
                 </Typography>
               </CardContent>
             </Card>
@@ -390,7 +391,7 @@ function MEDashboard({ rights, locations }) {
                   {dashboardData.summary?.overview?.twa_inclusion_rate || 0}%
                 </Typography>
                 <Typography className={classes.statLabel}>
-                  Inclusion Twa
+                  {formatMessage('dashboard.me.stat.twaInclusion')}
                 </Typography>
               </CardContent>
             </Card>
@@ -402,7 +403,7 @@ function MEDashboard({ rights, locations }) {
                   {dashboardData.summary?.overview?.host_community_percentage || 0}%
                 </Typography>
                 <Typography className={classes.statLabel}>
-                  Communautés d'Accueil
+                  {formatMessage('dashboard.me.stat.hostCommunity')}
                 </Typography>
               </CardContent>
             </Card>
@@ -413,7 +414,7 @@ function MEDashboard({ rights, locations }) {
             <Card className={classes.card}>
               <CardContent className={classes.cardContent}>
                 <Typography variant="h6" gutterBottom>
-                  Répartition par Genre
+                  {formatMessage('dashboard.me.chart.genderBreakdown')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -445,7 +446,7 @@ function MEDashboard({ rights, locations }) {
             <Card className={classes.card}>
               <CardContent className={classes.cardContent}>
                 <Typography variant="h6" gutterBottom>
-                  Inclusion Minorité Twa
+                  {formatMessage('dashboard.me.chart.twaInclusion')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -477,7 +478,7 @@ function MEDashboard({ rights, locations }) {
             <Card className={classes.card}>
               <CardContent className={classes.cardContent}>
                 <Typography variant="h6" gutterBottom>
-                  Réfugiés vs Communautés d'Accueil
+                  {formatMessage('dashboard.me.chart.refugeeVsHost')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -509,7 +510,7 @@ function MEDashboard({ rights, locations }) {
             <Card className={classes.card}>
               <CardContent className={classes.cardContent}>
                 <Typography variant="h6" gutterBottom>
-                  Tendances Trimestrielles {filters.year}
+                  {formatMessage('dashboard.me.chart.quarterlyTrends', { year: filters.year })}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -519,9 +520,9 @@ function MEDashboard({ rights, locations }) {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="transfers" fill="#FF6B6B" name="Transferts" />
-                      <Bar dataKey="training" fill="#4ECDC4" name="Formations" />
-                      <Bar dataKey="microProjects" fill="#45B7D1" name="Micro-projets" />
+                      <Bar dataKey="transfers" fill="#FF6B6B" name={formatMessage('dashboard.me.chart.transfers')} />
+                      <Bar dataKey="training" fill="#4ECDC4" name={formatMessage('dashboard.me.chart.training')} />
+                      <Bar dataKey="microProjects" fill="#45B7D1" name={formatMessage('dashboard.me.chart.microProjects')} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -533,7 +534,7 @@ function MEDashboard({ rights, locations }) {
           <Grid item xs={12}>
             <Paper style={{ padding: 16 }}>
               <Typography variant="h6" gutterBottom>
-                Exports Excel
+                {formatMessage('dashboard.me.export.title')}
               </Typography>
               <Box>
                 <Button
@@ -542,7 +543,7 @@ function MEDashboard({ rights, locations }) {
                   startIcon={<ExportIcon />}
                   className={classes.exportButton}
                 >
-                  Transferts Monétaires
+                  {formatMessage('dashboard.me.export.monetaryTransfers')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -550,7 +551,7 @@ function MEDashboard({ rights, locations }) {
                   startIcon={<ExportIcon />}
                   className={classes.exportButton}
                 >
-                  Mesures d'Accompagnement
+                  {formatMessage('dashboard.me.export.accompanyingMeasures')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -558,7 +559,7 @@ function MEDashboard({ rights, locations }) {
                   startIcon={<ExportIcon />}
                   className={classes.exportButton}
                 >
-                  Micro-projets
+                  {formatMessage('dashboard.me.export.microProjects')}
                 </Button>
               </Box>
             </Paper>

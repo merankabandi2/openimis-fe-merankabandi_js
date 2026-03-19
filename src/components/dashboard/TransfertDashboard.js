@@ -11,18 +11,24 @@ import {
   IconButton,
   Tooltip,
   Fade,
+  Box,
+  Avatar,
+  Button,
 } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
-import { decodeId } from '@openimis/fe-core';
+import { useIntl } from 'react-intl';
+import { decodeId, formatMessage } from '@openimis/fe-core';
+import { MODULE_NAME } from '../../constants';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import TrendingUpIcon from '@material-ui/icons/TrendingUp';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
-import MapComponent from './MapComponent';
-import BoxCard from './BoxCard';
+import GetAppIcon from '@material-ui/icons/GetApp';
+import AccessibilityIcon from '@material-ui/icons/Accessibility';
+import WcIcon from '@material-ui/icons/Wc';
+import PeopleIcon from '@material-ui/icons/People';
+import ReactApexChart from 'react-apexcharts';
 import MonetaryTransferChart from './MonetaryTransferChart';
-import MonetaryTransferChartBeneficiaires from './MonetaryTransferChartBeneficiaires';
 import BenefitConsumptionByProvinces from './BenefitConsumptionByProvinces';
-import TransfersChart from './TransfersChart';
 import { useMonetaryTransfersDashboard } from '../../hooks/useMonetaryTransfersDashboard';
 import { useOptimizedDashboard } from '../../hooks/useOptimizedDashboard';
 import ModernDashboardFilters from '../filters/ModernDashboardFilters';
@@ -179,10 +185,24 @@ const useStyles = makeStyles((theme) => ({
   refreshButton: {
     color: theme.palette.primary.main,
   },
+  vulnerableGroupCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(2),
+    backgroundColor: '#fff',
+    padding: theme.spacing(2),
+    borderRadius: theme.spacing(1),
+    boxShadow: '0 0 20px rgba(0,0,0,.06)',
+    height: '100%',
+  },
+  exportButton: {
+    marginLeft: theme.spacing(1),
+  },
 }));
 
 // Dashboard component
 function TransfertDashboard() {
+  const intl = useIntl();
   const [filters, setFilters] = useState({
     provinces: [],
     communes: [],
@@ -258,6 +278,25 @@ function TransfertDashboard() {
   };
 
 
+  // Export dashboard data as JSON
+  const handleExport = () => {
+    const exportData = {
+      summary: displayData,
+      genderBreakdown: breakdown?.genderBreakdown,
+      communityBreakdown: summary?.communityBreakdown,
+      transferPerformance: performance?.overallMetrics,
+      exportDate: new Date().toISOString(),
+      filters,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transfers-dashboard-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   // Use optimized data as primary source, fallback to legacy data
   const optimizedMetrics = performance?.overallMetrics || {};
   const summaryData = summary?.summary || {};
@@ -284,17 +323,28 @@ function TransfertDashboard() {
           <div className={classes.pageHeader}>
             <Typography className={classes.pageTitle}>
               <AccountBalanceIcon className={classes.titleIcon} />
-              Tableau de Bord - Transferts
+              {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.title')}
             </Typography>
-            <Tooltip title="Actualiser les données">
-              <IconButton 
-                className={classes.refreshButton}
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
+            <Box display="flex" alignItems="center">
+              <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.export')}>
+                <IconButton
+                  className={classes.exportButton}
+                  onClick={handleExport}
+                  disabled={isLoading}
+                >
+                  <GetAppIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.refresh')}>
+                <IconButton
+                  className={classes.refreshButton}
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </div>
 
           {/* Modern Dashboard Filters */}
@@ -312,40 +362,40 @@ function TransfertDashboard() {
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={3}>
                       <Typography className={classes.summaryTitle}>
-                        Total Bénéficiaires
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.totalBeneficiaries')}
                       </Typography>
                       <Typography className={classes.summaryValue}>
                         {formatNumber(displayData.totalBeneficiaries)}
                       </Typography>
                       <Typography className={classes.summarySubtitle}>
-                        Ménages enregistrés
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.registeredHouseholds')}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <Typography className={classes.summaryTitle}>
-                        Montant Total
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.totalAmount')}
                       </Typography>
                       <Typography className={classes.summaryValue}>
                         {formatCurrency(displayData.totalAmount)}
                       </Typography>
                       <Typography className={classes.summarySubtitle}>
-                        BIF à distribuer
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.toDistribute')}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <Typography className={classes.summaryTitle}>
-                        Montant Distribué
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.distributedAmount')}
                       </Typography>
                       <Typography className={classes.summaryValue}>
                         {formatCurrency(displayData.totalAmountReceived)}
                       </Typography>
                       <Typography className={classes.summarySubtitle}>
-                        BIF déjà payés
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.alreadyPaid')}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <Typography className={classes.summaryTitle}>
-                        Taux de Paiement
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.paymentRate')}
                       </Typography>
                       <Typography className={classes.summaryValue}>
                         {paymentRate}%
@@ -353,7 +403,7 @@ function TransfertDashboard() {
                       <div className={classes.statIndicator}>
                         <TrendingUpIcon fontSize="small" />
                         <Typography variant="caption">
-                          En progression
+                          {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.stat.inProgress')}
                         </Typography>
                       </div>
                     </Grid>
@@ -363,45 +413,126 @@ function TransfertDashboard() {
             </Grid>
           </Fade>
 
+          {/* Vulnerable Groups & Demographics */}
+          {breakdown?.genderBreakdown && (
+            <Grid container spacing={2} style={{ marginTop: 16, marginBottom: 16 }}>
+              <Grid item xs={12} sm={4}>
+                <div className={classes.vulnerableGroupCard}>
+                  <Avatar style={{ backgroundColor: '#ff8f00' }}>
+                    <AccessibilityIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">
+                      {breakdown.genderBreakdown.twaBeneficiaries || 0}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.demo.twaBeneficiaries')}
+                    </Typography>
+                  </Box>
+                </div>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <div className={classes.vulnerableGroupCard}>
+                  <Avatar style={{ backgroundColor: '#e91e63' }}>
+                    <WcIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">
+                      {breakdown.genderBreakdown.femalePercentage
+                        ? `${Math.round(breakdown.genderBreakdown.femalePercentage)}%`
+                        : '0%'}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.demo.femalePercentage')}
+                    </Typography>
+                  </Box>
+                </div>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <div className={classes.vulnerableGroupCard}>
+                  <Avatar style={{ backgroundColor: '#5a8dee' }}>
+                    <PeopleIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">
+                      {breakdown.genderBreakdown.twaPercentage
+                        ? `${Math.round(breakdown.genderBreakdown.twaPercentage)}%`
+                        : '0%'}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.demo.twaInclusionRate')}
+                    </Typography>
+                  </Box>
+                </div>
+              </Grid>
+            </Grid>
+          )}
+
           {/* Charts Section */}
           <Typography className={classes.sectionTitle}>
             <TrendingUpIcon className={classes.sectionIcon} />
-            Analyses Détaillées
+            {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.detailedAnalysis')}
           </Typography>
           <Grid container spacing={3}>
-            {/*  <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <Paper className={classes.box}>
-                <TransfersChart 
-                  filters={filters} 
-                  compact={true} 
-                  optimizedData={performance?.overallMetrics}
-                />
-              </Paper>
-            </Grid> */}
-           <Grid item xs={12} md={6}>
-              <Paper className={classes.box}>
-                <MonetaryTransferChart 
+                <MonetaryTransferChart
                   filters={legacyFilters}
                   monetaryTransferData={monetaryTransferData}
                 />
               </Paper>
             </Grid>
-             {/* <Grid item xs={12} md={6}>
-              <Paper className={classes.box}>
-                <MonetaryTransferChartBeneficiaires 
-                  filters={legacyFilters}
-                  monetaryTransferData={monetaryTransferData}
-                />
-              </Paper>
-            </Grid> */}
             <Grid item xs={12} md={6}>
               <Paper className={classes.box}>
-                <BenefitConsumptionByProvinces 
-                  filters={legacyFilters} 
+                <BenefitConsumptionByProvinces
+                  filters={legacyFilters}
                   optimizedData={breakdown?.locationBreakdown}
                 />
               </Paper>
             </Grid>
+            {breakdown?.genderBreakdown && (
+              <Grid item xs={12} md={6}>
+                <Paper className={classes.box}>
+                  <Typography variant="h6" gutterBottom>
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.genderDistribution')}
+                  </Typography>
+                  <ReactApexChart
+                    options={{
+                      chart: { type: 'donut' },
+                      labels: [
+                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.men'),
+                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.women'),
+                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.twa'),
+                      ],
+                      colors: ['#5a8dee', '#e91e63', '#ff8f00'],
+                      legend: { position: 'bottom' },
+                      plotOptions: {
+                        pie: {
+                          donut: {
+                            size: '65%',
+                            labels: {
+                              show: true,
+                              total: { show: true, showAlways: true, fontSize: '16px', fontWeight: 600 },
+                            },
+                          },
+                        },
+                      },
+                      dataLabels: {
+                        enabled: true,
+                        formatter(val) { return `${val.toFixed(1)}%`; },
+                      },
+                    }}
+                    series={[
+                      breakdown.genderBreakdown.maleBeneficiaries || 0,
+                      breakdown.genderBreakdown.femaleBeneficiaries || 0,
+                      breakdown.genderBreakdown.twaBeneficiaries || 0,
+                    ]}
+                    type="donut"
+                    height={350}
+                  />
+                </Paper>
+              </Grid>
+            )}
           </Grid>
         </Container>
       </div>

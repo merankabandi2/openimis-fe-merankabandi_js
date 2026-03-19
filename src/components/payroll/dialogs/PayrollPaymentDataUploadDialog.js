@@ -59,7 +59,7 @@ function PayrollPaymentDataUploadDialog({
 
     try {
       const response = await fetch(urlImport, {
-        headers: apiHeaders,
+        headers: apiHeaders(),
         body: formData,
         method: 'POST',
         credentials: 'same-origin',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import { useIntl } from 'react-intl';
 import {
   Container,
   Grid,
@@ -17,14 +18,12 @@ import {
   Card,
   CardContent,
   Avatar,
-  Divider,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  Collapse,
   List,
   ListItem,
   ListItemText,
@@ -32,9 +31,14 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
-import { baseApiUrl, apiHeaders } from '@openimis/fe-core';
+import { baseApiUrl, apiHeaders, formatMessage } from '@openimis/fe-core';
+import { MODULE_NAME } from '../../constants';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import AssessmentIcon from '@material-ui/icons/Assessment';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
@@ -299,10 +303,28 @@ const getProgressColor = (progress) => {
   return '#ff5c75';
 };
 
-// Load data from backend
-const loadResultsFrameworkData = async () => {
+// Load data from backend with optional filters
+const loadResultsFrameworkData = async (filters = {}) => {
   const csrfToken = localStorage.getItem('csrfToken');
   const baseHeaders = apiHeaders();
+
+  // Build indicator filter string
+  const indicatorFilters = [];
+  if (filters.sectionId) {
+    indicatorFilters.push(`section_Id: "${filters.sectionId}"`);
+  }
+
+  // Build achievement filter string
+  const achievementFilters = [];
+  if (filters.dateFrom) {
+    achievementFilters.push(`date_Gte: "${filters.dateFrom}"`);
+  }
+  if (filters.dateTo) {
+    achievementFilters.push(`date_Lte: "${filters.dateTo}"`);
+  }
+
+  const indicatorFilterStr = indicatorFilters.length > 0 ? `(${indicatorFilters.join(', ')})` : '';
+  const achievementFilterStr = achievementFilters.length > 0 ? `(${achievementFilters.join(', ')})` : '';
 
   const response = await fetch(`${baseApiUrl}/graphql`, {
     method: 'post',
@@ -318,7 +340,7 @@ const loadResultsFrameworkData = async () => {
               }
             }
           }
-          indicator {
+          indicator${indicatorFilterStr} {
             edges {
               node {
                 id
@@ -334,7 +356,7 @@ const loadResultsFrameworkData = async () => {
               }
             }
           }
-          indicatorAchievement {
+          indicatorAchievement${achievementFilterStr} {
             edges {
               node {
                 id
@@ -362,16 +384,18 @@ const loadResultsFrameworkData = async () => {
 
 // Dashboard component
 function ResultsFrameworkDashboard() {
+  const intl = useIntl();
   const [data, setData] = useState({ sections: [], indicators: [], achievements: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIndicator, setSelectedIndicator] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
+  const [filters, setFilters] = useState({ sectionId: '', dateFrom: '', dateTo: '' });
   const classes = useStyles();
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const result = await loadResultsFrameworkData();
+      const result = await loadResultsFrameworkData(filters);
       
       // Process the data
       const sections = result.section.edges.map(edge => edge.node);
@@ -406,7 +430,7 @@ function ResultsFrameworkDashboard() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filters]);
 
   const handleSectionToggle = (sectionId) => {
     setExpandedSections(prev => ({
@@ -488,7 +512,7 @@ function ResultsFrameworkDashboard() {
         stops: [0, 50, 53, 91]
       },
     },
-    labels: ['Progression Moyenne'],
+    labels: [formatMessage(intl, MODULE_NAME, 'dashboard.results.chart.averageProgressLabel')],
   };
 
   const sectionChartOptions = {
@@ -545,10 +569,10 @@ function ResultsFrameworkDashboard() {
           <div className={classes.pageHeader}>
             <Typography className={classes.pageTitle}>
               <AssessmentIcon className={classes.titleIcon} />
-              Cadre de Résultats
+              {formatMessage(intl, MODULE_NAME, 'dashboard.results.title')}
             </Typography>
-            <Tooltip title="Actualiser les données">
-              <IconButton 
+            <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.results.refresh')}>
+              <IconButton
                 className={classes.refreshButton}
                 onClick={loadData}
                 disabled={isLoading}
@@ -557,6 +581,63 @@ function ResultsFrameworkDashboard() {
               </IconButton>
             </Tooltip>
           </div>
+
+          {/* Filters */}
+          <Paper style={{ padding: 16, marginBottom: 24 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth size="small" variant="outlined">
+                  <InputLabel>{formatMessage(intl, MODULE_NAME, 'dashboard.results.filter.section')}</InputLabel>
+                  <Select
+                    value={filters.sectionId}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, sectionId: e.target.value }))}
+                    label={formatMessage(intl, MODULE_NAME, 'dashboard.results.filter.section')}
+                  >
+                    <MenuItem value="">
+                      {formatMessage(intl, MODULE_NAME, 'dashboard.results.filter.allSections')}
+                    </MenuItem>
+                    {data.sections.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  type="date"
+                  label={formatMessage(intl, MODULE_NAME, 'dashboard.results.filter.dateFrom')}
+                  value={filters.dateFrom}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  type="date"
+                  label={formatMessage(intl, MODULE_NAME, 'dashboard.results.filter.dateTo')}
+                  value={filters.dateTo}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setFilters({ sectionId: '', dateFrom: '', dateTo: '' })}
+                  fullWidth
+                >
+                  {formatMessage(intl, MODULE_NAME, 'merankabandi.filter.clearAll')}
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
 
           {/* Summary Card */}
           <Fade in={!isLoading}>
@@ -567,7 +648,7 @@ function ResultsFrameworkDashboard() {
                     {overallStats.totalIndicators}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Indicateurs Total
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.results.stat.totalIndicators')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -575,7 +656,7 @@ function ResultsFrameworkDashboard() {
                     {overallStats.achievedIndicators}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Objectifs Atteints
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.results.stat.achieved')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -583,7 +664,7 @@ function ResultsFrameworkDashboard() {
                     {overallStats.inProgressIndicators}
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    En Cours
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.results.stat.inProgress')}
                   </Typography>
                 </div>
                 <div className={classes.summaryItem}>
@@ -591,7 +672,7 @@ function ResultsFrameworkDashboard() {
                     {overallStats.averageProgress}%
                   </Typography>
                   <Typography className={classes.summaryLabel}>
-                    Progression Moyenne
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.results.stat.averageProgress')}
                   </Typography>
                 </div>
               </div>
@@ -603,7 +684,7 @@ function ResultsFrameworkDashboard() {
             <Grid item xs={12} md={4}>
               <Paper style={{ padding: 24, height: '100%' }}>
                 <Typography variant="h6" gutterBottom style={{ textAlign: 'center' }}>
-                  Progression Globale
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.chart.overallProgress')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -618,7 +699,7 @@ function ResultsFrameworkDashboard() {
             <Grid item xs={12} md={8}>
               <Paper style={{ padding: 24, height: '100%' }}>
                 <Typography variant="h6" gutterBottom>
-                  Progression par Section
+                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.chart.progressBySection')}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ReactApexChart
@@ -655,7 +736,7 @@ function ResultsFrameworkDashboard() {
                     <Box flex={1}>
                       <Typography variant="h6">{section.name}</Typography>
                       <Typography variant="caption" color="textSecondary">
-                        {sectionIndicators.length} indicateur{sectionIndicators.length > 1 ? 's' : ''}
+                        {sectionIndicators.length} {formatMessage(intl, MODULE_NAME, sectionIndicators.length > 1 ? 'dashboard.results.indicator.indicators' : 'dashboard.results.indicator.indicator')}
                       </Typography>
                     </Box>
                     <Chip
@@ -690,10 +771,10 @@ function ResultsFrameworkDashboard() {
                             <div className={classes.progressContainer}>
                               <div className={classes.progressLabel}>
                                 <Typography className={classes.progressValue}>
-                                  Actuel: {indicator.currentValue.toLocaleString('fr-FR')}
+                                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.indicator.current')}: {indicator.currentValue.toLocaleString('fr-FR')}
                                 </Typography>
                                 <Typography className={classes.progressValue}>
-                                  Cible: {parseFloat(indicator.target).toLocaleString('fr-FR')}
+                                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.indicator.target')}: {parseFloat(indicator.target).toLocaleString('fr-FR')}
                                 </Typography>
                               </div>
                               <LinearProgress
@@ -715,7 +796,7 @@ function ResultsFrameworkDashboard() {
                                   {parseFloat(indicator.baseline).toLocaleString('fr-FR')}
                                 </Typography>
                                 <Typography className={classes.statLabel}>
-                                  Base
+                                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.indicator.base')}
                                 </Typography>
                               </div>
                               <div className={classes.statItem}>
@@ -723,7 +804,7 @@ function ResultsFrameworkDashboard() {
                                   {indicator.progress}%
                                 </Typography>
                                 <Typography className={classes.statLabel}>
-                                  Progrès
+                                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.indicator.progress')}
                                 </Typography>
                               </div>
                               <div className={classes.statItem}>
@@ -731,7 +812,7 @@ function ResultsFrameworkDashboard() {
                                   {indicator.achievements.length}
                                 </Typography>
                                 <Typography className={classes.statLabel}>
-                                  Mesures
+                                  {formatMessage(intl, MODULE_NAME, 'dashboard.results.indicator.measurements')}
                                 </Typography>
                               </div>
                             </div>
@@ -778,7 +859,7 @@ function ResultsFrameworkDashboard() {
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" color="textSecondary">
-                        Valeur de base
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.baseline')}
                       </Typography>
                       <Typography variant="h6">
                         {parseFloat(selectedIndicator.baseline).toLocaleString('fr-FR')}
@@ -786,7 +867,7 @@ function ResultsFrameworkDashboard() {
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" color="textSecondary">
-                        Valeur cible
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.target')}
                       </Typography>
                       <Typography variant="h6">
                         {parseFloat(selectedIndicator.target).toLocaleString('fr-FR')}
@@ -794,7 +875,7 @@ function ResultsFrameworkDashboard() {
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" color="textSecondary">
-                        Valeur actuelle
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.current')}
                       </Typography>
                       <Typography variant="h6">
                         {selectedIndicator.currentValue.toLocaleString('fr-FR')}
@@ -802,7 +883,7 @@ function ResultsFrameworkDashboard() {
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" color="textSecondary">
-                        Progression
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.progress')}
                       </Typography>
                       <Typography variant="h6">
                         {selectedIndicator.progress}%
@@ -811,7 +892,7 @@ function ResultsFrameworkDashboard() {
                     {selectedIndicator.observation && (
                       <Grid item xs={12}>
                         <Typography variant="subtitle2" color="textSecondary">
-                          Observation
+                          {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.observation')}
                         </Typography>
                         <Typography variant="body1">
                           {selectedIndicator.observation}
@@ -820,14 +901,14 @@ function ResultsFrameworkDashboard() {
                     )}
                     <Grid item xs={12}>
                       <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                        Historique des mesures
+                        {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.history')}
                       </Typography>
                       <List>
                         {selectedIndicator.achievements.length === 0 ? (
                           <ListItem>
                             <ListItemText 
-                              primary="Aucune mesure enregistrée"
-                              secondary="La valeur actuelle correspond à la valeur de base"
+                              primary={formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.noMeasurements')}
+                              secondary={formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.noMeasurementsHint')}
                             />
                           </ListItem>
                         ) : (
@@ -851,7 +932,7 @@ function ResultsFrameworkDashboard() {
                 </DialogContent>
                 <DialogActions>
                   <Button onClick={() => setSelectedIndicator(null)} color="primary">
-                    Fermer
+                    {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.close')}
                   </Button>
                 </DialogActions>
               </>
