@@ -334,6 +334,7 @@ function MicroProjectSearcher({
         defaultPageSize={DEFAULT_PAGE_SIZE}
         rowIdentifier={rowIdentifier}
         onDoubleClick={onDoubleClick}
+        FilterPane={microProjectFilter}
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadIndicators}

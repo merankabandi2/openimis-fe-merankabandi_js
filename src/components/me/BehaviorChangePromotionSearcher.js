@@ -265,6 +265,7 @@ function BehaviorChangePromotionSearcher({
         defaultPageSize={DEFAULT_PAGE_SIZE}
         rowIdentifier={rowIdentifier}
         onDoubleClick={onDoubleClick}
+        FilterPane={behaviorChangePromotionFilter}
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadBehaviorChangePromotions}
@@ -276,7 +277,7 @@ function BehaviorChangePromotionSearcher({
         <ValidationDialog
           open={validationDialogOpen}
           onClose={handleCloseValidationDialog}
-          onValidationComplete={handleValidationComplete}
+          onValidated={handleValidationComplete}
           type="behavior_change"
           data={selectedPromotion}
           detailFields={[

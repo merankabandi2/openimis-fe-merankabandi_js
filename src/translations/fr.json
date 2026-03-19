@@ -1216,6 +1216,8 @@
   "behaviorChangePromotion.mutation.createLabel": "Créer une promotion du changement de comportement {label}",
   "behaviorChangePromotion.mutation.updateLabel": "Mettre à jour la promotion du changement de comportement {label}",
   "BehaviorChangePromotionSearcher.results": "{totalCount} Promotions du changement de comportement",
+  "socialProtection.sensitizationTraining.category": "Catégorie",
+  "socialProtection.sensitizationTraining.facilitator": "Facilitateur",
   "sensitizationTraining.sensitization_date": "Date",
   "sensitizationTraining.delete.confirm.title": "Supprimer la sensibilisation/formation {label}",
   "sensitizationTraining.delete.confirm.message": "Êtes-vous sûr de vouloir supprimer cette sensibilisation/formation ?",

@@ -287,6 +287,7 @@ function SensitizationTrainingSearcher({
         defaultPageSize={DEFAULT_PAGE_SIZE}
         rowIdentifier={rowIdentifier}
         onDoubleClick={onDoubleClick}
+        FilterPane={sensitizationTrainingFilter}
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadSensitizationTrainings}
@@ -298,7 +299,7 @@ function SensitizationTrainingSearcher({
         <ValidationDialog
           open={validationDialogOpen}
           onClose={handleCloseValidationDialog}
-          onValidationComplete={handleValidationComplete}
+          onValidated={handleValidationComplete}
           type="sensitization"
           data={selectedTraining}
           detailFields={[
