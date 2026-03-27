@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import React from 'react';
-import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline } from '@material-ui/icons';
+import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, MonetizationOn } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
@@ -27,6 +27,7 @@ import {
   BenefitPlanProvincesTabPanel,
 } from './components/social-protection/BenefitPlanProvincesTab';
 import BurundiLocationHierarchyPanel from './components/social-protection/BurundiLocationHierarchyPanel';
+import BurundiLocationFilter from './components/BurundiLocationFilter';
 import WizardLaunchButton from './components/social-protection/WizardLaunchButton';
 import MerankabaniBenefitPlanSearcher from './components/social-protection/MerankabaniBenefitPlanSearcher';
 
@@ -116,6 +117,33 @@ import KoboETLAdminPage from './pages/KoboETLAdminPage';
 import BeneficiarySelectionWizardPage from './pages/BeneficiarySelectionWizardPage';
 import PmtFormulasPage from './pages/PmtFormulasPage';
 import PmtFormulaPage from './pages/PmtFormulaPage';
+import MerankabandiPayrollPage from './pages/MerankabandiPayrollPage';
+import ApprovedPayrollsPage from './pages/ApprovedPayrollsPage';
+import PendingPayrollsPage from './pages/PendingPayrollsPage';
+import ReconciledPayrollsPage from './pages/ReconciledPayrollsPage';
+
+// Payroll tab panel contributions
+import {
+  BenefitConsumptionsTabLabel,
+  BenefitConsumptionsTabPanel,
+} from './components/payroll/BenefitConsumptionTabPanel';
+import {
+  PayrollPaymentFilesTabLabel,
+  PayrollPaymentFilesTabPanel,
+} from './components/payroll/PayrollPaymentFilesTab';
+import {
+  PayrollTaskTabLabel,
+  PayrollTaskTabPanel,
+} from './components/payroll/PayrollTaskTabPanel';
+
+// Payroll benefit consumption searcher (for individual/group detail pages)
+import BenefitConsumptionPayrollSearcher from './components/payroll/BenefitConsumptionPayrollSearcher';
+
+// Payroll verification task (Burundi-specific task source)
+import {
+  PayrollVerificationTaskTableHeaders,
+  PayrollVerificationTaskItemFormatters,
+} from './components/payroll/PayrollVerificationTask';
 
 // Constants
 import {
@@ -144,6 +172,11 @@ import {
   ROUTE_PMT_FORMULAS,
   ROUTE_PMT_FORMULA,
 } from './constants';
+
+// Route constants for status-filtered payroll pages
+const ROUTE_PAYROLLS_APPROVED = 'payrollsApproved';
+const ROUTE_PAYROLLS_PENDING = 'payrollsPending';
+const ROUTE_PAYROLLS_RECONCILED = 'payrollsReconciled';
 
 // Reducer
 import reducer from './reducer';
@@ -193,6 +226,18 @@ const DEFAULT_CONFIG = {
     PaymentRequestRejectedTabPanel,
   ],
 
+  // Payroll detail page tab panels (benefit consumptions, tasks, payment files)
+  'payroll.TabPanel.label': [BenefitConsumptionsTabLabel, PayrollTaskTabLabel, PayrollPaymentFilesTabLabel],
+  'payroll.TabPanel.panel': [BenefitConsumptionsTabPanel, PayrollTaskTabPanel, PayrollPaymentFilesTabPanel],
+
+  // Payroll verification task (Burundi-specific: verification step before approval)
+  'tasksManagement.tasks': [{
+    text: <FormattedMessage module="payroll" id="payroll.tasks.verify.title" />,
+    tableHeaders: PayrollVerificationTaskTableHeaders,
+    itemFormatters: PayrollVerificationTaskItemFormatters,
+    taskSource: ['payroll_verification'],
+  }],
+
   // M&E Activity tab panels (Activities page)
   'meIndicators.TabPanel.label': [
     MicroProjectTabLabel,
@@ -241,6 +286,9 @@ const DEFAULT_CONFIG = {
     { path: `${ROUTE_BENEFICIARY_SELECTION_WIZARD}/:benefit_plan_uuid?`, component: BeneficiarySelectionWizardPage },
     { path: ROUTE_PMT_FORMULAS, component: PmtFormulasPage },
     { path: `${ROUTE_PMT_FORMULA}/:formula_id?`, component: PmtFormulaPage },
+    { path: ROUTE_PAYROLLS_APPROVED, component: ApprovedPayrollsPage },
+    { path: ROUTE_PAYROLLS_PENDING, component: PendingPayrollsPage },
+    { path: ROUTE_PAYROLLS_RECONCILED, component: ReconciledPayrollsPage },
   ],
 
 
@@ -260,6 +308,27 @@ const DEFAULT_CONFIG = {
       route: `/${ROUTE_PAYMENT_NEW_PAYMENT}`,
       filter: (rights) => rights.includes(RIGHT_PAYROLL_CREATE),
       id: 'mainMenuPayment.paymentrequest.add',
+    },
+    {
+      text: <FormattedMessage module="payroll" id="payroll.route.payrollsPending" />,
+      icon: <MonetizationOn />,
+      route: `/${ROUTE_PAYROLLS_PENDING}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'legalAndFinance.payrollsPending',
+    },
+    {
+      text: <FormattedMessage module="payroll" id="payroll.route.payrollsApproved" />,
+      icon: <MonetizationOn />,
+      route: `/${ROUTE_PAYROLLS_APPROVED}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'legalAndFinance.payrollsApproved',
+    },
+    {
+      text: <FormattedMessage module="payroll" id="payroll.route.payrollsReconciled" />,
+      icon: <MonetizationOn />,
+      route: `/${ROUTE_PAYROLLS_RECONCILED}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'legalAndFinance.payrollsReconciled',
     },
   ],
 
@@ -341,10 +410,19 @@ const DEFAULT_CONFIG = {
 
     // Location hierarchy override: Burundi uses 3 levels (Province/Commune/Colline)
     { key: 'location.Location.MaxLevels', ref: '3' },
+    { key: 'location.DetailedLocationFilter', ref: BurundiLocationFilter },
     { key: 'merankabandi.BurundiLocationHierarchyPanel', ref: BurundiLocationHierarchyPanel },
 
     // BenefitPlanSearcher override (adds wizard launch icon per row)
     { key: 'socialProtection.BenefitPlanSearcher', ref: MerankabaniBenefitPlanSearcher },
+
+    // PayrollPage override (Burundi-specific: location-based, auto-generated name, task workflow)
+    { key: 'payroll.PayrollPage', ref: MerankabandiPayrollPage },
+
+    // Status-filtered payroll page route refs
+    { key: 'payroll.route.payrollsApproved', ref: ROUTE_PAYROLLS_APPROVED },
+    { key: 'payroll.route.payrollsPending', ref: ROUTE_PAYROLLS_PENDING },
+    { key: 'payroll.route.payrollsReconciled', ref: ROUTE_PAYROLLS_RECONCILED },
 
     // Payroll searcher override (adds paymentRequestStatus filtering, status formatting)
     { key: 'payroll.benefitConsumptionPayrollSearcher', ref: MerankabandiPayrollSearcher },
@@ -387,6 +465,14 @@ const DEFAULT_CONFIG = {
     { key: 'merankabandi.BeneficiaryPhotoPanel', ref: BeneficiaryPhotoPanel },
     { key: 'merankabandi.MerankabandiPayrollSearcher', ref: MerankabandiPayrollSearcher },
     { key: 'merankabandi.route.selectionWizard', ref: ROUTE_BENEFICIARY_SELECTION_WIZARD },
+    { key: 'merankabandi.route.indicator', ref: ROUTE_RESULTS_FRAMEWORK_INDICATOR },
+    { key: 'merankabandi.route.indicators', ref: ROUTE_RESULTS_FRAMEWORK_INDICATORS_LIST },
+    { key: 'merankabandi.route.section', ref: ROUTE_RESULTS_FRAMEWORK_SECTION },
+    { key: 'merankabandi.route.sections', ref: ROUTE_RESULTS_FRAMEWORK_SECTIONS_LIST },
+    { key: 'merankabandi.route.monetaryTransfer', ref: ROUTE_ME_MONETARY_TRANSFER },
+    { key: 'merankabandi.route.sensitizationTraining', ref: ROUTE_ME_INDICATORS },
+    { key: 'merankabandi.route.microProject', ref: ROUTE_ME_INDICATORS },
+    { key: 'merankabandi.route.behaviorChangePromotion', ref: ROUTE_ME_INDICATORS },
   ],
 };
 

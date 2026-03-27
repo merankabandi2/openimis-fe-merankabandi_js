@@ -19,25 +19,32 @@ export const GROUP_HEAD_PANEL_CONTRIBUTION_KEY = 'group.Group.headPanel';
 // Payroll / Payment Request
 export const PAYROLL_MODULE_NAME = 'payroll';
 export const ROUTE_PAYMENT_REQUEST = 'paymentrequest';
-export const ROUTE_PAYMENT_NEW_PAYMENT = 'payroll/payroll';
+export const ROUTE_PAYMENT_NEW_PAYMENT = 'payrolls/payroll';
 export const PAYROLL_PAYROLL_ROUTE = 'payroll.route.payroll';
 export const ALL_PAYMENT_REQUEST_LIST_TAB_VALUE = 'paymentRequestTab-ALL';
 export const PAYMENTREQUEST_TABS_LABEL_CONTRIBUTION_KEY = 'paymentRequest.TabPanel.label';
 export const PAYMENTREQUEST_TABS_PANEL_CONTRIBUTION_KEY = 'paymentRequest.TabPanel.panel';
 export const PAYMENT_MAIN_MENU_CONTRIBUTION_KEY = 'payment.MainMenu';
+export const BENEFIT_CONSUMPTION_LIST_TAB_VALUE = 'payrollTab-BenefitConsumptions';
+export const PAYROLL_TABS_LABEL_CONTRIBUTION_KEY = 'payroll.TabPanel.label';
+export const PAYROLL_TABS_PANEL_CONTRIBUTION_KEY = 'payroll.TabPanel.panel';
 
 export const RIGHT_PAYROLL_SEARCH = 202001;
 export const RIGHT_PAYROLL_CREATE = 202002;
 
 export const EMPTY_STRING = '';
 
+export const PAYROLL_FROM_FAILED_INVOICES_URL_PARAM = 'createPayrollFromFailedInvoices';
+
 export const PAYROLL_STATUS = {
   PENDING_VERIFICATION: 'PENDING_VERIFICATION',
+  GENERATING: 'GENERATING',
   PENDING_APPROVAL: 'PENDING_APPROVAL',
   APPROVE_FOR_PAYMENT: 'APPROVE_FOR_PAYMENT',
   REJECTED: 'REJECTED',
   RECONCILIATED: 'RECONCILIATED',
   RECONCILED: 'RECONCILED',
+  FAILED: 'FAILED',
 };
 
 export const PAYROLL_STATUS_LIST = [
@@ -51,6 +58,35 @@ export const PAYROLL_STATUS_LIST = [
 
 export const APPROVED = 'APPROVED';
 
+export const PAYROLL_TASK_TAB_VALUE = 'payrollTaskTab';
+export const PAYROLL_PAYMENT_FILES_TAB_VALUE = 'payrollPaymentFilesTab';
+
+export const BENEFIT_CONSUMPTION_STATUS = {
+  ACCEPTED: 'ACCEPTED',
+  CREATED: 'CREATED',
+  APPROVE_FOR_PAYMENT: 'APPROVE_FOR_PAYMENT',
+  REJECTED: 'REJECTED',
+  DUPLICATE: 'DUPLICATE',
+  RECONCILED: 'RECONCILED',
+};
+
+export const BENEFIT_CONSUMPTION_STATUS_LIST = [
+  'ACCEPTED', 'CREATED', 'APPROVE_FOR_PAYMENT', 'REJECTED', 'DUPLICATE', 'RECONCILED',
+];
+
+export const PAYROLL_PAYMENT_FILE_STATUS = {
+  TRIGGERED: 'TRIGGERED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  SUCCESS: 'SUCCESS',
+  PARTIAL_SUCCESS: 'PARTIAL_SUCCESS',
+  WAITING_FOR_VERIFICATION: 'WAITING_FOR_VERIFICATION',
+  FAIL: 'FAIL',
+};
+
+export const PAYROLL_PAYMENT_FILE_STATUS_LIST = [
+  'TRIGGERED', 'IN_PROGRESS', 'SUCCESS', 'WAITING_FOR_VERIFICATION', 'FAIL',
+];
+
 export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
 export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_DEBOUNCE_TIME = 500;
@@ -58,6 +94,15 @@ export const CONTAINS_LOOKUP = 'Icontains';
 export const CLEARED_STATE_FILTER = {
   field: '', filter: '', type: '', value: '',
 };
+export const BENEFIT_PLAN = 'BenefitPlan';
+export const INTEGER = 'integer';
+export const STRING = 'string';
+export const BOOLEAN = 'boolean';
+export const DATE = 'date';
+export const BOOL_OPTIONS = [
+  { value: 'True', label: 'True' },
+  { value: 'False', label: 'False' },
+];
 
 export const BENEFIT_PLAN_TYPE = {
   INDIVIDUAL: 'INDIVIDUAL',

@@ -1,10 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
-
-import { IconButton, Tooltip } from '@material-ui/core';
-import VisibilityIcon from '@material-ui/icons/Visibility';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 import {
   Searcher,
@@ -15,20 +11,15 @@ import {
   clearConfirm,
   journalize,
 } from '@openimis/fe-core';
-import { fetchPayrolls, deletePayrolls } from '../../payroll-actions';
 import PayrollFilter from './PayrollFilter';
-import { mutationLabel, pageTitle } from '../../utils/string-utils';
 import {
-  DEFAULT_PAGE_SIZE,
-  PAYROLL_MODULE_NAME,
-  PAYROLL_PAYROLL_ROUTE,
-  RIGHT_PAYROLL_SEARCH,
-  ROWS_PER_PAGE_OPTIONS,
-  PAYROLL_STATUS,
+  DEFAULT_PAGE_SIZE, PAYROLL_MODULE_NAME, PAYROLL_PAYROLL_ROUTE, RIGHT_PAYROLL_SEARCH, ROWS_PER_PAGE_OPTIONS, PAYROLL_STATUS,
 } from '../../constants';
+import { fetchPayrolls } from '../../payroll-actions';
+import PaymentReconciliationSummaryDialog from './dialogs/PaymentReconciliationSummaryDialog';
+import PayrollReconciliationFilesDialog from './dialogs/PayrollReconciliationFilesDialog';
 
-function MerankabandiPayrollSearcher({
-  deletePayrolls,
+function PayrollSearcherReconciled({
   fetchingPayrolls,
   fetchedPayrolls,
   errorPayrolls,
@@ -36,44 +27,16 @@ function MerankabandiPayrollSearcher({
   pageInfo,
   totalCount,
   fetchPayrolls,
-  coreConfirm,
-  clearConfirm,
-  confirmed,
   submittingMutation,
   mutation,
-  paymentRequestStatus,
+  classes,
 }) {
   const history = useHistory();
   const modulesManager = useModulesManager();
-  const { formatMessage, formatMessageWithValues } = useTranslations(PAYROLL_MODULE_NAME, modulesManager);
+  const { formatMessageWithValues } = useTranslations(PAYROLL_MODULE_NAME, modulesManager);
   const rights = useSelector((store) => store.core.user.i_user.rights ?? []);
 
-  const [payrollToDelete, setPayrollToDelete] = useState(null);
-  const [deletedPayrollUuids, setDeletedPayrollUuids] = useState([]);
   const prevSubmittingMutationRef = useRef();
-
-  const openDeletePayrollConfirmDialog = () => {
-    coreConfirm(
-      formatMessageWithValues('payroll.delete.confirm.title', pageTitle(payrollToDelete)),
-      formatMessage('payroll.delete.confirm.message'),
-    );
-  };
-
-  useEffect(() => payrollToDelete && openDeletePayrollConfirmDialog(), [payrollToDelete]);
-
-  useEffect(() => {
-    if (payrollToDelete && confirmed) {
-      deletePayrolls(
-        payrollToDelete,
-        formatMessageWithValues('payroll.mutation.deleteLabel', mutationLabel(payrollToDelete)),
-      );
-      setDeletedPayrollUuids([...deletedPayrollUuids, payrollToDelete.id]);
-    }
-    if (payrollToDelete && confirmed !== null) {
-      setPayrollToDelete(null);
-    }
-    return () => confirmed && clearConfirm(false);
-  }, [confirmed]);
 
   useEffect(() => {
     if (prevSubmittingMutationRef.current && !submittingMutation) {
@@ -87,39 +50,31 @@ function MerankabandiPayrollSearcher({
 
   const headers = () => [
     'payroll.name',
-    'payroll.benefitPlan',
+    'payroll.paymentPlan',
     'payroll.paymentPoint',
     'payroll.status',
     'payroll.paymentMethod',
-    'emptyLabel',
     'emptyLabel',
   ];
 
   const sorts = () => [
     ['name', true],
-    ['benefitPlan', true],
+    ['paymentPlan', true],
     ['paymentPoint', true],
     ['status', true],
     ['paymentMethod', true],
   ];
 
-  const defaultFilters = () => {
-    const filters = {
-      isDeleted: {
-        value: false,
-        filter:
-        'isDeleted: false',
-      },
-    };
-    if (paymentRequestStatus) {
-      filters.status = {
-        value: true,
-        filter:
-        `status: ${paymentRequestStatus}`,
-      };
-    }
-    return filters;
-  };
+  const defaultFilters = () => ({
+    isDeleted: {
+      value: false,
+      filter: 'isDeleted: false',
+    },
+    status: {
+      value: PAYROLL_STATUS.RECONCILED,
+      filter: `status: ${PAYROLL_STATUS.RECONCILED}`,
+    },
+  });
 
   const fetch = (params) => fetchPayrolls(modulesManager, params);
 
@@ -129,8 +84,6 @@ function MerankabandiPayrollSearcher({
     `/${modulesManager.getRef(PAYROLL_PAYROLL_ROUTE)}/${payroll?.id}`,
   );
 
-  const onDelete = (payroll) => setPayrollToDelete(payroll);
-
   const itemFormatters = () => [
     (payroll) => payroll.name,
     (payroll) => (payroll.benefitPlan
@@ -138,36 +91,28 @@ function MerankabandiPayrollSearcher({
     (payroll) => (payroll.paymentPoint
       ? `${payroll.paymentPoint.name}` : ''),
     (payroll) => (payroll.status
-      ? formatMessage(`payroll.payroll.payrollStatusPicker.${payroll.status}`) : ''),
-    (payroll) => payroll.paymentMethod || '',
+      ? `${payroll.status}` : ''),
+    (payroll) => (payroll.paymentMethod
+      ? `${payroll.paymentMethod}` : ''),
     (payroll) => (
-      <Tooltip title={formatMessage('tooltip.viewDetails')}>
-        <IconButton
-          onClick={() => openPayroll(payroll)}
-        >
-          <VisibilityIcon />
-        </IconButton>
-      </Tooltip>
+      <PayrollReconciliationFilesDialog
+        classes={classes}
+        payroll={payroll}
+      />
     ),
     (payroll) => (
-      <Tooltip title={formatMessage('tooltip.delete')}>
-        <IconButton
-          onClick={() => onDelete(payroll)}
-          disabled={deletedPayrollUuids.includes(payroll.id) || payroll.status !== PAYROLL_STATUS.PENDING_APPROVAL}
-        >
-          <DeleteIcon />
-        </IconButton>
-      </Tooltip>
+      <PaymentReconciliationSummaryDialog
+        classes={classes}
+        payrollDetail={payroll}
+      />
     ),
   ];
 
   const onDoubleClick = (payroll) => openPayroll(payroll);
 
   const payrollFilter = ({ filters, onChangeFilters }) => (
-    <PayrollFilter filters={filters} onChangeFilters={onChangeFilters} />
+    <PayrollFilter filters={filters} onChangeFilters={onChangeFilters} statusReadOnly />
   );
-
-  const isRowDisabled = (_, payroll) => deletedPayrollUuids.includes(payroll.id);
 
   return (
     <Searcher
@@ -188,8 +133,6 @@ function MerankabandiPayrollSearcher({
       rowIdentifier={rowIdentifier}
       onDoubleClick={onDoubleClick}
       defaultFilters={defaultFilters()}
-      rowDisabled={isRowDisabled}
-      rowLocked={isRowDisabled}
     />
   );
 }
@@ -208,10 +151,9 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchPayrolls,
-  deletePayrolls,
   journalize,
   clearConfirm,
   coreConfirm,
 }, dispatch);
 
-export default connect(mapStateToProps, mapDispatchToProps)(MerankabandiPayrollSearcher);
+export default connect(mapStateToProps, mapDispatchToProps)(PayrollSearcherReconciled);

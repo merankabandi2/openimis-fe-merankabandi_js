@@ -1625,6 +1625,7 @@
   "merankabandi.dashboard.me.export.monetaryTransfers": "Transferts Monétaires",
   "merankabandi.dashboard.me.export.accompanyingMeasures": "Mesures d'Accompagnement",
   "merankabandi.dashboard.me.export.microProjects": "Micro-projets",
+  "merankabandi.dashboard.me.export.subcomponents": "Rapport par sous-composante",
 
   "merankabandi.dashboard.activities.title": "Tableau de Bord des Activités",
   "merankabandi.dashboard.activities.refresh": "Actualiser les données",
@@ -1717,5 +1718,9 @@
   "merankabandi.dashboard.results.filter.section": "Section",
   "merankabandi.dashboard.results.filter.allSections": "Toutes les sections",
   "merankabandi.dashboard.results.filter.dateFrom": "Date début",
-  "merankabandi.dashboard.results.filter.dateTo": "Date fin"
+  "merankabandi.dashboard.results.filter.dateTo": "Date fin",
+  "payroll.route.payrollsApproved": "Paiements Approuvés",
+  "payroll.route.payrollsPending": "Paiements en Attente",
+  "payroll.route.payrollsReconciled": "Paiements Réconciliés",
+  "merankabandi.payroll.commune_not_reconciled": "Cette commune a un payroll actif avec des bénéfices non réconciliés. Veuillez le réconcilier entièrement avant d'en créer un nouveau."
 }

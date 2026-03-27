@@ -89,6 +89,9 @@
   "payroll.paymentDate": "Payment Date",
   "payroll.generationSuccess": "Payroll generation started successfully",
   "payroll.generationError": "Payroll generation error",
+  "payroll.route.payrollsApproved": "Approved Payrolls",
+  "payroll.route.payrollsPending": "Pending Payrolls",
+  "payroll.route.payrollsReconciled": "Reconciled Payrolls",
 
   "location.details": "Location Details",
   "location.beneficiaries": "Active Beneficiaries",
@@ -578,6 +581,7 @@
   "merankabandi.dashboard.me.export.monetaryTransfers": "Monetary Transfers",
   "merankabandi.dashboard.me.export.accompanyingMeasures": "Accompanying Measures",
   "merankabandi.dashboard.me.export.microProjects": "Micro-projects",
+  "merankabandi.dashboard.me.export.subcomponents": "Sub-component Report",
 
   "merankabandi.dashboard.activities.title": "Activities Dashboard",
   "merankabandi.dashboard.activities.refresh": "Refresh data",
@@ -670,5 +674,6 @@
   "merankabandi.dashboard.results.filter.section": "Section",
   "merankabandi.dashboard.results.filter.allSections": "All sections",
   "merankabandi.dashboard.results.filter.dateFrom": "Start date",
-  "merankabandi.dashboard.results.filter.dateTo": "End date"
+  "merankabandi.dashboard.results.filter.dateTo": "End date",
+  "merankabandi.payroll.commune_not_reconciled": "This commune has an active payroll with unreconciled benefits. Fully reconcile it before creating a new one."
 }

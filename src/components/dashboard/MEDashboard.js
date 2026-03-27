@@ -561,6 +561,15 @@ function MEDashboard({ rights, locations }) {
                 >
                   {formatMessage('dashboard.me.export.microProjects')}
                 </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleExport('subcomponents')}
+                  startIcon={<ExportIcon />}
+                  className={classes.exportButton}
+                  color="primary"
+                >
+                  {formatMessage('dashboard.me.export.subcomponents')}
+                </Button>
               </Box>
             </Paper>
           </Grid>
