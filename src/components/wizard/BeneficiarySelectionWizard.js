@@ -4,7 +4,6 @@ import {
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 import { injectIntl } from 'react-intl';
 import {
   withModulesManager, formatMessage, PublishedComponent,
@@ -12,7 +11,7 @@ import {
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import AssessmentIcon from '@material-ui/icons/Assessment';
 import {
-  importSurveyData, triggerPmtCalculation, promoteToBeneficiary,
+  importSurveyData, triggerPmtCalculation,
 } from '../../wizard-actions';
 import { MODULE_NAME } from '../../constants';
 import WizardBeneficiaryList from './WizardBeneficiaryList';
@@ -75,16 +74,22 @@ function BeneficiarySelectionWizard({
   const handleNext = () => setActiveStep((prev) => prev + 1);
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
-  const handleImportSurvey = () => {
+  const handleImportSurvey = async () => {
     setSubmitting(true);
-    dispatch(importSurveyData(benefitPlan.id, '/data/survey.csv'));
-    setSubmitting(false);
+    try {
+      await dispatch(importSurveyData(benefitPlan.id, '/data/survey.csv'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCalculatePMT = () => {
+  const handleCalculatePMT = async () => {
     setSubmitting(true);
-    dispatch(triggerPmtCalculation(benefitPlan.id));
-    setSubmitting(false);
+    try {
+      await dispatch(triggerPmtCalculation(benefitPlan.id));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const currentStepKey = steps[activeStep]?.key;
@@ -259,7 +264,6 @@ function BeneficiarySelectionWizard({
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch,
-  ...bindActionCreators({ importSurveyData, triggerPmtCalculation, promoteToBeneficiary }, dispatch),
 });
 
 export default withModulesManager(
