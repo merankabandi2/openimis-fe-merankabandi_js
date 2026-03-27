@@ -256,7 +256,7 @@ function MonetaryTransferUploadDialog({
                         </Typography>
                         {uploadResult.invalid_items.map((item, index) => (
                           <Alert severity="error" key={index} style={{ marginTop: 4 }}>
-                            Row {item.row}: {item.error}
+                            Row {String(item.row)}: {String(item.error)}
                           </Alert>
                         ))}
                       </div>

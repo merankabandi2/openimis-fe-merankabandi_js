@@ -60,8 +60,10 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { useIntl } from 'react-intl';
 import { useOptimizedDashboard, useDashboardSystem } from '../../hooks/useOptimizedDashboard';
-import { useTranslations, formatMessage } from '@openimis/fe-core';
+import { formatMessage } from '@openimis/fe-core';
+import { MODULE_NAME } from '../../constants';
 
 // Color schemes for charts
 const COLORS = {
@@ -83,10 +85,10 @@ const REFRESH_INTERVALS = {
 /**
  * Performance indicator component
  */
-const PerformanceIndicator = ({ isLoading, isStale, lastRefresh, onRefresh, isRefreshing }) => {
+const PerformanceIndicator = ({ isLoading, isStale, lastRefresh, onRefresh, isRefreshing, intl }) => {
   const getStatus = () => {
-    if (isLoading) return { color: 'info', icon: <CircularProgress size={16} />, text: 'Loading...' };
-    if (isRefreshing) return { color: 'warning', icon: <CircularProgress size={16} />, text: 'Refreshing...' };
+    if (isLoading) return { color: 'info', icon: <CircularProgress size={16} />, text: formatMessage(intl, MODULE_NAME, 'dashboard.loading') };
+    if (isRefreshing) return { color: 'warning', icon: <CircularProgress size={16} />, text: formatMessage(intl, MODULE_NAME, 'dashboard.refreshing') };
     if (isStale) return { color: 'warning', icon: <WarningIcon />, text: 'Data may be stale' };
     return { color: 'success', icon: <CheckCircleIcon />, text: 'Data is fresh' };
   };
@@ -168,7 +170,7 @@ const SummaryCard = ({ title, value, subtitle, icon, color = 'primary', trend = 
 /**
  * Gender breakdown pie chart
  */
-const GenderBreakdownChart = ({ data }) => {
+const GenderBreakdownChart = ({ data, intl }) => {
   if (!data) return null;
 
   const chartData = [
@@ -181,7 +183,7 @@ const GenderBreakdownChart = ({ data }) => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Gender Distribution
+          {formatMessage(intl, MODULE_NAME, 'dashboard.genderDistribution')}
         </Typography>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -218,7 +220,7 @@ const GenderBreakdownChart = ({ data }) => {
 /**
  * Community breakdown chart
  */
-const CommunityBreakdownChart = ({ data }) => {
+const CommunityBreakdownChart = ({ data, intl }) => {
   if (!data) return null;
 
   const chartData = data.map((item, index) => ({
@@ -230,7 +232,7 @@ const CommunityBreakdownChart = ({ data }) => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Community Type Distribution
+          {formatMessage(intl, MODULE_NAME, 'dashboard.communityDistribution')}
         </Typography>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
@@ -390,6 +392,7 @@ const SystemHealthIndicator = ({ health }) => {
  * Main optimized dashboard component
  */
 const OptimizedMEDashboard = ({ filters = {} }) => {
+  const intl = useIntl();
   const [autoRefreshInterval, setAutoRefreshInterval] = useState(REFRESH_INTERVALS.off);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -450,28 +453,28 @@ const OptimizedMEDashboard = ({ filters = {} }) => {
 
     return [
       {
-        title: 'Total Beneficiaries',
+        title: formatMessage(intl, MODULE_NAME, 'dashboard.totalBeneficiaries'),
         value: summary.summary.totalBeneficiaries,
         subtitle: `Across ${summary.summary.provincesCovered} provinces`,
         icon: <PeopleIcon fontSize="large" />,
         color: 'primary',
       },
       {
-        title: 'Total Transfers',
+        title: formatMessage(intl, MODULE_NAME, 'dashboard.totalTransfers'),
         value: summary.summary.totalTransfers,
         subtitle: 'Completed transfers',
         icon: <AssignmentIcon fontSize="large" />,
         color: 'secondary',
       },
       {
-        title: 'Amount Paid',
+        title: formatMessage(intl, MODULE_NAME, 'dashboard.amountPaid'),
         value: `${summary.summary.totalAmountPaid?.toLocaleString()} BIF`,
         subtitle: `Avg: ${summary.summary.avgAmountPerBeneficiary?.toLocaleString()} BIF/beneficiary`,
         icon: <MoneyIcon fontSize="large" />,
         color: 'success',
       },
     ];
-  }, [summary]);
+  }, [summary, intl]);
 
   // Show loading state
   if (isLoading && !summary) {
@@ -479,7 +482,7 @@ const OptimizedMEDashboard = ({ filters = {} }) => {
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress size={60} />
         <Typography variant="h6" ml={2}>
-          Loading optimized dashboard...
+          {formatMessage(intl, MODULE_NAME, 'dashboard.loading')}
         </Typography>
       </Box>
     );
@@ -513,6 +516,7 @@ const OptimizedMEDashboard = ({ filters = {} }) => {
             lastRefresh={lastRefresh}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
+            intl={intl}
           />
         </Box>
       </Box>
@@ -571,12 +575,12 @@ const OptimizedMEDashboard = ({ filters = {} }) => {
       <Grid container spacing={3}>
         {/* Gender Breakdown */}
         <Grid item xs={12} lg={6}>
-          <GenderBreakdownChart data={breakdown?.genderBreakdown} />
+          <GenderBreakdownChart data={breakdown?.genderBreakdown} intl={intl} />
         </Grid>
 
         {/* Community Breakdown */}
         <Grid item xs={12} lg={6}>
-          <CommunityBreakdownChart data={breakdown?.communityBreakdown} />
+          <CommunityBreakdownChart data={breakdown?.communityBreakdown} intl={intl} />
         </Grid>
 
         {/* Transfer Performance */}

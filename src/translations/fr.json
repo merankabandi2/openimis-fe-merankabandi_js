@@ -1722,5 +1722,12 @@
   "payroll.route.payrollsApproved": "Paiements Approuvés",
   "payroll.route.payrollsPending": "Paiements en Attente",
   "payroll.route.payrollsReconciled": "Paiements Réconciliés",
-  "merankabandi.payroll.commune_not_reconciled": "Cette commune a un payroll actif avec des bénéfices non réconciliés. Veuillez le réconcilier entièrement avant d'en créer un nouveau."
+  "merankabandi.payroll.commune_not_reconciled": "Cette commune a un payroll actif avec des bénéfices non réconciliés. Veuillez le réconcilier entièrement avant d'en créer un nouveau.",
+  "merankabandi.dashboard.loading": "Chargement...",
+  "merankabandi.dashboard.refreshing": "Actualisation...",
+  "merankabandi.dashboard.totalBeneficiaries": "Total Bénéficiaires",
+  "merankabandi.dashboard.totalTransfers": "Total Transferts",
+  "merankabandi.dashboard.amountPaid": "Montant Payé",
+  "merankabandi.dashboard.genderDistribution": "Répartition par Genre",
+  "merankabandi.dashboard.communityDistribution": "Répartition par Communauté"
 }

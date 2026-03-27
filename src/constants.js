@@ -20,6 +20,9 @@ export const GROUP_HEAD_PANEL_CONTRIBUTION_KEY = 'group.Group.headPanel';
 export const PAYROLL_MODULE_NAME = 'payroll';
 export const ROUTE_PAYMENT_REQUEST = 'paymentrequest';
 export const ROUTE_PAYMENT_NEW_PAYMENT = 'payrolls/payroll';
+export const ROUTE_PAYROLLS_APPROVED = 'payrollsApproved';
+export const ROUTE_PAYROLLS_PENDING = 'payrollsPending';
+export const ROUTE_PAYROLLS_RECONCILED = 'payrollsReconciled';
 export const PAYROLL_PAYROLL_ROUTE = 'payroll.route.payroll';
 export const ALL_PAYMENT_REQUEST_LIST_TAB_VALUE = 'paymentRequestTab-ALL';
 export const PAYMENTREQUEST_TABS_LABEL_CONTRIBUTION_KEY = 'paymentRequest.TabPanel.label';
@@ -42,7 +45,6 @@ export const PAYROLL_STATUS = {
   PENDING_APPROVAL: 'PENDING_APPROVAL',
   APPROVE_FOR_PAYMENT: 'APPROVE_FOR_PAYMENT',
   REJECTED: 'REJECTED',
-  RECONCILIATED: 'RECONCILIATED',
   RECONCILED: 'RECONCILED',
   FAILED: 'FAILED',
 };
@@ -52,7 +54,6 @@ export const PAYROLL_STATUS_LIST = [
   PAYROLL_STATUS.PENDING_APPROVAL,
   PAYROLL_STATUS.APPROVE_FOR_PAYMENT,
   PAYROLL_STATUS.REJECTED,
-  PAYROLL_STATUS.RECONCILIATED,
   PAYROLL_STATUS.RECONCILED,
 ];
 

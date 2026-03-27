@@ -675,5 +675,12 @@
   "merankabandi.dashboard.results.filter.allSections": "All sections",
   "merankabandi.dashboard.results.filter.dateFrom": "Start date",
   "merankabandi.dashboard.results.filter.dateTo": "End date",
-  "merankabandi.payroll.commune_not_reconciled": "This commune has an active payroll with unreconciled benefits. Fully reconcile it before creating a new one."
+  "merankabandi.payroll.commune_not_reconciled": "This commune has an active payroll with unreconciled benefits. Fully reconcile it before creating a new one.",
+  "merankabandi.dashboard.loading": "Loading...",
+  "merankabandi.dashboard.refreshing": "Refreshing...",
+  "merankabandi.dashboard.totalBeneficiaries": "Total Beneficiaries",
+  "merankabandi.dashboard.totalTransfers": "Total Transfers",
+  "merankabandi.dashboard.amountPaid": "Amount Paid",
+  "merankabandi.dashboard.genderDistribution": "Gender Distribution",
+  "merankabandi.dashboard.communityDistribution": "Community Distribution"
 }

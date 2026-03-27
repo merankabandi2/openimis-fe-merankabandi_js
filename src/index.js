@@ -175,12 +175,10 @@ import {
   ROUTE_BENEFICIARY_SELECTION_WIZARD,
   ROUTE_PMT_FORMULAS,
   ROUTE_PMT_FORMULA,
+  ROUTE_PAYROLLS_APPROVED,
+  ROUTE_PAYROLLS_PENDING,
+  ROUTE_PAYROLLS_RECONCILED,
 } from './constants';
-
-// Route constants for status-filtered payroll pages
-const ROUTE_PAYROLLS_APPROVED = 'payrollsApproved';
-const ROUTE_PAYROLLS_PENDING = 'payrollsPending';
-const ROUTE_PAYROLLS_RECONCILED = 'payrollsReconciled';
 
 // Reducer
 import reducer from './reducer';
