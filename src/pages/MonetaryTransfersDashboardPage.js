@@ -33,7 +33,7 @@ function MonetaryTransfersDashboardPage() {
   return (
     <div className={classes.page} data-testid="monetary-transfers-dashboard-page">
       <Helmet title={formatMessage('monetaryTransfer.dashboard.page.title')} />
-      
+
       {/* Dashboard Section */}
       <Box className={classes.dashboardContainer} data-testid="dashboard-container">
         <TransfertDashboard />

@@ -277,7 +277,6 @@ function TransfertDashboard() {
     return `${formatNumber(amount)} BIF`;
   };
 
-
   // Export dashboard data as JSON
   const handleExport = () => {
     const exportData = {
@@ -300,7 +299,7 @@ function TransfertDashboard() {
   // Use optimized data as primary source, fallback to legacy data
   const optimizedMetrics = performance?.overallMetrics || {};
   const summaryData = summary?.summary || {};
-  
+
   const displayData = {
     totalBeneficiaries: optimizedMetrics.totalBeneficiaries || summaryData.totalBeneficiaries || totalBeneficiaries || 0,
     totalPayments: optimizedMetrics.totalPaymentCycles || totalPayments || 0,
@@ -311,7 +310,7 @@ function TransfertDashboard() {
   };
 
   // Calculate payment rate
-  const paymentRate = displayData.totalAmount > 0 
+  const paymentRate = displayData.totalAmount > 0
     ? Math.round((displayData.totalAmountReceived / displayData.totalAmount) * 100)
     : 0;
 

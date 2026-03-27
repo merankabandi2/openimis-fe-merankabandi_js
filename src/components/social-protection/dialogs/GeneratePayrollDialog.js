@@ -138,14 +138,16 @@ function GeneratePayrollDialog({
           {formatMessage('payroll.generateForLocation')}
         </DialogTitle>
         <DialogContent>
-          {generating ? (
+          {generating
+            ? (
             <div className={classes.loadingWrapper}>
               <CircularProgress />
               <Typography variant="body1" style={{ marginTop: '10px' }}>
                 {formatMessage('payroll.generating')}
               </Typography>
             </div>
-          ) : (
+              )
+            : (
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Paper elevation={3} style={{ padding: '20px', marginBottom: '20px' }}>
@@ -202,7 +204,7 @@ function GeneratePayrollDialog({
                 </Paper>
               </Grid>
             </Grid>
-          )}
+              )}
         </DialogContent>
         <DialogActions>
           <Button

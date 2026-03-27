@@ -36,7 +36,7 @@ const styles = (theme) => ({
 class IndicatorForm extends FormPanel {
   onCreateSection = () => {
     historyPush(this.props.modulesManager, this.props.history, 'merankabandi.route.sections');
-  }
+  };
 
   render() {
     const {

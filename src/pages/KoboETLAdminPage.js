@@ -102,7 +102,7 @@ function KoboETLAdminPage() {
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations('merankabandi', modulesManager);
-  
+
   const [selectedScope, setSelectedScope] = useState('all');
   const [mutationStatus, setMutationStatus] = useState(null);
   const [recentMutations, setRecentMutations] = useState([]);
@@ -148,7 +148,7 @@ function KoboETLAdminPage() {
         );
 
         const mutation = result?.data?.mutationLogs?.edges?.[0]?.node;
-        
+
         if (mutation) {
           if (mutation.status === 1) { // SUCCESS
             setMutationStatus({
@@ -331,14 +331,16 @@ function KoboETLAdminPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {recentMutations.length === 0 ? (
+                    {recentMutations.length === 0
+                      ? (
                       <TableRow>
                         <TableCell colSpan={4} align="center">
                           {formatMessage('koboETL.history.noRecords')}
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      recentMutations.map((mutation) => (
+                        )
+                      : (
+                          recentMutations.map((mutation) => (
                         <TableRow key={mutation.id}>
                           <TableCell>{formatDateFromISO(mutation.requestDateTime)}</TableCell>
                           <TableCell>
@@ -354,8 +356,8 @@ function KoboETLAdminPage() {
                           </TableCell>
                           <TableCell>{mutation.error || '-'}</TableCell>
                         </TableRow>
-                      ))
-                    )}
+                          ))
+                        )}
                   </TableBody>
                 </Table>
               </TableContainer>

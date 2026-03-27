@@ -105,7 +105,7 @@ function IndicatorCalculationDisplay({
 
   const handleCalculate = async () => {
     if (!indicator?.id) return;
-    
+
     setLoading(true);
     try {
       const response = await calculateIndicatorValue(
@@ -114,7 +114,7 @@ function IndicatorCalculationDisplay({
         dateTo,
         locationId
       );
-      
+
       if (response?.payload?.data?.calculateIndicatorValue) {
         setCalculationResult(response.payload.data.calculateIndicatorValue);
       }
@@ -172,34 +172,36 @@ function IndicatorCalculationDisplay({
             </Typography>
           )}
         </Grid>
-        
+
         <Grid item xs={6} md={2}>
           <Typography variant="body2" color="textSecondary">
             {formatMessage(intl, 'merankabandi', 'indicator.baseline')}
           </Typography>
           <Typography variant="h6">{indicator.baseline || 0}</Typography>
         </Grid>
-        
+
         <Grid item xs={6} md={2}>
           <Typography variant="body2" color="textSecondary">
             {formatMessage(intl, 'merankabandi', 'indicator.target')}
           </Typography>
           <Typography variant="h6">{target}</Typography>
         </Grid>
-        
+
         <Grid item xs={6} md={1}>
-          {loading ? (
+          {loading
+            ? (
             <CircularProgress size={24} />
-          ) : (
+              )
+            : (
             <>
               <Typography variant="body2" color="textSecondary">
                 {formatMessage(intl, 'merankabandi', 'indicator.achieved')}
               </Typography>
               <Typography variant="h6">{value}</Typography>
             </>
-          )}
+              )}
         </Grid>
-        
+
         <Grid item xs={6} md={1} style={{ textAlign: 'right' }}>
           <Tooltip title={formatMessage(intl, 'merankabandi', 'indicator.refresh')}>
             <IconButton size="small" onClick={handleCalculate} disabled={loading}>
@@ -214,7 +216,7 @@ function IndicatorCalculationDisplay({
             </Tooltip>
           )}
         </Grid>
-        
+
         <Grid item xs={12}>
           <Box className={classes.progressContainer}>
             <LinearProgress
@@ -234,7 +236,7 @@ function IndicatorCalculationDisplay({
             </Typography>
           </Box>
         </Grid>
-        
+
         {calculationResult && (
           <Grid item xs={12}>
             <Chip
@@ -254,7 +256,7 @@ function IndicatorCalculationDisplay({
           </Grid>
         )}
       </Grid>
-      
+
       {showDetails && expanded && calculationResult && (
         <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>

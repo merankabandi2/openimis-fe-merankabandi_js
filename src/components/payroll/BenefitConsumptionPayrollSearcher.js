@@ -58,10 +58,11 @@ function BenefitConsumptionPayrollSearcher({
     }
 
     return (
-      payrollBenefitConsumption.benefit
-      && payrollBenefitConsumption.benefit.dateDue
-      >= payrollBenefitConsumption.benefit.benefitAttachment[0].bill.datePayed)
-      ? 'True' : 'False';
+      payrollBenefitConsumption.benefit &&
+      payrollBenefitConsumption.benefit.dateDue >=
+      payrollBenefitConsumption.benefit.benefitAttachment[0].bill.datePayed)
+      ? 'True'
+      : 'False';
   };
 
   const itemFormatters = () => [

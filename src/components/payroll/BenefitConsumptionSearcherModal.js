@@ -123,14 +123,18 @@ function BenefitConsumptionSearcherModal({
 
     return (
       benefitAttachment.benefit && benefitAttachment.benefit.dateDue >= benefitAttachment.bill.datePayed
-    ) ? 'True' : 'False';
+    )
+      ? 'True'
+      : 'False';
   };
 
   const itemFormatters = () => [
     (benefitAttachment) => (
-      benefitAttachment.benefit.receipt ? (
+      benefitAttachment.benefit.receipt
+        ? (
         <PhotoCameraOutlinedIcon style={{ fontSize: 150 }} />
-      ) : null
+          )
+        : null
     ),
     (benefitAttachment) => benefitAttachment?.benefit?.individual?.firstName,
     (benefitAttachment) => benefitAttachment?.benefit?.individual?.lastName,
@@ -162,8 +166,8 @@ function BenefitConsumptionSearcherModal({
       </Button>
     ),
     (benefitAttachment) => (
-      payrollDetail.paymentMethod === 'StrategyOnlinePayment' && payrollDetail.status === PAYROLL_STATUS.RECONCILED
-        && benefitAttachment.benefit.status !== 'RECONCILED' && (
+      payrollDetail.paymentMethod === 'StrategyOnlinePayment' && payrollDetail.status === PAYROLL_STATUS.RECONCILED &&
+        benefitAttachment.benefit.status !== 'RECONCILED' && (
           <Button
             onClick={() => setSelectedBenefitAttachment(benefitAttachment)}
             variant="contained"
@@ -174,8 +178,8 @@ function BenefitConsumptionSearcherModal({
       )
     ),
     (benefitAttachment) => (
-      payrollDetail.status === PAYROLL_STATUS.PENDING_APPROVAL
-      && benefitAttachment.benefit.status !== 'PENDING_DELETION' && (
+      payrollDetail.status === PAYROLL_STATUS.PENDING_APPROVAL &&
+      benefitAttachment.benefit.status !== 'PENDING_DELETION' && (
         <Button
           onClick={() => confirmDeleteBenefitConsumption(benefitAttachment)}
           variant="contained"

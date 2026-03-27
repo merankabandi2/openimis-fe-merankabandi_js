@@ -48,12 +48,12 @@ import GetAppIcon from '@material-ui/icons/GetApp';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import ReactApexChart from 'react-apexcharts';
-import { 
-  usePaymentReporting, 
-  usePaymentByLocation, 
-  usePaymentByProgram, 
+import {
+  usePaymentReporting,
+  usePaymentByLocation,
+  usePaymentByProgram,
   usePaymentTrends,
-  usePaymentKPIs 
+  usePaymentKPIs
 } from '../hooks/usePaymentReporting';
 import { useLocations } from '@openimis/fe-location';
 import { useBenefitPlans } from '@openimis/fe-social_protection';
@@ -249,11 +249,11 @@ function PaymentReportingDashboard() {
   const [locationLevel, setLocationLevel] = useState('province');
   const [trendGranularity, setTrendGranularity] = useState('month');
   const [showFilters, setShowFilters] = useState(true);
-  
+
   // Get location and benefit plan data
   const { provinces, communes, collines } = useLocations();
   const { benefitPlans } = useBenefitPlans();
-  
+
   // Use payment reporting hooks
   const {
     summary,
@@ -266,45 +266,45 @@ function PaymentReportingDashboard() {
     clearFilters,
     refetch: refetchSummary,
   } = usePaymentReporting();
-  
+
   const {
     locations,
     total: locationTotal,
     isLoading: locationLoading,
     refetch: refetchLocation,
   } = usePaymentByLocation(locationLevel, filters);
-  
+
   const {
     programs,
     total: programTotal,
     isLoading: programLoading,
     refetch: refetchProgram,
   } = usePaymentByProgram(filters);
-  
+
   const {
     trends,
     isLoading: trendsLoading,
     refetch: refetchTrends,
   } = usePaymentTrends(trendGranularity, filters);
-  
+
   const {
     kpis,
     targets,
     isLoading: kpisLoading,
     refetch: refetchKPIs,
   } = usePaymentKPIs(filters);
-  
+
   // Handle filter changes
   const handleFilterChange = (name) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     updateFilters({ [name]: value });
   };
-  
+
   // Handle location hierarchy
   const handleLocationChange = (level) => (event) => {
     const value = event.target.value;
     updateFilters({ [`${level}Id`]: value });
-    
+
     // Clear child locations when parent changes
     if (level === 'province') {
       updateFilters({ communeId: null, collineId: null });
@@ -312,7 +312,7 @@ function PaymentReportingDashboard() {
       updateFilters({ collineId: null });
     }
   };
-  
+
   // Refresh all data
   const handleRefreshAll = () => {
     refetchSummary();
@@ -321,39 +321,39 @@ function PaymentReportingDashboard() {
     refetchTrends();
     refetchKPIs();
   };
-  
+
   // Export data (placeholder)
   const handleExport = () => {
     // TODO: Implement export functionality
     console.log('Export payment report');
   };
-  
+
   // Prepare chart data
   const prepareChartData = () => {
     // Payment source pie chart
     const sourceChart = {
       series: breakdownBySource.map(item => item.paymentAmount),
-      labels: breakdownBySource.map(item => 
+      labels: breakdownBySource.map(item =>
         item.source === 'EXTERNAL' ? 'Paiements Externes' : 'Paiements Internes'
       ),
     };
-    
+
     // Gender distribution chart
     const genderChart = {
       series: breakdownByGender.map(item => item.beneficiaryCount),
-      labels: breakdownByGender.map(item => 
+      labels: breakdownByGender.map(item =>
         item.gender === 'M' ? 'Hommes' : 'Femmes'
       ),
     };
-    
+
     // Community type chart
     const communityChart = {
       series: breakdownByCommunity.map(item => item.beneficiaryCount),
-      labels: breakdownByCommunity.map(item => 
+      labels: breakdownByCommunity.map(item =>
         item.communityType === 'HOST' ? 'Communauté Hôte' : item.communityType
       ),
     };
-    
+
     // Trends line chart
     const trendsChart = {
       series: [{
@@ -366,12 +366,12 @@ function PaymentReportingDashboard() {
       }],
       categories: trends.map(t => t.period),
     };
-    
+
     return { sourceChart, genderChart, communityChart, trendsChart };
   };
-  
+
   const chartData = prepareChartData();
-  
+
   return (
     <ThemeProvider theme={theme}>
       <div className={classes.wrapper}>
@@ -389,7 +389,7 @@ function PaymentReportingDashboard() {
                 </IconButton>
               </Tooltip>
               <Tooltip title="Actualiser les données">
-                <IconButton 
+                <IconButton
                   className={classes.refreshButton}
                   onClick={handleRefreshAll}
                   disabled={summaryLoading}
@@ -399,7 +399,7 @@ function PaymentReportingDashboard() {
               </Tooltip>
             </Box>
           </div>
-          
+
           {/* Filters */}
           <Paper className={classes.filterContainer}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -414,7 +414,7 @@ function PaymentReportingDashboard() {
                 {showFilters ? 'Masquer' : 'Afficher'}
               </Button>
             </Box>
-            
+
             {showFilters && (
               <Grid container spacing={2}>
                 {/* Time filters */}
@@ -446,7 +446,7 @@ function PaymentReportingDashboard() {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 {/* Location filters */}
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl variant="outlined" fullWidth size="small">
@@ -465,7 +465,7 @@ function PaymentReportingDashboard() {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 {filters.provinceId && (
                   <Grid item xs={12} sm={6} md={2}>
                     <FormControl variant="outlined" fullWidth size="small">
@@ -487,7 +487,7 @@ function PaymentReportingDashboard() {
                     </FormControl>
                   </Grid>
                 )}
-                
+
                 {/* Program filter */}
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl variant="outlined" fullWidth size="small">
@@ -506,7 +506,7 @@ function PaymentReportingDashboard() {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 {/* Demographic filters */}
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl variant="outlined" fullWidth size="small">
@@ -522,7 +522,7 @@ function PaymentReportingDashboard() {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControlLabel
                     control={
@@ -535,7 +535,7 @@ function PaymentReportingDashboard() {
                     label="TWA uniquement"
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl variant="outlined" fullWidth size="small">
                     <InputLabel>Source</InputLabel>
@@ -550,7 +550,7 @@ function PaymentReportingDashboard() {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <Button
                     variant="outlined"
@@ -562,7 +562,7 @@ function PaymentReportingDashboard() {
                 </Grid>
               </Grid>
             )}
-            
+
             {/* Active filters chips */}
             <Box mt={2} display="flex" flexWrap="wrap">
               {filters.year && (
@@ -591,7 +591,7 @@ function PaymentReportingDashboard() {
               )}
             </Box>
           </Paper>
-          
+
           {/* Summary Cards */}
           {summary && (
             <Fade in={!summaryLoading}>
@@ -633,7 +633,7 @@ function PaymentReportingDashboard() {
               </Paper>
             </Fade>
           )}
-          
+
           {/* KPI Cards */}
           {kpis && (
             <Grid container spacing={3} style={{ marginBottom: 24 }}>
@@ -659,7 +659,7 @@ function PaymentReportingDashboard() {
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} md={3}>
                 <Card className={classes.kpiCard} style={{ backgroundColor: '#f3e5f5' }}>
                   <CardContent>
@@ -682,7 +682,7 @@ function PaymentReportingDashboard() {
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} md={3}>
                 <Card className={classes.kpiCard} style={{ backgroundColor: '#e8f5e9' }}>
                   <CardContent>
@@ -698,7 +698,7 @@ function PaymentReportingDashboard() {
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} md={3}>
                 <Card className={classes.kpiCard} style={{ backgroundColor: '#fff3e0' }}>
                   <CardContent>
@@ -723,7 +723,7 @@ function PaymentReportingDashboard() {
               </Grid>
             </Grid>
           )}
-          
+
           {/* Tabs for different views */}
           <Paper style={{ marginBottom: 24 }}>
             <Tabs
@@ -740,7 +740,7 @@ function PaymentReportingDashboard() {
               <Tab label="Tendances" icon={<TrendingUpIcon />} />
             </Tabs>
           </Paper>
-          
+
           {/* Tab Content */}
           {activeTab === 0 && (
             <Grid container spacing={3}>
@@ -771,7 +771,7 @@ function PaymentReportingDashboard() {
                   </div>
                 </Paper>
               </Grid>
-              
+
               {/* Gender Distribution */}
               <Grid item xs={12} md={6}>
                 <Paper style={{ padding: 24 }}>
@@ -793,7 +793,7 @@ function PaymentReportingDashboard() {
                   </div>
                 </Paper>
               </Grid>
-              
+
               {/* Community Type Distribution */}
               <Grid item xs={12} md={6}>
                 <Paper style={{ padding: 24 }}>
@@ -823,7 +823,7 @@ function PaymentReportingDashboard() {
                   </div>
                 </Paper>
               </Grid>
-              
+
               {/* Payment Details Table */}
               <Grid item xs={12} md={6}>
                 <Paper style={{ padding: 24 }}>
@@ -868,7 +868,7 @@ function PaymentReportingDashboard() {
               </Grid>
             </Grid>
           )}
-          
+
           {activeTab === 1 && (
             <Grid container spacing={3}>
               {/* Location Level Selector */}
@@ -888,13 +888,14 @@ function PaymentReportingDashboard() {
                   </FormControl>
                 </Box>
               </Grid>
-              
+
               {/* Location Map/Chart */}
               <Grid item xs={12}>
                 <Paper style={{ padding: 24 }}>
                   <Typography variant="h6" gutterBottom>
-                    Paiements par {locationLevel === 'province' ? 'Province' : 
-                                   locationLevel === 'commune' ? 'Commune' : 'Colline'}
+                    Paiements par {locationLevel === 'province'
+                    ? 'Province'
+                    : locationLevel === 'commune' ? 'Commune' : 'Colline'}
                   </Typography>
                   <TableContainer className={classes.tableContainer}>
                     <Table>
@@ -955,7 +956,7 @@ function PaymentReportingDashboard() {
               </Grid>
             </Grid>
           )}
-          
+
           {activeTab === 2 && (
             <Grid container spacing={3}>
               {/* Programs Table */}
@@ -1025,7 +1026,7 @@ function PaymentReportingDashboard() {
               </Grid>
             </Grid>
           )}
-          
+
           {activeTab === 3 && (
             <Grid container spacing={3}>
               {/* Trends Granularity Selector */}
@@ -1047,7 +1048,7 @@ function PaymentReportingDashboard() {
                   </FormControl>
                 </Box>
               </Grid>
-              
+
               {/* Trends Chart */}
               <Grid item xs={12}>
                 <Paper style={{ padding: 24 }}>
@@ -1057,11 +1058,11 @@ function PaymentReportingDashboard() {
                   <div className={classes.chartContainer}>
                     <ReactApexChart
                       options={{
-                        chart: { 
+                        chart: {
                           type: 'line',
                           zoom: { enabled: true },
                         },
-                        xaxis: { 
+                        xaxis: {
                           categories: chartData.trendsChart.categories,
                           labels: { rotate: -45 },
                         },
@@ -1091,7 +1092,7 @@ function PaymentReportingDashboard() {
                   </div>
                 </Paper>
               </Grid>
-              
+
               {/* Cumulative Trends */}
               <Grid item xs={12} md={6}>
                 <Paper style={{ padding: 24 }}>
@@ -1102,7 +1103,7 @@ function PaymentReportingDashboard() {
                     <ReactApexChart
                       options={{
                         chart: { type: 'area' },
-                        xaxis: { 
+                        xaxis: {
                           categories: trends.map(t => t.period),
                           labels: { rotate: -45 },
                         },
@@ -1132,7 +1133,7 @@ function PaymentReportingDashboard() {
                   </div>
                 </Paper>
               </Grid>
-              
+
               {/* Inclusion Trends */}
               <Grid item xs={12} md={6}>
                 <Paper style={{ padding: 24 }}>
@@ -1143,7 +1144,7 @@ function PaymentReportingDashboard() {
                     <ReactApexChart
                       options={{
                         chart: { type: 'line' },
-                        xaxis: { 
+                        xaxis: {
                           categories: trends.map(t => t.period),
                           labels: { rotate: -45 },
                         },

@@ -13,14 +13,16 @@ function WorkflowsPicker({
   nullLabel = null,
   withLabel = true,
 }) {
-  const options = Array.isArray(workflows) && workflows !== undefined ? [
-    ...workflows
-      .filter((workflow) => !workflow.name.includes('Valid'))
-      .map((workflow) => ({
-        value: { name: workflow.name, group: workflow.group },
-        label: workflow.name,
-      })),
-  ] : [];
+  const options = Array.isArray(workflows) && workflows !== undefined
+    ? [
+        ...workflows
+          .filter((workflow) => !workflow.name.includes('Valid'))
+          .map((workflow) => ({
+            value: { name: workflow.name, group: workflow.group },
+            label: workflow.name,
+          })),
+      ]
+    : [];
 
   useEffect(() => {
     if (withNull) {

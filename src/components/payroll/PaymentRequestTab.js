@@ -116,8 +116,8 @@ function PaymentRequestTab({
               {formatMessage('payroll.summary.download')}
             </Button>
             )}
-            {payrollUuid && payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && payroll.paymentMethod === 'StrategyOfflinePayment'
-                && (
+            {payrollUuid && payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && payroll.paymentMethod === 'StrategyOfflinePayment' &&
+                (
                 <PayrollPaymentDataUploadDialog
                   payrollUuid={payrollUuid}
                 />

@@ -29,18 +29,18 @@ class SectionPicker extends Component {
   formatOption = (option) => {
     if (!option) return '';
     return option.name;
-  }
+  };
 
   onSectionChange = (section) => {
     if (this.props.onChange) {
       this.props.onChange(section);
     }
-  }
+  };
 
   onInputChange = (search) => {
     // Handle search input changes if needed
     // For now, we don't need to do anything special
-  }
+  };
 
   render() {
     const {

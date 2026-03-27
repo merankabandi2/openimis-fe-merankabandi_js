@@ -74,7 +74,7 @@ function MonetaryTransferUploadDialog({
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'text/csv'
       ];
-      
+
       if (!validTypes.includes(selectedFile.type)) {
         coreAlert(
           formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.invalidFileType'),
@@ -82,7 +82,7 @@ function MonetaryTransferUploadDialog({
         );
         return;
       }
-      
+
       setFile(selectedFile);
       setUploadResult(null);
     }
@@ -151,7 +151,7 @@ function MonetaryTransferUploadDialog({
       }
 
       setUploadResult(result);
-      
+
       if (result.success && result.imported > 0 && onUploadSuccess) {
         onUploadSuccess();
       }
@@ -175,7 +175,7 @@ function MonetaryTransferUploadDialog({
       >
         {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.button')}
       </Button>
-      
+
       <Dialog
         open={isOpen}
         onClose={handleClose}
@@ -185,7 +185,7 @@ function MonetaryTransferUploadDialog({
         <DialogTitle>
           {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.title')}
         </DialogTitle>
-        
+
         <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -193,7 +193,7 @@ function MonetaryTransferUploadDialog({
                 {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.description')}
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12}>
               <Link
                 component="button"
@@ -203,7 +203,7 @@ function MonetaryTransferUploadDialog({
                 {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.downloadTemplate')}
               </Link>
             </Grid>
-            
+
             <Grid item xs={12}>
               <input
                 accept=".csv,.xls,.xlsx"
@@ -221,14 +221,14 @@ function MonetaryTransferUploadDialog({
                   {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.selectFile')}
                 </Button>
               </label>
-              
+
               {file && (
                 <Typography variant="body2" style={{ marginTop: 8 }}>
                   {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.selectedFile')}: {file.name}
                 </Typography>
               )}
             </Grid>
-            
+
             {uploading && (
               <Grid item xs={12} className={classes.progressContainer}>
                 <LinearProgress />
@@ -237,10 +237,11 @@ function MonetaryTransferUploadDialog({
                 </Typography>
               </Grid>
             )}
-            
+
             {uploadResult && (
               <Grid item xs={12} className={classes.resultsContainer}>
-                {uploadResult.success ? (
+                {uploadResult.success
+                  ? (
                   <>
                     <Alert severity="success">
                       {formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.success', {
@@ -248,7 +249,7 @@ function MonetaryTransferUploadDialog({
                         failed: uploadResult.failed
                       })}
                     </Alert>
-                    
+
                     {uploadResult.failed > 0 && uploadResult.invalid_items && (
                       <div className={classes.errorList}>
                         <Typography variant="subtitle2" style={{ marginTop: 16 }}>
@@ -262,16 +263,17 @@ function MonetaryTransferUploadDialog({
                       </div>
                     )}
                   </>
-                ) : (
+                    )
+                  : (
                   <Alert severity="error">
                     {uploadResult.error || formatMessage(intl, 'merankabandi', 'monetaryTransfer.upload.failed')}
                   </Alert>
-                )}
+                    )}
               </Grid>
             )}
           </Grid>
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={handleClose} color="default">
             {formatMessage(intl, 'merankabandi', 'close')}

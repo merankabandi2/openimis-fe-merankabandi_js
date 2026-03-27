@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
-  makeStyles, 
-  CircularProgress, 
+  makeStyles,
+  CircularProgress,
   Typography,
   Paper,
   Chip,
@@ -96,7 +96,7 @@ L.Icon.Default.mergeOptions({
 const loadStats = async (filters = {}) => {
   const csrfToken = localStorage.getItem('csrfToken');
   const baseHeaders = apiHeaders();
-  
+
   // Build filter object for optimized query
   const queryFilters = {};
   if (filters.benefitPlan) {
@@ -115,7 +115,7 @@ const loadStats = async (filters = {}) => {
   if (filters.collines && filters.collines.length > 0) {
     queryFilters.collineId = parseInt(decodeId(filters.collines[0]));
   }
-  
+
   const query = `
     query OptimizedLocationByBenefitPlan($filters: DashboardFiltersInput) {
       optimizedLocationByBenefitPlan(filters: $filters) {
@@ -131,16 +131,16 @@ const loadStats = async (filters = {}) => {
       }
     }
   `;
-  
+
   const response = await fetch(`${baseApiUrl}/graphql`, {
     method: 'post',
     headers: { ...baseHeaders, 'X-Requested-With': REQUESTED_WITH, 'X-CSRFToken': csrfToken },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       query,
       variables: { filters: queryFilters }
     }),
   });
-  
+
   if (!response.ok) {
     throw response;
   } else {
@@ -190,16 +190,17 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
 
   // Calculate total count for a location
   const getTotalCount = (location) => {
-    return (location.countPotential || 0) + 
-           (location.countValidated || 0) + 
-           (location.countActive || 0) + 
-           (location.countGraduated || 0) + 
+    return (location.countPotential || 0) +
+           (location.countValidated || 0) +
+           (location.countActive || 0) +
+           (location.countGraduated || 0) +
            (location.countSuspended || 0);
   };
 
   // Find the max count for color scaling
   const maxCount = locationData.length
-    ? Math.max(...locationData.map(getTotalCount)) : 0;
+    ? Math.max(...locationData.map(getTotalCount))
+    : 0;
 
   // Enhanced style function with better colors
   const getStyle = (feature, isHovered = false) => {
@@ -234,33 +235,33 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
       graduated: locationInfo.countGraduated || 0,
       suspended: locationInfo.countSuspended || 0
     };
-    
+
     // Find dominant status
-    const dominantStatus = Object.keys(statusCounts).reduce((a, b) => 
+    const dominantStatus = Object.keys(statusCounts).reduce((a, b) =>
       statusCounts[a] > statusCounts[b] ? a : b
     );
-    
+
     const intensity = Math.floor(colorIntensity * 100);
-    
-    switch(dominantStatus) {
+
+    switch (dominantStatus) {
       case 'potential':
-        fillColor = `hsl(0, 0%, ${85 - intensity * 0.3}%)`;  // Gray
+        fillColor = `hsl(0, 0%, ${85 - intensity * 0.3}%)`; // Gray
         borderColor = '#9e9e9e';
         break;
       case 'validated':
-        fillColor = `hsl(210, ${40 + intensity}%, ${85 - intensity * 0.3}%)`;  // Blue
+        fillColor = `hsl(210, ${40 + intensity}%, ${85 - intensity * 0.3}%)`; // Blue
         borderColor = '#1565c0';
         break;
       case 'active':
-        fillColor = `hsl(120, ${40 + intensity}%, ${85 - intensity * 0.3}%)`;  // Green
+        fillColor = `hsl(120, ${40 + intensity}%, ${85 - intensity * 0.3}%)`; // Green
         borderColor = '#2e7d32';
         break;
       case 'graduated':
-        fillColor = `hsl(30, ${40 + intensity}%, ${85 - intensity * 0.3}%)`;  // Orange
+        fillColor = `hsl(30, ${40 + intensity}%, ${85 - intensity * 0.3}%)`; // Orange
         borderColor = '#ff9800';
         break;
       case 'suspended':
-        fillColor = `hsl(0, ${40 + intensity}%, ${85 - intensity * 0.3}%)`;  // Red
+        fillColor = `hsl(0, ${40 + intensity}%, ${85 - intensity * 0.3}%)`; // Red
         borderColor = '#f44336';
         break;
     }
@@ -279,7 +280,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
   const onEachFeature = (feature, layer) => {
     const locationName = feature.properties.shapeName;
     const locationInfo = locationLookup[locationName];
-    
+
     layer.on({
       mouseover: (e) => {
         setHoveredProvince(locationName);
@@ -291,7 +292,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
         e.target.setStyle(getStyle(feature, false));
       },
     });
-    
+
     if (locationInfo) {
       layer.bindTooltip(`
         <div style="
@@ -303,16 +304,20 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
           <div style="font-weight: 600; font-size: 16px; margin-bottom: 8px; color: #1a237e;">
             ${locationInfo.name}
           </div>
-          ${locationInfo.countPotential > 0 ? `
+          ${locationInfo.countPotential > 0
+? `
           <div style="display: flex; justify-content: space-between; margin: 4px 0;">
             <span style="color: #546e7a;">Potentiels:</span>
             <span style="font-weight: 600; color: #9e9e9e;">${(locationInfo.countPotential || 0).toLocaleString('fr-FR')}</span>
-          </div>` : ''}
-          ${locationInfo.countValidated > 0 ? `
+          </div>`
+: ''}
+          ${locationInfo.countValidated > 0
+? `
           <div style="display: flex; justify-content: space-between; margin: 4px 0;">
             <span style="color: #546e7a;">Validés:</span>
             <span style="font-weight: 600; color: #1565c0;">${(locationInfo.countValidated || 0).toLocaleString('fr-FR')}</span>
-          </div>` : ''}
+          </div>`
+: ''}
           <div style="display: flex; justify-content: space-between; margin: 4px 0;">
             <span style="color: #546e7a;">Actifs:</span>
             <span style="font-weight: 600; color: #2e7d32;">${(locationInfo.countActive || 0).toLocaleString('fr-FR')}</span>
@@ -345,7 +350,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
   // Calculate statistics
   const totalBeneficiaries = locationData.reduce((sum, loc) => sum + getTotalCount(loc), 0);
   const activeProvinces = locationData.filter(loc => getTotalCount(loc) > 0).length;
-  
+
   if (loading || parentLoading) {
     return (
       <Box className={classes.loadingContainer}>
@@ -382,7 +387,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
             />
           )}
         </Map>
-        
+
         {/* Legend */}
         <Fade in={!loading}>
           <Paper className={classes.legendContainer}>
@@ -408,7 +413,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
             </div>
           </Paper>
         </Fade>
-        
+
         {/* Stats Overlay */}
         <Fade in={!loading}>
           <Paper className={classes.statsOverlay}>

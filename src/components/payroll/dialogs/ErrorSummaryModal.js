@@ -29,15 +29,17 @@ function ErrorSummaryModal({ open, onClose, benefitAttachment }) {
           }}
         >
           <Typography variant="h6">{formatMessage('payroll.errorSummary.title')}</Typography>
-          {outputGateway === null || outputGateway === 'undefined' ? (
+          {outputGateway === null || outputGateway === 'undefined'
+            ? (
             <Typography>
               {formatMessage('payroll.errorSummary.outputGateway.noInfo')}
             </Typography>
-          ) : (
+              )
+            : (
             <Typography>
               {outputGateway}
             </Typography>
-          )}
+              )}
           <Box display="flex" justifyContent="center" mt={2}>
             <Button onClick={onClose} variant="contained" color="primary">
               {formatMessage('payroll.errorSummary.close')}

@@ -122,9 +122,11 @@ function SnapshotManagementPanel({
       <Chip
         label={formatMessage(intl, 'merankabandi', `snapshot.status.${snapshot.status}`)}
         className={
-          snapshot.status === 'FINALIZED' ? classes.successChip :
-          snapshot.status === 'DRAFT' ? classes.warningChip :
-          classes.errorChip
+          snapshot.status === 'FINALIZED'
+            ? classes.successChip
+            : snapshot.status === 'DRAFT'
+              ? classes.warningChip
+              : classes.errorChip
         }
         size="small"
       />
@@ -137,8 +139,8 @@ function SnapshotManagementPanel({
           </IconButton>
         </Tooltip>
         <Tooltip title={formatMessage(intl, 'merankabandi', 'snapshot.generateDocument')}>
-          <IconButton 
-            size="small" 
+          <IconButton
+            size="small"
             onClick={() => handleGenerateDocument(snapshot)}
             disabled={generatingDocument}
           >
@@ -300,8 +302,8 @@ function SnapshotManagementPanel({
           <Button onClick={() => setCreateDialogOpen(false)}>
             {formatMessage(intl, 'merankabandi', 'dialog.cancel')}
           </Button>
-          <Button 
-            onClick={handleCreateSnapshot} 
+          <Button
+            onClick={handleCreateSnapshot}
             color="primary"
             disabled={!newSnapshot.name || submittingMutation}
           >
@@ -347,12 +349,13 @@ function SnapshotManagementPanel({
                               </Typography>
                             </Grid>
                             <Grid item xs={3}>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 align="right"
-                                style={{ 
-                                  color: indicator.percentage >= 80 ? 'green' : 
-                                         indicator.percentage >= 50 ? 'orange' : 'red' 
+                                style={{
+                                  color: indicator.percentage >= 80
+                                    ? 'green'
+                                    : indicator.percentage >= 50 ? 'orange' : 'red'
                                 }}
                               >
                                 {indicator.percentage.toFixed(1)}%

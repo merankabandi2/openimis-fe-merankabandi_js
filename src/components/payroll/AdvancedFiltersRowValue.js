@@ -1,6 +1,4 @@
 /* eslint-disable react/jsx-no-useless-fragment */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/jsx-props-no-spreading */
 import React from 'react';
 import { injectIntl } from 'react-intl';
@@ -122,7 +120,8 @@ function AdvancedFiltersRowValue({
       className={classes.item}
       style={{ backgroundColor: '#DFEDEF' }}
     >
-      {filters.length > 0 && !readOnly ? (
+      {filters.length > 0 && !readOnly
+        ? (
         <div style={{
           backgroundColor: '#DFEDEF', width: '10px', height: '25px', marginTop: '25px',
         }}
@@ -138,7 +137,8 @@ function AdvancedFiltersRowValue({
             &#x2716;
           </span>
         </div>
-      ) : (<></>)}
+          )
+        : (<></>)}
       <Grid item xs={3} className={classes.item}>
         <CustomFilterFieldStatusPicker
           module="payroll"
@@ -149,7 +149,8 @@ function AdvancedFiltersRowValue({
           readOnly={readOnly}
         />
       </Grid>
-      {currentFilter.field !== '' ? (
+      {currentFilter.field !== ''
+        ? (
         <Grid item xs={3} className={classes.item}>
           <CustomFilterTypeStatusPicker
             module="payroll"
@@ -161,12 +162,15 @@ function AdvancedFiltersRowValue({
             readOnly={readOnly}
           />
         </Grid>
-      ) : (<></>) }
-      {currentFilter.field !== '' && currentFilter.filter !== '' ? (
+          )
+        : (<></>) }
+      {currentFilter.field !== '' && currentFilter.filter !== ''
+        ? (
         <Grid item xs={3} className={classes.item}>
           {renderInputBasedOnType(currentFilter.type)}
         </Grid>
-      ) : (<></>) }
+          )
+        : (<></>) }
     </Grid>
   );
 }

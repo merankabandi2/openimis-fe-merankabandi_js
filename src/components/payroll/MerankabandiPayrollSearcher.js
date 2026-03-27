@@ -134,11 +134,14 @@ function MerankabandiPayrollSearcher({
   const itemFormatters = () => [
     (payroll) => payroll.name,
     (payroll) => (payroll.benefitPlan
-      ? `${payroll.benefitPlan.code} ${payroll.benefitPlan.name}` : ''),
+      ? `${payroll.benefitPlan.code} ${payroll.benefitPlan.name}`
+      : ''),
     (payroll) => (payroll.paymentPoint
-      ? `${payroll.paymentPoint.name}` : ''),
+      ? `${payroll.paymentPoint.name}`
+      : ''),
     (payroll) => (payroll.status
-      ? formatMessage(`payroll.payroll.payrollStatusPicker.${payroll.status}`) : ''),
+      ? formatMessage(`payroll.payroll.payrollStatusPicker.${payroll.status}`)
+      : ''),
     (payroll) => payroll.paymentMethod || '',
     (payroll) => (
       <Tooltip title={formatMessage('tooltip.viewDetails')}>

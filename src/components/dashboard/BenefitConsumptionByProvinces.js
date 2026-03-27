@@ -103,15 +103,17 @@ function BenefitConsumptionByProvinces({ filters, optimizedData }) {
 
         const result = await response.json();
         if (result.data && result.data.benefitConsumptionByProvince) {
-          setData({ edges: result.data.benefitConsumptionByProvince.map(item => ({ 
-            node: {
-              name: item.provinceName,
-              code: item.provinceCode,
-              countActive: item.beneficiariesActive,
-              countSuspended: item.beneficiariesSuspended,
-              countSelected: item.beneficiariesSelected
-            }
-          }))});
+          setData({
+            edges: result.data.benefitConsumptionByProvince.map(item => ({
+              node: {
+                name: item.provinceName,
+                code: item.provinceCode,
+                countActive: item.beneficiariesActive,
+                countSuspended: item.beneficiariesSuspended,
+                countSelected: item.beneficiariesSelected
+              }
+            }))
+          });
         } else {
           setData({ edges: [] });
         }

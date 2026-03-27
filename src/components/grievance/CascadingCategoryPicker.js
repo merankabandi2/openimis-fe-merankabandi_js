@@ -175,10 +175,12 @@ function CascadingCategoryPicker({
   }, [data]);
 
   const level1Options = Object.keys(categoryHierarchy);
-  const level2Options = currentSelection.level1 ?
-    Object.keys(categoryHierarchy[currentSelection.level1]?.children || {}) : [];
-  const level3Options = currentSelection.level1 && currentSelection.level2 ?
-    Object.keys(categoryHierarchy[currentSelection.level1].children[currentSelection.level2]?.children || {}) : [];
+  const level2Options = currentSelection.level1
+    ? Object.keys(categoryHierarchy[currentSelection.level1]?.children || {})
+    : [];
+  const level3Options = currentSelection.level1 && currentSelection.level2
+    ? Object.keys(categoryHierarchy[currentSelection.level1].children[currentSelection.level2]?.children || {})
+    : [];
 
   const selectedCategories = useMemo(() => {
     if (!value) return [];

@@ -28,8 +28,8 @@ function PendingPayrollsPage() {
   return (
     <div className={classes.page}>
       <Helmet title={formatMessage('paymentPoint.page.title')} />
-      {rights.includes(RIGHT_PAYROLL_SEARCH)
-        && <PayrollSearcherPending classes={classes} />}
+      {rights.includes(RIGHT_PAYROLL_SEARCH) &&
+        <PayrollSearcherPending classes={classes} />}
     </div>
   );
 }

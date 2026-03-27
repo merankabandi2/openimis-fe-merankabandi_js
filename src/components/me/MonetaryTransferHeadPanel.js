@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { injectIntl } from 'react-intl';
 
-import { 
-  Grid, 
-  Paper, 
-  Typography, 
+import {
+  Grid,
+  Paper,
+  Typography,
   Box,
   Chip,
   Tooltip,
@@ -50,7 +50,7 @@ const styles = (theme) => ({
     borderRadius: theme.spacing(1.5),
     border: '1px solid #e8e8e8',
     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-    
+
     // Target both outlined and underlined inputs
     '& .MuiOutlinedInput-root, & .MuiInput-root': {
       border: '1px solid #d1d5db !important',
@@ -84,7 +84,7 @@ const styles = (theme) => ({
         },
       },
     },
-    
+
     // Hide default underlines and outlines since we're adding custom borders
     '& .MuiOutlinedInput-notchedOutline': {
       border: 'none !important',
@@ -92,7 +92,7 @@ const styles = (theme) => ({
     '& .MuiInput-underline:before, & .MuiInput-underline:after': {
       display: 'none !important',
     },
-    
+
     // Always visible labels - force shrink state
     '& .MuiInputLabel-root': {
       color: '#6b7280 !important',
@@ -111,13 +111,13 @@ const styles = (theme) => ({
         fontWeight: '600 !important',
       },
     },
-    
+
     // Override any auto-shrinking behavior
     '& .MuiInputLabel-outlined': {
       transform: 'translate(14px, -6px) scale(1) !important',
       background: 'linear-gradient(to bottom, transparent 40%, #fafafa 40%, #fafafa 60%, transparent 60%) !important',
     },
-    
+
     // Helper text styling
     '& .MuiFormHelperText-root': {
       fontSize: '0.6875rem !important',
@@ -128,7 +128,7 @@ const styles = (theme) => ({
         fontWeight: '500 !important',
       },
     },
-    
+
     // Input text styling with adjusted padding for visible labels
     '& .MuiInputBase-input': {
       padding: '18px 14px 10px 14px !important',
@@ -141,7 +141,7 @@ const styles = (theme) => ({
       },
     },
   },
-  
+
   // Section headers styling with reduced spacing
   sectionHeader: {
     color: '#374151',
@@ -159,7 +159,7 @@ const styles = (theme) => ({
       borderRadius: '2px',
     },
   },
-  
+
   // Reduced field container spacing
   fieldContainer: {
     marginBottom: theme.spacing(1.5),
@@ -274,14 +274,14 @@ class MonetaryTransferHeadPanel extends FormPanel {
 
   // Calculate totals
   getTotalPlanned = (monetaryTransfer) => {
-    return (Number(monetaryTransfer?.plannedWomen || 0) + 
-            Number(monetaryTransfer?.plannedMen || 0) + 
+    return (Number(monetaryTransfer?.plannedWomen || 0) +
+            Number(monetaryTransfer?.plannedMen || 0) +
             Number(monetaryTransfer?.plannedTwa || 0));
   };
 
   getTotalPaid = (monetaryTransfer) => {
-    return (Number(monetaryTransfer?.paidWomen || 0) + 
-            Number(monetaryTransfer?.paidMen || 0) + 
+    return (Number(monetaryTransfer?.paidWomen || 0) +
+            Number(monetaryTransfer?.paidMen || 0) +
             Number(monetaryTransfer?.paidTwa || 0));
   };
 
@@ -376,7 +376,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
               Bénéficiaires
             </div>
           </Grid>
-          
+
           {/* Planned beneficiaries in full-width grid */}
           <Grid item xs={12} md={4} className={classes.fieldContainer}>
             <NumberInput
@@ -411,7 +411,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
               min={0}
             />
           </Grid>
-          
+
           {/* Paid beneficiaries in full-width grid */}
           <Grid item xs={12} md={4} className={classes.fieldContainer}>
             <NumberInput
@@ -666,10 +666,10 @@ class MonetaryTransferHeadPanel extends FormPanel {
             <Box className={classes.summaryBox}>
               <div className={classes.summaryItem}>
                 <Typography variant="body2" fontWeight="medium">Total prévu:</Typography>
-                <Chip 
-                  label={`${totalPlanned} bénéficiaires`} 
-                  color="primary" 
-                  variant="outlined" 
+                <Chip
+                  label={`${totalPlanned} bénéficiaires`}
+                  color="primary"
+                  variant="outlined"
                   size="small"
                 />
               </div>
@@ -701,7 +701,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <WcIcon color={womenValid ? "action" : "error"} />
+                        <WcIcon color={womenValid ? 'action' : 'error'} />
                       </InputAdornment>
                     ),
                   }}
@@ -723,7 +723,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <PersonIcon color={menValid ? "action" : "error"} />
+                        <PersonIcon color={menValid ? 'action' : 'error'} />
                       </InputAdornment>
                     ),
                   }}
@@ -745,7 +745,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <AccessibilityIcon color={twaValid ? "action" : "error"} />
+                        <AccessibilityIcon color={twaValid ? 'action' : 'error'} />
                       </InputAdornment>
                     ),
                   }}
@@ -755,18 +755,18 @@ class MonetaryTransferHeadPanel extends FormPanel {
             <Box className={classes.summaryBox}>
               <div className={classes.summaryItem}>
                 <Typography variant="body2" fontWeight="medium">Total payé:</Typography>
-                <Chip 
-                  label={`${totalPaid} bénéficiaires`} 
-                  color={totalPaid <= totalPlanned ? "primary" : "secondary"} 
-                  variant="outlined" 
+                <Chip
+                  label={`${totalPaid} bénéficiaires`}
+                  color={totalPaid <= totalPlanned ? 'primary' : 'secondary'}
+                  variant="outlined"
                   size="small"
                 />
               </div>
               <div className={classes.summaryItem}>
                 <Typography variant="body2" fontWeight="medium">Taux de paiement:</Typography>
-                <Chip 
-                  label={`${paymentRate}%`} 
-                  color={paymentRate >= 90 ? "primary" : paymentRate >= 70 ? "default" : "secondary"} 
+                <Chip
+                  label={`${paymentRate}%`}
+                  color={paymentRate >= 90 ? 'primary' : paymentRate >= 70 ? 'default' : 'secondary'}
                   size="small"
                 />
               </div>
@@ -822,7 +822,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <AttachMoneyIcon color={amountValid ? "action" : "error"} />
+                        <AttachMoneyIcon color={amountValid ? 'action' : 'error'} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -843,15 +843,15 @@ class MonetaryTransferHeadPanel extends FormPanel {
               </div>
               <div className={classes.summaryItem}>
                 <Typography variant="body2" fontWeight="medium">Montant transféré:</Typography>
-                <Typography variant="body2" color={amountValid ? "primary" : "error"}>
+                <Typography variant="body2" color={amountValid ? 'primary' : 'error'}>
                   {this.formatCurrency(monetaryTransfer?.transferredAmount)} BIF
                 </Typography>
               </div>
               <div className={classes.summaryItem}>
                 <Typography variant="body2" fontWeight="medium">Taux de transfert:</Typography>
-                <Chip 
-                  label={`${transferRate}%`} 
-                  color={transferRate >= 90 ? "primary" : transferRate >= 70 ? "default" : "secondary"} 
+                <Chip
+                  label={`${transferRate}%`}
+                  color={transferRate >= 90 ? 'primary' : transferRate >= 70 ? 'default' : 'secondary'}
                   size="small"
                 />
               </div>
@@ -875,7 +875,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                 </Grid>
                 <Grid item xs={12} sm={3}>
                   <Box textAlign="center">
-                    <Typography variant="h4" color={totalPaid <= totalPlanned ? "primary" : "error"}>
+                    <Typography variant="h4" color={totalPaid <= totalPlanned ? 'primary' : 'error'}>
                       {totalPaid}
                     </Typography>
                     <Typography variant="caption">Bénéficiaires payés</Typography>
@@ -891,7 +891,7 @@ class MonetaryTransferHeadPanel extends FormPanel {
                 </Grid>
                 <Grid item xs={12} sm={3}>
                   <Box textAlign="center">
-                    <Typography variant="h4" color={amountValid ? "primary" : "error"}>
+                    <Typography variant="h4" color={amountValid ? 'primary' : 'error'}>
                       {this.formatCurrency(monetaryTransfer?.transferredAmount)}
                     </Typography>
                     <Typography variant="caption">BIF transférés</Typography>

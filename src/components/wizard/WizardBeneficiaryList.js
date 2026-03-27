@@ -23,7 +23,7 @@ function WizardBeneficiaryList({ intl, benefitPlanId, selectedLocation, dispatch
       `benefitPlan_Id: "${benefitPlanId}"`,
       `first: ${first}`,
       `offset: ${offset}`,
-      `orderBy: ["-json_ext__pmt_score"]`,
+      'orderBy: ["-json_ext__pmt_score"]',
     ];
     if (selectedLocation?.uuid && selectedLocation?.type) {
       const levelMap = { D: 0, W: 1, V: 2 };

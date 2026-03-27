@@ -600,10 +600,12 @@ function reducer(state = STORE_STATE, action) {
         indicatorAchievements: parseData(action.payload.data.indicatorAchievement)?.map((achievement) => ({
           ...achievement,
           id: decodeId(achievement.id),
-          indicator: achievement.indicator ? {
-            ...achievement.indicator,
-            id: decodeId(achievement.indicator.id),
-          } : null,
+          indicator: achievement.indicator
+            ? {
+                ...achievement.indicator,
+                id: decodeId(achievement.indicator.id),
+              }
+            : null,
         })),
         indicatorAchievementsPageInfo: pageInfo(action.payload.data.indicatorAchievement),
         indicatorAchievementsTotalCount: action.payload.data.indicatorAchievement?.totalCount ?? 0,

@@ -39,10 +39,10 @@ function SectionsPage() {
   return (
     <div className={classes.page}>
       <Helmet title={formatMessage('section.page.title')} />
-      {rights.includes(RIGHT_SECTION_SEARCH)
-        && <SectionSearcher />}
-      {rights.includes(RIGHT_SECTION_CREATE)
-        && withTooltip(
+      {rights.includes(RIGHT_SECTION_SEARCH) &&
+        <SectionSearcher />}
+      {rights.includes(RIGHT_SECTION_CREATE) &&
+        withTooltip(
           <div className={classes.fab}>
             <Fab color="primary" onClick={onCreate}>
               <AddIcon />

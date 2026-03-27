@@ -396,7 +396,7 @@ function ResultsFrameworkDashboard() {
     setIsLoading(true);
     try {
       const result = await loadResultsFrameworkData(filters);
-      
+
       // Process the data
       const sections = result.section.edges.map(edge => edge.node);
       const indicators = result.indicator.edges.map(edge => edge.node);
@@ -407,7 +407,7 @@ function ResultsFrameworkDashboard() {
         const indicatorAchievements = achievements.filter(a => a.indicator.id === indicator.id);
         const latestAchievement = indicatorAchievements.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
         const currentValue = latestAchievement ? parseFloat(latestAchievement.achieved) : parseFloat(indicator.baseline);
-        
+
         return {
           ...indicator,
           currentValue,
@@ -445,7 +445,7 @@ function ResultsFrameworkDashboard() {
     achievedIndicators: data.indicators.filter(i => i.progress >= 100).length,
     inProgressIndicators: data.indicators.filter(i => i.progress > 0 && i.progress < 100).length,
     notStartedIndicators: data.indicators.filter(i => i.progress === 0).length,
-    averageProgress: data.indicators.length > 0 
+    averageProgress: data.indicators.length > 0
       ? Math.round(data.indicators.reduce((sum, i) => sum + i.progress, 0) / data.indicators.length)
       : 0,
   };
@@ -474,7 +474,7 @@ function ResultsFrameworkDashboard() {
         startAngle: -90,
         endAngle: 90,
         track: {
-          background: "#e7e7e7",
+          background: '#e7e7e7',
           strokeWidth: '97%',
           margin: 5,
           dropShadow: {
@@ -495,7 +495,7 @@ function ResultsFrameworkDashboard() {
             fontSize: '22px',
             fontWeight: 700,
             formatter: function (val) {
-              return val + "%";
+              return val + '%';
             }
           }
         }
@@ -533,7 +533,7 @@ function ResultsFrameworkDashboard() {
     dataLabels: {
       enabled: true,
       formatter: function (val) {
-        return val + "%";
+        return val + '%';
       },
       style: {
         fontSize: '12px',
@@ -555,7 +555,7 @@ function ResultsFrameworkDashboard() {
     tooltip: {
       y: {
         formatter: function (val) {
-          return val + "% de progression";
+          return val + '% de progression';
         },
       },
     },
@@ -717,7 +717,7 @@ function ResultsFrameworkDashboard() {
           {data.sections.map(section => {
             const sectionIndicators = data.indicators.filter(i => i.section.id === section.id);
             const isExpanded = expandedSections[section.id] !== false; // Default to expanded
-            
+
             return (
               <Accordion
                 key={section.id}
@@ -752,7 +752,7 @@ function ResultsFrameworkDashboard() {
                   <Grid container spacing={3} style={{ padding: theme.spacing(2) }}>
                     {sectionIndicators.map(indicator => (
                       <Grid item xs={12} md={6} key={indicator.id}>
-                        <Card 
+                        <Card
                           className={classes.indicatorCard}
                           onClick={() => setSelectedIndicator(indicator)}
                         >
@@ -761,11 +761,13 @@ function ResultsFrameworkDashboard() {
                               <Typography className={classes.indicatorName}>
                                 {indicator.name}
                               </Typography>
-                              {indicator.progress >= 100 ? (
+                              {indicator.progress >= 100
+                                ? (
                                 <CheckCircleIcon color="primary" className={classes.indicatorStatus} />
-                              ) : (
+                                  )
+                                : (
                                 <RadioButtonUncheckedIcon color="action" className={classes.indicatorStatus} />
-                              )}
+                                  )}
                             </div>
 
                             <div className={classes.progressContainer}>
@@ -904,17 +906,19 @@ function ResultsFrameworkDashboard() {
                         {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.history')}
                       </Typography>
                       <List>
-                        {selectedIndicator.achievements.length === 0 ? (
+                        {selectedIndicator.achievements.length === 0
+                          ? (
                           <ListItem>
-                            <ListItemText 
+                            <ListItemText
                               primary={formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.noMeasurements')}
                               secondary={formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.noMeasurementsHint')}
                             />
                           </ListItem>
-                        ) : (
-                          selectedIndicator.achievements
-                            .sort((a, b) => new Date(b.date) - new Date(a.date))
-                            .map(achievement => (
+                            )
+                          : (
+                              selectedIndicator.achievements
+                                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                .map(achievement => (
                               <ListItem key={achievement.id} divider>
                                 <ListItemIcon>
                                   <TimelineIcon />
@@ -924,8 +928,8 @@ function ResultsFrameworkDashboard() {
                                   secondary={achievement.comment}
                                 />
                               </ListItem>
-                            ))
-                        )}
+                                ))
+                            )}
                       </List>
                     </Grid>
                   </Grid>

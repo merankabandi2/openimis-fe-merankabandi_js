@@ -81,7 +81,7 @@ function MonetaryTransferChartBeneficiaires({ classes, theme, filters = {} }) {
       if (filters.year) optimizedFilters.year = filters.year;
       if (filters.locationId) optimizedFilters.provinceId = filters.locationId;
       if (filters.benefitPlanId) optimizedFilters.benefitPlanId = decodeId(filters.benefitPlanId);
-      
+
       const response = await fetch(`${baseApiUrl}/graphql`, {
         method: 'post',
         headers: apiHeaders(),

@@ -22,9 +22,9 @@ import {
 import {
   fetchIndicatorAchievements,
   deleteIndicatorAchievement,
+  ACTION_TYPE
 } from '../../actions';
 import IndicatorAchievementDialog from './IndicatorAchievementDialog';
-import { ACTION_TYPE } from '../../actions';
 
 const styles = (theme) => ({
   paper: theme.paper.paper,
@@ -60,9 +60,9 @@ class IndicatorAchievementsPanel extends React.Component {
 
     if (prevProps.submittingMutation && !submittingMutation) {
       journalize(mutation);
-      if (mutation?.actionType === ACTION_TYPE.CREATE_INDICATOR_ACHIEVEMENT
-          || mutation?.actionType === ACTION_TYPE.UPDATE_INDICATOR_ACHIEVEMENT
-          || mutation?.actionType === ACTION_TYPE.DELETE_INDICATOR_ACHIEVEMENT) {
+      if (mutation?.actionType === ACTION_TYPE.CREATE_INDICATOR_ACHIEVEMENT ||
+          mutation?.actionType === ACTION_TYPE.UPDATE_INDICATOR_ACHIEVEMENT ||
+          mutation?.actionType === ACTION_TYPE.DELETE_INDICATOR_ACHIEVEMENT) {
         this.refreshData();
       }
     }

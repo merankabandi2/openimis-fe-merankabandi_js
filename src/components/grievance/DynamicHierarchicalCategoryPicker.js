@@ -102,7 +102,7 @@ class DynamicHierarchicalCategoryPicker extends Component {
 
     const newSelectedCategories = [...selectedCategories.slice(0, level), category.fullName || category.name];
 
-    let flags = [];
+    const flags = [];
     if (category.flag) {
       flags.push(category.flag);
     }

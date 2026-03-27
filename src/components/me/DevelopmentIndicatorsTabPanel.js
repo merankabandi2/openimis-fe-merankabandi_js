@@ -171,7 +171,7 @@ function AchievementDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {formatMessage(intl, "achievement.dialog", isEdit ? "edit.title" : "add.title")}
+        {formatMessage(intl, 'achievement.dialog', isEdit ? 'edit.title' : 'add.title')}
         {' '}
         -
         {indicator?.name}
@@ -180,7 +180,7 @@ function AchievementDialog({
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog.value", "label")}
+              label={formatMessage(intl, 'achievement.dialog.value', 'label')}
               value={achieved}
               onChange={(e) => setAchieved(e.target.value)}
               fullWidth
@@ -190,7 +190,7 @@ function AchievementDialog({
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog", "date")}
+              label={formatMessage(intl, 'achievement.dialog', 'date')}
               value={date}
               onChange={(e) => setDate(e.target.value)}
               fullWidth
@@ -201,7 +201,7 @@ function AchievementDialog({
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog.notes", "label")}
+              label={formatMessage(intl, 'achievement.dialog.notes', 'label')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               fullWidth
@@ -214,10 +214,10 @@ function AchievementDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">
-          {formatMessage(intl, "core", "cancel")}
+          {formatMessage(intl, 'core', 'cancel')}
         </Button>
         <Button onClick={handleSave} color="primary" variant="contained">
-          {formatMessage(intl, "core", "save")}
+          {formatMessage(intl, 'core', 'save')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -299,7 +299,7 @@ function DevelopmentIndicatorsTabPanel({
   const developmentIndicators = React.useMemo(() => {
     // Development indicators are in sections 1-3 based on the CSV data
     const developmentSectionIds = [1, 2, 3];
-    
+
     // Define development section names that should be included
     const developmentSectionNames = [
       'Renforcer les capacités de gestion',
@@ -312,7 +312,7 @@ function DevelopmentIndicatorsTabPanel({
       // Handle section as either object or ID
       let sectionId = null;
       let sectionName = null;
-      
+
       if (indicator.section) {
         if (typeof indicator.section === 'object') {
           sectionId = indicator.section.pk || indicator.section.id;
@@ -321,16 +321,16 @@ function DevelopmentIndicatorsTabPanel({
           sectionId = parseInt(indicator.section);
         }
       }
-      
+
       // Check if indicator belongs to development sections by ID
       const sectionIdMatch = sectionId && developmentSectionIds.includes(sectionId);
-      
+
       // Check if indicator belongs to development sections by name
-      const sectionNameMatch = sectionName && 
-        developmentSectionNames.some(name => 
+      const sectionNameMatch = sectionName &&
+        developmentSectionNames.some(name =>
           sectionName.toLowerCase() === name.toLowerCase()
         );
-      
+
       return sectionIdMatch || sectionNameMatch;
     });
 
@@ -349,12 +349,12 @@ function DevelopmentIndicatorsTabPanel({
   // Process data to create a unified view with sections and indicators
   const processedData = React.useMemo(() => {
     const sectionMap = {};
-    
+
     // Group indicators by section
     developmentIndicators.indicators.forEach((indicator) => {
       let sectionId = 'no-section';
-      let sectionObj = { id: 'no-section', name: formatMessage(intl, "indicator", "withoutSection") };
-      
+      let sectionObj = { id: 'no-section', name: formatMessage(intl, 'indicator', 'withoutSection') };
+
       if (indicator.section) {
         if (typeof indicator.section === 'object') {
           sectionId = indicator.section.id;
@@ -362,11 +362,11 @@ function DevelopmentIndicatorsTabPanel({
         } else {
           // If section is just an ID, try to find it in our sections
           sectionId = indicator.section;
-          sectionObj = developmentIndicators.sections.find(s => s.id === sectionId) || 
+          sectionObj = developmentIndicators.sections.find(s => s.id === sectionId) ||
             { id: sectionId, name: `Section ${sectionId}` };
         }
       }
-      
+
       if (!sectionMap[sectionId]) {
         sectionMap[sectionId] = {
           section: sectionObj,
@@ -394,7 +394,7 @@ function DevelopmentIndicatorsTabPanel({
 
     // Convert to array and flatten for display
     const result = [];
-    
+
     // First add all sections with their indicators
     Object.values(sectionMap).forEach(({ section, indicators: sectionIndicators }) => {
       result.push({
@@ -450,9 +450,9 @@ function DevelopmentIndicatorsTabPanel({
 
   const handleSaveAchievement = (achievementData) => {
     if (achievementDialog.isEdit) {
-      updateIndicatorAchievement(achievementData, formatMessage(intl, "indicator.mutation", "updateLabel"));
+      updateIndicatorAchievement(achievementData, formatMessage(intl, 'indicator.mutation', 'updateLabel'));
     } else {
-      createIndicatorAchievement(achievementData, formatMessage(intl, "indicator.mutation", "createLabel"));
+      createIndicatorAchievement(achievementData, formatMessage(intl, 'indicator.mutation', 'createLabel'));
     }
     // Refresh data
     setTimeout(() => {
@@ -473,20 +473,24 @@ function DevelopmentIndicatorsTabPanel({
 
   const itemFormatters = () => [
     (item) => (
-      item.isSection ? (
+      item.isSection
+        ? (
         <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>
           {item.name}
         </span>
-      ) : item.name
+          )
+        : item.name
     ),
     (item) => (item.isSection ? '' : item.pbc),
     (item) => (item.isSection ? '' : item.baseline),
     (item) => (
-      item.isSection ? '' : (
+      item.isSection
+        ? ''
+        : (
         <span style={{ fontWeight: 'bold' }}>
           {item.target}
         </span>
-      )
+          )
     ),
     (item) => {
       if (item.isSection) return '';
@@ -508,7 +512,7 @@ function DevelopmentIndicatorsTabPanel({
             onClick={() => handleAddAchievement(item)}
             className={classes.addButton}
           >
-            {formatMessage(intl, "achievement", "add")}
+            {formatMessage(intl, 'achievement', 'add')}
           </Button>
           {item.latestAchievement && (
             <Button
@@ -517,7 +521,7 @@ function DevelopmentIndicatorsTabPanel({
               onClick={() => handleEditAchievement(item)}
               className={classes.addButton}
             >
-              {formatMessage(intl, "achievement", "edit")}
+              {formatMessage(intl, 'achievement', 'edit')}
             </Button>
           )}
         </div>
@@ -552,7 +556,7 @@ function DevelopmentIndicatorsTabPanel({
               variant="contained"
               onClick={() => historyPush(modulesManager, history, 'merankabandi.route.indicators')}
             >
-              {formatMessage(intl, "indicatorsTab", "manageIndicators")}
+              {formatMessage(intl, 'indicatorsTab', 'manageIndicators')}
             </Button>
           </div>
           <Searcher

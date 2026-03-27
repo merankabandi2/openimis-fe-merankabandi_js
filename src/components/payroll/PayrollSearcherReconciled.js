@@ -87,13 +87,17 @@ function PayrollSearcherReconciled({
   const itemFormatters = () => [
     (payroll) => payroll.name,
     (payroll) => (payroll.benefitPlan
-      ? `${payroll.benefitPlan.code} ${payroll.benefitPlan.name}` : ''),
+      ? `${payroll.benefitPlan.code} ${payroll.benefitPlan.name}`
+      : ''),
     (payroll) => (payroll.paymentPoint
-      ? `${payroll.paymentPoint.name}` : ''),
+      ? `${payroll.paymentPoint.name}`
+      : ''),
     (payroll) => (payroll.status
-      ? `${payroll.status}` : ''),
+      ? `${payroll.status}`
+      : ''),
     (payroll) => (payroll.paymentMethod
-      ? `${payroll.paymentMethod}` : ''),
+      ? `${payroll.paymentMethod}`
+      : ''),
     (payroll) => (
       <PayrollReconciliationFilesDialog
         classes={classes}

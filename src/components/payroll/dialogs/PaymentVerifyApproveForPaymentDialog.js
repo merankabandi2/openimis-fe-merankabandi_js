@@ -25,8 +25,7 @@ import {
 } from '../../../constants';
 import { fetchTask, resolveTask } from '../../../actions';
 import { closePayroll, fetchPayroll, rejectPayroll } from '../../../payroll-actions';
-import { mutationLabel } from '../../../utils/string-utils';
-import { formatFrenchThousands } from '../../../utils/string-utils';
+import { mutationLabel, formatFrenchThousands } from '../../../utils/string-utils';
 
 function downloadPayroll(payrollId, payrollFileName, blank = true) {
   const url = new URL(
@@ -124,9 +123,9 @@ function PaymentVerifyApproveForPaymentDialog({
 
   return (
     <>
-      {rights.includes(RIGHT_PAYROLL_SEARCH)
-        && [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll?.status)
-        && (
+      {rights.includes(RIGHT_PAYROLL_SEARCH) &&
+        [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll?.status) &&
+        (
         <Button
           onClick={handleOpen}
           variant="contained"
@@ -221,11 +220,11 @@ function PaymentVerifyApproveForPaymentDialog({
               paddingRight: '16px',
             }}
             >
-              {rights.includes(RIGHT_PAYROLL_SEARCH)
-                && task
-                && user
-                && [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll?.status)
-                && (
+              {rights.includes(RIGHT_PAYROLL_SEARCH) &&
+                task &&
+                user &&
+                [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll?.status) &&
+                (
                   <Button
                     onClick={() => resolveTaskCallback(task, user)}
                     variant="contained"

@@ -104,7 +104,7 @@ function MEDashboard({ rights, locations }) {
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const params = new URLSearchParams();
       if (filters.startDate) params.append('start_date', filters.startDate);
@@ -219,7 +219,7 @@ function MEDashboard({ rights, locations }) {
   // Prepare chart data
   const getGenderChartData = () => {
     if (!dashboardData?.beneficiaryBreakdown?.gender_summary) return [];
-    
+
     const { planned } = dashboardData.beneficiaryBreakdown.gender_summary;
     // Only show gender breakdown (men vs women)
     return [
@@ -230,11 +230,11 @@ function MEDashboard({ rights, locations }) {
 
   const getMinorityGroupData = () => {
     if (!dashboardData?.beneficiaryBreakdown?.gender_summary) return [];
-    
+
     const { planned } = dashboardData.beneficiaryBreakdown.gender_summary;
     const totalNonTwa = (planned.men || 0) + (planned.women || 0);
     const twaValue = planned.twa || 0;
-    
+
     return [
       { name: formatMessage('dashboard.me.chart.twa'), value: twaValue },
       { name: formatMessage('dashboard.me.chart.nonTwa'), value: totalNonTwa },
@@ -243,17 +243,18 @@ function MEDashboard({ rights, locations }) {
 
   const getCommunityChartData = () => {
     if (!dashboardData?.refugeeHostBreakdown) return [];
-    
-    const { host_community, refugee_community } = dashboardData.refugeeHostBreakdown;
+
+    const hostCommunity = dashboardData.refugeeHostBreakdown.host_community;
+    const refugeeCommunity = dashboardData.refugeeHostBreakdown.refugee_community;
     return [
-      { name: formatMessage('dashboard.me.chart.hostCommunity'), value: host_community?.planned_beneficiaries || 0 },
-      { name: formatMessage('dashboard.me.chart.refugees'), value: refugee_community?.planned_beneficiaries || 0 },
+      { name: formatMessage('dashboard.me.chart.hostCommunity'), value: hostCommunity?.planned_beneficiaries || 0 },
+      { name: formatMessage('dashboard.me.chart.refugees'), value: refugeeCommunity?.planned_beneficiaries || 0 },
     ].filter(item => item.value > 0);
   };
 
   const getQuarterlyChartData = () => {
     if (!dashboardData?.quarterlyData) return [];
-    
+
     return Object.entries(dashboardData.quarterlyData).map(([quarter, data]) => ({
       quarter,
       transfers: data.transfers?.total_paid || 0,

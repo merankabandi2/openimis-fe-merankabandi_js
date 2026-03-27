@@ -3,7 +3,6 @@ import { ConstantBasedPicker } from '@openimis/fe-core';
 
 import { PAYROLL_STATUS_LIST } from '../../constants';
 
-
 function PayrollStatusPicker({
   required,
   withNull,

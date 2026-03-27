@@ -65,8 +65,8 @@ function PaymentRequestPage({
   return (
     <div className={classes.page}>
       <Helmet title={formatMessage('paymentRequestPage.title')} />
-      {rights.includes(RIGHT_PAYROLL_SEARCH)
-        && (
+      {rights.includes(RIGHT_PAYROLL_SEARCH) &&
+        (
           <Form
             key="payments-requests"
             module="payroll"
@@ -79,8 +79,8 @@ function PaymentRequestPage({
             readOnly={readOnly}
           />
         )}
-      {rights.includes(RIGHT_PAYROLL_CREATE)
-        && withTooltip(
+      {rights.includes(RIGHT_PAYROLL_CREATE) &&
+        withTooltip(
           <div className={classes.fab}>
             <Fab color="primary" onClick={onCreate}>
               <AddIcon />

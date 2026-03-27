@@ -61,17 +61,17 @@ function SensitizationTrainingSearcher({
   // Helper function to get category display label
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
-    
+
     // Try to get translation first - handle both lowercase and uppercase keys
     const normalizedKey = categoryKey.toLowerCase();
     const translationKey = `sensitizationTraining.category.${normalizedKey}`;
     const translated = intl.formatMessage({ id: translationKey });
-    
+
     // If translation exists (not same as key), return it
     if (translated !== translationKey) {
       return translated;
     }
-    
+
     // Otherwise return the original value
     return categoryKey;
   };
@@ -104,13 +104,13 @@ function SensitizationTrainingSearcher({
 
   const renderValidationStatus = (training) => {
     const statusMap = {
-      'PENDING': { icon: <HourglassEmptyIcon />, color: 'default', label: formatMessage('validation.status.pending') },
-      'VALIDATED': { icon: <CheckCircleIcon />, color: 'primary', label: formatMessage('validation.status.validated') },
-      'REJECTED': { icon: <CancelIcon />, color: 'secondary', label: formatMessage('validation.status.rejected') },
+      PENDING: { icon: <HourglassEmptyIcon />, color: 'default', label: formatMessage('validation.status.pending') },
+      VALIDATED: { icon: <CheckCircleIcon />, color: 'primary', label: formatMessage('validation.status.validated') },
+      REJECTED: { icon: <CancelIcon />, color: 'secondary', label: formatMessage('validation.status.rejected') },
     };
 
     const status = training.validationStatus || 'PENDING';
-    const statusConfig = statusMap[status] || statusMap['PENDING'];
+    const statusConfig = statusMap[status] || statusMap.PENDING;
 
     return (
       <Chip

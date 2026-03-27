@@ -90,9 +90,9 @@ function MerankabandiPayrollPage({
 
   useEffect(() => {
     if (
-      payroll
-      && payrollUuid
-      && [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll.status)
+      payroll &&
+      payrollUuid &&
+      [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll.status)
     ) {
       const source = (payroll.status === PAYROLL_STATUS.PENDING_VERIFICATION) ? 'payroll_verification' : 'payroll';
       fetchTask(modulesManager, [`entityId: "${payrollUuid}", source: "${source}"`]);
@@ -142,12 +142,12 @@ function MerankabandiPayrollPage({
 
   const mandatoryFieldsEmpty = () => {
     if (
-      editedPayroll?.paymentPlan
-      && editedPayroll?.paymentCycle
-      && editedPayroll?.dateValidFrom
-      && editedPayroll?.paymentPoint
-      && editedPayroll?.location
-      && !editedPayroll?.isDeleted) return false;
+      editedPayroll?.paymentPlan &&
+      editedPayroll?.paymentCycle &&
+      editedPayroll?.dateValidFrom &&
+      editedPayroll?.paymentPoint &&
+      editedPayroll?.location &&
+      !editedPayroll?.isDeleted) return false;
     return true;
   };
 

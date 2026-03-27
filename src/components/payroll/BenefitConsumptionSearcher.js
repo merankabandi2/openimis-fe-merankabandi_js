@@ -62,19 +62,22 @@ function BenefitConsumptionSearcher({
     }
 
     return (
-      benefitConsumption
-      && benefitConsumption.dateDue
-      >= benefitConsumption.benefitAttachment[0].bill.datePayed)
-      ? 'True' : 'False';
+      benefitConsumption &&
+      benefitConsumption.dateDue >=
+      benefitConsumption.benefitAttachment[0].bill.datePayed)
+      ? 'True'
+      : 'False';
   };
 
   const itemFormatters = () => [
     (benefitConsumption) => benefitConsumption?.individual?.firstName,
     (benefitConsumption) => benefitConsumption?.individual?.lastName,
     (benefitConsumption) => (
-      benefitConsumption.receipt ? (
+      benefitConsumption.receipt
+        ? (
         <PhotoCameraOutlinedIcon style={{ fontSize: 150 }} />
-      ) : null
+          )
+        : null
     ),
     (benefitConsumption) => benefitConsumption?.code,
     (benefitConsumption) => benefitConsumption?.dateDue,
@@ -82,7 +85,8 @@ function BenefitConsumptionSearcher({
     (benefitConsumption) => benefitConsumption?.amount,
     (benefitConsumption) => benefitConsumption?.type,
     (benefitConsumption) => (isPayrollFromFailedInvoices
-      ? BENEFIT_CONSUMPTION_STATUS.APPROVE_FOR_PAYMENT : benefitConsumption?.status),
+      ? BENEFIT_CONSUMPTION_STATUS.APPROVE_FOR_PAYMENT
+      : benefitConsumption?.status),
     (benefitConsumption) => checkBenefitDueDate(benefitConsumption),
     (benefitConsumption) => (
       !benefitConsumption.receipt

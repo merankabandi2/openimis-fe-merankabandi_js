@@ -60,7 +60,7 @@ function MonetaryTransfersListPage() {
   return (
     <div className={classes.page} data-testid="monetary-transfers-list-page">
       <Helmet title={formatMessage('monetaryTransfer.list.page.title')} />
-      
+
       {/* Searcher Section */}
       {canSearch && (
         <Box className={classes.searcherSection} data-testid="searcher-section">
@@ -79,8 +79,8 @@ function MonetaryTransfersListPage() {
       {canCreate && (
         <Box className={classes.fabContainer} data-testid="create-button-container">
           {withTooltip(
-            <Fab 
-              color="primary" 
+            <Fab
+              color="primary"
               onClick={handleCreate}
               data-testid="create-monetary-transfer-button"
               aria-label={formatMessage('tooltip.createButton')}

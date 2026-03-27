@@ -52,8 +52,8 @@ function TicketsPieChart({ data: propsData, isLoading: propsIsLoading, filters =
   useEffect(() => {
     if (data && data.length) {
       const labels = data.map((item) => formatMessage(
-        intl, 
-        'grievanceSocialProtection', 
+        intl,
+        'grievanceSocialProtection',
         `ticket.status.${item.status}`
       ));
       const values = data.map((item) => parseInt(item.count, 10));
@@ -84,21 +84,23 @@ function TicketsPieChart({ data: propsData, isLoading: propsIsLoading, filters =
 
   return (
     <div style={{ height: '300px' }}>
-      {data && data.length ? (
+      {data && data.length
+        ? (
         <ReactApexChart
           options={chartOptions}
           series={series}
           type="pie"
           height={300}
         />
-      ) : (
+          )
+        : (
         <div style={{
           display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%',
         }}
         >
           <p>No ticket data available</p>
         </div>
-      )}
+          )}
     </div>
   );
 }

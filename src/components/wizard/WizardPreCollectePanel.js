@@ -22,7 +22,7 @@ function WizardPreCollectePanel({ intl, benefitPlanId, selectedLocation, dispatc
       `benefitPlan_Id: "${benefitPlanId}"`,
       `first: ${first}`,
       `offset: ${offset}`,
-      `orderBy: ["-id"]`,
+      'orderBy: ["-id"]',
     ];
     if (selectedLocation?.uuid && selectedLocation?.type) {
       const levelMap = { D: 0, W: 1, V: 2 };

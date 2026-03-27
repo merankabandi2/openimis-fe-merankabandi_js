@@ -15,9 +15,8 @@ import {
   coreConfirm,
   journalize,
 } from '@openimis/fe-core';
-import { fetchSections, deleteSection } from '../../actions';
+import { fetchSections, deleteSection, ACTION_TYPE } from '../../actions';
 import { RIGHT_SECTION_SEARCH, RIGHT_SECTION_UPDATE, SECTION_ROUTE } from '../../constants';
-import { ACTION_TYPE } from '../../actions';
 
 function SectionSearcher({
   fetchSections,
@@ -130,9 +129,9 @@ function SectionSearcher({
       <div style={{ padding: '16px' }}>
         <div>
           <label>{formatMessage('section.name')}</label>
-          <input 
-            type="text" 
-            value={filters.name || ''} 
+          <input
+            type="text"
+            value={filters.name || ''}
             onChange={(e) => onChangeFilters({ ...filters, name: e.target.value })}
             style={{ marginLeft: '8px' }}
           />

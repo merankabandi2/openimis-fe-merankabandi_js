@@ -47,7 +47,7 @@ function IndicatorsPage() {
             </Fab>
           </div>,
           formatMessage('tooltip.createButton'),
-        )}
+      )}
     </div>
   );
 }

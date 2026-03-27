@@ -293,7 +293,6 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_PAYROLLS_RECONCILED, component: ReconciledPayrollsPage },
   ],
 
-
   // Payment menu items (contributed to PaymentMainMenu via 'payment.MainMenu' key
   // so they appear in getMenuEntries() for DB menu config matching)
   'payment.MainMenu': [

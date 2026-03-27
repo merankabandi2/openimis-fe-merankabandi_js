@@ -70,7 +70,7 @@ function MonetaryTransferChart({ filters = {} }) {
   // Transform data for the chart
   const chartData = useMemo(() => {
     if (!data?.byTransferType) return [];
-    
+
     // The optimized query now includes quarterly breakdown data
     return data.byTransferType.map(item => ({
       transferType: item.transferType,
@@ -90,17 +90,17 @@ function MonetaryTransferChart({ filters = {} }) {
     name: item.transferType,
     data: showBeneficiaries
       ? [
-        parseFloat(item.q1Beneficiaries || 0),
-        parseFloat(item.q2Beneficiaries || 0),
-        parseFloat(item.q3Beneficiaries || 0),
-        parseFloat(item.q4Beneficiaries || 0),
-      ]
+          parseFloat(item.q1Beneficiaries || 0),
+          parseFloat(item.q2Beneficiaries || 0),
+          parseFloat(item.q3Beneficiaries || 0),
+          parseFloat(item.q4Beneficiaries || 0),
+        ]
       : [
-        parseFloat(item.q1Amount || 0),
-        parseFloat(item.q2Amount || 0),
-        parseFloat(item.q3Amount || 0),
-        parseFloat(item.q4Amount || 0),
-      ],
+          parseFloat(item.q1Amount || 0),
+          parseFloat(item.q2Amount || 0),
+          parseFloat(item.q3Amount || 0),
+          parseFloat(item.q4Amount || 0),
+        ],
     // Add metadata for better tooltips
     meta: {
       paymentSource: item.paymentSource,
@@ -126,25 +126,27 @@ function MonetaryTransferChart({ filters = {} }) {
         },
       },
     },
-    plotOptions: showBeneficiaries ? {} : {
-      bar: {
-        horizontal: false,
-        columnWidth: '30%',
-        endingShape: 'rounded',
-      },
-    },
+    plotOptions: showBeneficiaries
+      ? {}
+      : {
+          bar: {
+            horizontal: false,
+            columnWidth: '30%',
+            endingShape: 'rounded',
+          },
+        },
     dataLabels: {
       enabled: false,
     },
     stroke: showBeneficiaries
       ? {
-        curve: 'smooth',
-        width: 3,
-      }
+          curve: 'smooth',
+          width: 3,
+        }
       : {
-        show: true,
-        width: 2,
-      },
+          show: true,
+          width: 2,
+        },
     xaxis: {
       categories: ['T1', 'T2', 'T3', 'T4'],
       title: {
@@ -211,23 +213,25 @@ function MonetaryTransferChart({ filters = {} }) {
             <CircularProgress size={40} />
           </div>
         )}
-        
+
         {/* Main loading state */}
-        {isLoading ? (
+        {isLoading
+          ? (
           <div style={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
               <CircularProgress size={60} />
               <Typography style={{ marginTop: 16 }}>Chargement des données...</Typography>
             </div>
           </div>
-        ) : (
+            )
+          : (
           <Chart
             options={options}
             series={series}
             type={showBeneficiaries ? 'line' : 'bar'}
             height={350}
           />
-        )}
+            )}
       </div>
     );
   };
@@ -244,17 +248,17 @@ function MonetaryTransferChart({ filters = {} }) {
     <Card className={classes.card}>
       {/* Progress bar for loading states */}
       {(isLoading || isRefreshing) && (
-        <LinearProgress 
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            zIndex: 2 
-          }} 
+        <LinearProgress
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2
+          }}
         />
       )}
-      
+
       <div className={classes.cardHeader}>
         <Typography className={classes.title} variant="h6" component="h2">
           Transferts Monétaires par Trimestre (Système + Externe)

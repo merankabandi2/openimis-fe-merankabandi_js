@@ -79,10 +79,10 @@ const useStyles = makeStyles(() => ({
 }));
 
 const PayrollBenefitPrintTemplate = forwardRef(({ benefitAttachments }, ref) => {
-  if (!benefitAttachments) return null;
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations(modulesManager, PAYROLL_MODULE_NAME);
+  if (!benefitAttachments) return null;
 
   return (
     <div ref={ref} className={classes.printContainer}>

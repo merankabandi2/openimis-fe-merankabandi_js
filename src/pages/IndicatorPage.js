@@ -20,13 +20,13 @@ import {
   deleteIndicator,
   fetchIndicator,
   updateIndicator,
+  ACTION_TYPE
 } from '../actions';
 import {
   MODULE_NAME,
   RIGHT_INDICATOR_CREATE,
   RIGHT_INDICATOR_UPDATE,
 } from '../constants';
-import { ACTION_TYPE } from '../actions';
 import { mutationLabel, pageTitle } from '../utils/string-utils';
 import IndicatorForm from '../components/indicators/IndicatorForm';
 import IndicatorAchievementsPanel from '../components/indicators/IndicatorAchievementsPanel';
@@ -93,8 +93,8 @@ function IndicatorPage({
 
   const mandatoryFieldsEmpty = () => {
     if (
-      editedIndicator?.name
-      && !editedIndicator?.isDeleted) return false;
+      editedIndicator?.name &&
+      !editedIndicator?.isDeleted) return false;
     return true;
   };
 
@@ -136,8 +136,8 @@ function IndicatorPage({
     },
   ];
 
-  const canViewPage = indicatorId 
-    ? rights.includes(RIGHT_INDICATOR_UPDATE) 
+  const canViewPage = indicatorId
+    ? rights.includes(RIGHT_INDICATOR_UPDATE)
     : rights.includes(RIGHT_INDICATOR_CREATE);
 
   if (!canViewPage) {

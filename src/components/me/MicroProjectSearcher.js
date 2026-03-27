@@ -140,13 +140,13 @@ function MicroProjectSearcher({
 
   const renderValidationStatus = (microProject) => {
     const statusMap = {
-      'PENDING': { icon: <HourglassEmptyIcon />, color: 'default', label: formatMessage('validation.status.pending') },
-      'VALIDATED': { icon: <CheckCircleIcon />, color: 'primary', label: formatMessage('validation.status.validated') },
-      'REJECTED': { icon: <CancelIcon />, color: 'secondary', label: formatMessage('validation.status.rejected') },
+      PENDING: { icon: <HourglassEmptyIcon />, color: 'default', label: formatMessage('validation.status.pending') },
+      VALIDATED: { icon: <CheckCircleIcon />, color: 'primary', label: formatMessage('validation.status.validated') },
+      REJECTED: { icon: <CancelIcon />, color: 'secondary', label: formatMessage('validation.status.rejected') },
     };
-    
-    const status = statusMap[microProject.validationStatus] || statusMap['PENDING'];
-    
+
+    const status = statusMap[microProject.validationStatus] || statusMap.PENDING;
+
     return (
       <Chip
         icon={status.icon}

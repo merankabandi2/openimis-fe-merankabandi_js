@@ -20,13 +20,13 @@ import {
   deleteSection,
   fetchSection,
   updateSection,
+  ACTION_TYPE
 } from '../actions';
 import {
   MODULE_NAME,
   RIGHT_SECTION_CREATE,
   RIGHT_SECTION_UPDATE,
 } from '../constants';
-import { ACTION_TYPE } from '../actions';
 import { mutationLabel, pageTitle } from '../utils/string-utils';
 import SectionForm from '../components/indicators/SectionForm';
 
@@ -92,8 +92,8 @@ function SectionPage({
 
   const mandatoryFieldsEmpty = () => {
     if (
-      editedSection?.name
-      && !editedSection?.isDeleted) return false;
+      editedSection?.name &&
+      !editedSection?.isDeleted) return false;
     return true;
   };
 
@@ -135,8 +135,8 @@ function SectionPage({
     },
   ];
 
-  const canViewPage = sectionId 
-    ? rights.includes(RIGHT_SECTION_UPDATE) 
+  const canViewPage = sectionId
+    ? rights.includes(RIGHT_SECTION_UPDATE)
     : rights.includes(RIGHT_SECTION_CREATE);
 
   if (!canViewPage) {

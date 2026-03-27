@@ -131,25 +131,25 @@ function MonetaryTransferSearcher({
     const women = isPlanned ? monetaryTransfer.plannedWomen : monetaryTransfer.paidWomen;
     const men = isPlanned ? monetaryTransfer.plannedMen : monetaryTransfer.paidMen;
     const twa = isPlanned ? monetaryTransfer.plannedTwa : monetaryTransfer.paidTwa;
-    
+
     // Calculate payment status for paid beneficiaries
-    const womenStatus = !isPlanned && monetaryTransfer.plannedWomen > 0 
-      ? monetaryTransfer.paidWomen >= monetaryTransfer.plannedWomen 
+    const womenStatus = !isPlanned && monetaryTransfer.plannedWomen > 0
+      ? monetaryTransfer.paidWomen >= monetaryTransfer.plannedWomen
       : null;
-    const menStatus = !isPlanned && monetaryTransfer.plannedMen > 0 
-      ? monetaryTransfer.paidMen >= monetaryTransfer.plannedMen 
+    const menStatus = !isPlanned && monetaryTransfer.plannedMen > 0
+      ? monetaryTransfer.paidMen >= monetaryTransfer.plannedMen
       : null;
-    const twaStatus = !isPlanned && monetaryTransfer.plannedTwa > 0 
-      ? monetaryTransfer.paidTwa >= monetaryTransfer.plannedTwa 
+    const twaStatus = !isPlanned && monetaryTransfer.plannedTwa > 0
+      ? monetaryTransfer.paidTwa >= monetaryTransfer.plannedTwa
       : null;
-    
+
     return (
       <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
         <Chip
           icon={<WcIcon />}
           label={women}
           size="small"
-          style={{ 
+          style={{
             backgroundColor: isPlanned ? '#fce4ec' : (womenStatus === true ? '#c8e6c9' : womenStatus === false ? '#ffcdd2' : '#fce4ec')
           }}
         />
@@ -157,7 +157,7 @@ function MonetaryTransferSearcher({
           icon={<FaceIcon />}
           label={men}
           size="small"
-          style={{ 
+          style={{
             backgroundColor: isPlanned ? '#e3f2fd' : (menStatus === true ? '#c8e6c9' : menStatus === false ? '#ffcdd2' : '#e3f2fd')
           }}
         />
@@ -166,7 +166,7 @@ function MonetaryTransferSearcher({
             icon={<AccessibilityIcon />}
             label={`${twa} Twa`}
             size="small"
-            style={{ 
+            style={{
               backgroundColor: isPlanned ? '#f3e5f5' : (twaStatus === true ? '#c8e6c9' : twaStatus === false ? '#ffcdd2' : '#f3e5f5')
             }}
           />
@@ -285,7 +285,7 @@ function MonetaryTransferSearcher({
     try {
       // Build query params from current filters
       const queryParams = new URLSearchParams();
-      
+
       if (filters.transferDate_Gte) {
         queryParams.append('start_date', filters.transferDate_Gte);
       }
@@ -318,11 +318,11 @@ function MonetaryTransferSearcher({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       link.download = `transferts_monetaires_${timestamp}.xlsx`;
-      
+
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -389,7 +389,7 @@ function MonetaryTransferSearcher({
   return (
     <>
       <Box display="flex" justifyContent="flex-end" marginBottom={2} gap={1}>
-        <MonetaryTransferUploadDialog 
+        <MonetaryTransferUploadDialog
           onUploadSuccess={onRefresh}
         />
         <Button

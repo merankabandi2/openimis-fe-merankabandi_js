@@ -119,13 +119,13 @@ function MerankabaniBenefitPlanSearcher({
   };
 
   function benefitPlanUpdatePageUrl(benefitPlan) {
-    return (`${modulesManager.getRef('socialProtection.route.benefitPlan')}`
-        + `/${benefitPlan?.id}`);
+    return (`${modulesManager.getRef('socialProtection.route.benefitPlan')}` +
+        `/${benefitPlan?.id}`);
   }
 
-  const onDoubleClick = (benefitPlan, newTab = false) => rights.includes(RIGHT_BENEFIT_PLAN_UPDATE)
-      && !deletedBenefitPlanUuids.includes(benefitPlan.id)
-      && historyPush(modulesManager, history, 'socialProtection.route.benefitPlan', [benefitPlan?.id], newTab);
+  const onDoubleClick = (benefitPlan, newTab = false) => rights.includes(RIGHT_BENEFIT_PLAN_UPDATE) &&
+      !deletedBenefitPlanUuids.includes(benefitPlan.id) &&
+      historyPush(modulesManager, history, 'socialProtection.route.benefitPlan', [benefitPlan?.id], newTab);
 
   const onDelete = (benefitPlan) => setBenefitPlanToDelete(benefitPlan);
 

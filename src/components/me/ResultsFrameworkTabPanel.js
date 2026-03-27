@@ -171,7 +171,7 @@ function AchievementDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {formatMessage(intl, "achievement.dialog", isEdit ? "edit.title" : "add.title")}
+        {formatMessage(intl, 'achievement.dialog', isEdit ? 'edit.title' : 'add.title')}
         {' '}
         -
         {indicator?.name}
@@ -180,7 +180,7 @@ function AchievementDialog({
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog.value", "label")}
+              label={formatMessage(intl, 'achievement.dialog.value', 'label')}
               value={achieved}
               onChange={(e) => setAchieved(e.target.value)}
               fullWidth
@@ -190,7 +190,7 @@ function AchievementDialog({
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog", "date")}
+              label={formatMessage(intl, 'achievement.dialog', 'date')}
               value={date}
               onChange={(e) => setDate(e.target.value)}
               fullWidth
@@ -201,7 +201,7 @@ function AchievementDialog({
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label={formatMessage(intl, "achievement.dialog.notes", "label")}
+              label={formatMessage(intl, 'achievement.dialog.notes', 'label')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               fullWidth
@@ -214,10 +214,10 @@ function AchievementDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">
-          {formatMessage(intl, "core", "cancel")}
+          {formatMessage(intl, 'core', 'cancel')}
         </Button>
         <Button onClick={handleSave} color="primary" variant="contained">
-          {formatMessage(intl, "core", "save")}
+          {formatMessage(intl, 'core', 'save')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -268,7 +268,7 @@ function ResultsFrameworkTabPanel({
       const sectionId = indicator.section?.id || 'no-section';
       if (!sectionMap[sectionId]) {
         sectionMap[sectionId] = {
-          section: indicator.section || { id: 'no-section', name: formatMessage(intl, "indicator", "withoutSection") },
+          section: indicator.section || { id: 'no-section', name: formatMessage(intl, 'indicator', 'withoutSection') },
           indicators: [],
         };
       }
@@ -341,9 +341,9 @@ function ResultsFrameworkTabPanel({
 
   const handleSaveAchievement = (achievementData) => {
     if (achievementDialog.isEdit) {
-      updateIndicatorAchievement(achievementData, formatMessage(intl, "indicator.mutation", "updateLabel"));
+      updateIndicatorAchievement(achievementData, formatMessage(intl, 'indicator.mutation', 'updateLabel'));
     } else {
-      createIndicatorAchievement(achievementData, formatMessage(intl, "indicator.mutation", "createLabel"));
+      createIndicatorAchievement(achievementData, formatMessage(intl, 'indicator.mutation', 'createLabel'));
     }
     // Refresh data
     setTimeout(() => {
@@ -363,20 +363,24 @@ function ResultsFrameworkTabPanel({
   const fetch = (params) => Promise.resolve({});
   const itemFormatters = () => [
     (item) => (
-      item.isSection ? (
+      item.isSection
+        ? (
         <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>
           {item.name}
         </span>
-      ) : item.name
+          )
+        : item.name
     ),
     (item) => (item.isSection ? '' : item.pbc),
     (item) => (item.isSection ? '' : item.baseline),
     (item) => (
-      item.isSection ? '' : (
+      item.isSection
+        ? ''
+        : (
         <span style={{ fontWeight: 'bold' }}>
           {item.target}
         </span>
-      )
+          )
     ),
     (item) => {
       if (item.isSection) return '';
@@ -438,7 +442,7 @@ function ResultsFrameworkTabPanel({
               variant="contained"
               onClick={() => historyPush(modulesManager, history, 'merankabandi.route.indicators')}
             >
-              {formatMessage(intl, "indicatorsTab", "manageIndicators")}
+              {formatMessage(intl, 'indicatorsTab', 'manageIndicators')}
             </Button>
           </div>
           <Searcher

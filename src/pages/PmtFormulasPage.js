@@ -37,10 +37,10 @@ function PmtFormulasPage() {
   return (
     <div className={classes.page}>
       <Helmet title={formatMessage('pmtFormula.page.title')} />
-      {rights.includes(RIGHT_BENEFIT_PLAN_SEARCH)
-        && <PmtFormulaSearcher />}
-      {rights.includes(RIGHT_BENEFIT_PLAN_CREATE)
-        && withTooltip(
+      {rights.includes(RIGHT_BENEFIT_PLAN_SEARCH) &&
+        <PmtFormulaSearcher />}
+      {rights.includes(RIGHT_BENEFIT_PLAN_CREATE) &&
+        withTooltip(
           <div className={classes.fab}>
             <Fab color="primary" onClick={onCreate}>
               <AddIcon />

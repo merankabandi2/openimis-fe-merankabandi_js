@@ -11,7 +11,7 @@ function ActivitiesBarChart({ filters = {}, compact = false }) {
 
   const buildFilters = () => {
     const filterParts = [];
-    
+
     // Handle location filters - use the most specific location available
     if (filters.collines && filters.collines.length > 0) {
       const collineId = parseInt(decodeId(filters.collines[0]));
@@ -23,12 +23,12 @@ function ActivitiesBarChart({ filters = {}, compact = false }) {
       const provinceId = parseInt(decodeId(filters.provinces[0]));
       filterParts.push(`location_Parent_Parent_Id: ${provinceId}`);
     }
-    
+
     // Handle year filter
     if (filters.year) {
       filterParts.push(`sensitizationDate_Year: ${filters.year}`);
     }
-    
+
     return filterParts.length > 0 ? `(${filterParts.join(', ')})` : '';
   };
 
@@ -38,7 +38,7 @@ function ActivitiesBarChart({ filters = {}, compact = false }) {
       const csrfToken = localStorage.getItem('csrfToken');
       const baseHeaders = apiHeaders();
       const filterString = buildFilters();
-      
+
       const response = await fetch(`${baseApiUrl}/graphql`, {
         method: 'post',
         headers: { ...baseHeaders, 'X-Requested-With': REQUESTED_WITH, 'X-CSRFToken': csrfToken },

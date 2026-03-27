@@ -48,7 +48,6 @@ const theme = createTheme({
   },
 });
 
-
 // Custom styles
 const useStyles = makeStyles((theme) => ({
   wrapper: {
@@ -98,7 +97,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-
 // Dashboard component
 function Dashboard() {
   const [filters, setFilters] = useState({
@@ -137,7 +135,6 @@ function Dashboard() {
     includeTransfers: true,
   });
 
-
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
@@ -165,7 +162,7 @@ function Dashboard() {
 
   // Separate data for different entities
   const totalBeneficiaries = summaryData.totalBeneficiaries || 0; // groupbeneficiary count
-  const totalIndividuals = genderData.total || 0; // individual_individual count 
+  const totalIndividuals = genderData.total || 0; // individual_individual count
   const maleCount = genderData.male || 0;
   const femaleCount = genderData.female || 0;
   const twaCount = genderData.twa || 0;
@@ -185,7 +182,7 @@ function Dashboard() {
 
   // Get correct data from appropriate sources
   const totalHouseholds = breakdown?.householdBreakdown?.totalHouseholds || 0; // household count
-  const totalTransfers = summaryData.totalTransfers || 0; // payment cycles count  
+  const totalTransfers = summaryData.totalTransfers || 0; // payment cycles count
   const totalAmountPaid = summaryData.totalAmountPaid || 0; // total benefit consumption amount
 
   // Helper function to format currency
@@ -196,7 +193,7 @@ function Dashboard() {
 
   // Use grievance data from the main dashboard hook (respects dashboard filters)
   const grievanceStatus = grievances?.statusDistribution || [];
-  
+
   // Prepare grievance data for pie chart
   const ticketsData = grievanceStatus.map(item => ({
     status: item.category,
@@ -215,13 +212,13 @@ function Dashboard() {
               defaultFilters={filters}
               filterTypes={['location', 'benefitPlan', 'year']}
             />
-            
+
             {/* Refresh Button */}
             <Paper className={classes.refreshContainer}>
               <Box display="flex" justifyContent="flex-end" p={1}>
                 <Tooltip title={lastRefresh ? `Dernière mise à jour: ${new Date(lastRefresh).toLocaleString('fr-FR')}` : 'Actualiser les données'}>
-                  <IconButton 
-                    onClick={handleRefresh} 
+                  <IconButton
+                    onClick={handleRefresh}
                     disabled={isRefreshing}
                     size="small"
                     color="primary"

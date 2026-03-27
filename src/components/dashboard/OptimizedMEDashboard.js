@@ -1,6 +1,6 @@
 /**
  * Optimized M&E Dashboard Component
- * 
+ *
  * High-performance dashboard using materialized views and GraphQL queries.
  * Features:
  * - Real-time data with optimized caching
@@ -94,9 +94,9 @@ const PerformanceIndicator = ({ isLoading, isStale, lastRefresh, onRefresh, isRe
   };
 
   const status = getStatus();
-  const lastRefreshText = lastRefresh ? 
-    `Last refresh: ${lastRefresh.toLocaleTimeString()}` : 
-    'Never refreshed';
+  const lastRefreshText = lastRefresh
+    ? `Last refresh: ${lastRefresh.toLocaleTimeString()}`
+    : 'Never refreshed';
 
   return (
     <Box display="flex" alignItems="center" gap={1}>
@@ -144,12 +144,12 @@ const SummaryCard = ({ title, value, subtitle, icon, color = 'primary', trend = 
             )}
             {trend && (
               <Box display="flex" alignItems="center" mt={1}>
-                <TrendingUpIcon 
-                  fontSize="small" 
-                  color={trend > 0 ? 'success' : trend < 0 ? 'error' : 'disabled'} 
+                <TrendingUpIcon
+                  fontSize="small"
+                  color={trend > 0 ? 'success' : trend < 0 ? 'error' : 'disabled'}
                 />
-                <Typography 
-                  variant="body2" 
+                <Typography
+                  variant="body2"
                   color={trend > 0 ? 'success.main' : trend < 0 ? 'error.main' : 'textSecondary'}
                   ml={0.5}
                 >
@@ -268,7 +268,7 @@ const QuarterlyTrendsChart = ({ data }) => {
   // Prepare data for chart
   const chartData = [];
   const periods = [...new Set(data.trends.map(t => t.period))].sort();
-  
+
   periods.forEach(period => {
     const periodData = { period };
     Object.keys(trendsByMetric).forEach(metric => {
@@ -328,7 +328,7 @@ const TransferPerformanceChart = ({ data }) => {
             <XAxis dataKey="transferType" angle={-45} textAnchor="end" height={100} />
             <YAxis yAxisId="left" />
             <YAxis yAxisId="right" orientation="right" />
-            <RechartsTooltip 
+            <RechartsTooltip
               formatter={(value, name) => [
                 name === 'amount' ? `${value.toLocaleString()} BIF` : value.toLocaleString(),
                 name === 'amount' ? 'Amount' : name === 'beneficiaries' ? 'Beneficiaries' : 'Completion Rate (%)'

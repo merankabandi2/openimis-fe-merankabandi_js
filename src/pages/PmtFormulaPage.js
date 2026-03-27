@@ -20,13 +20,13 @@ import {
   deletePmtFormula,
   fetchPmtFormula,
   updatePmtFormula,
+  ACTION_TYPE
 } from '../actions';
 import {
   MODULE_NAME,
   RIGHT_BENEFIT_PLAN_CREATE,
   RIGHT_BENEFIT_PLAN_SEARCH,
 } from '../constants';
-import { ACTION_TYPE } from '../actions';
 import PmtFormulaForm from '../components/pmt/PmtFormulaForm';
 
 const useStyles = makeStyles((theme) => ({

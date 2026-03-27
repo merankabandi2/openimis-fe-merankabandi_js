@@ -1,0 +1,41 @@
+{
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2020,
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "requireConfigFile": false,
+    "babelOptions": {
+      "presets": ["@babel/preset-env", "@babel/preset-react"],
+      "plugins": ["@babel/plugin-proposal-class-properties"]
+    }
+  },
+  "extends": [
+    "standard",
+    "standard-react"
+  ],
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "plugins": [
+    "react"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "rules": {
+    "space-before-function-paren": 0,
+    "react/jsx-boolean-value": 0,
+    "react/prop-types": 0,
+    "import/no-unresolved": 0,
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "comma-dangle": ["error", "only-multiline"],
+    "semi": ["error", "always"],
+    "no-extra-semi": "error"
+  }
+}

@@ -546,7 +546,7 @@ function ModernDashboardFilters({
         }
         return '...';
       };
-      
+
       const dateLabel = `${formatDate(filters.dateRange.start)} - ${formatDate(filters.dateRange.end)}`;
       chips.push(
         <Chip
@@ -633,13 +633,13 @@ function ModernDashboardFilters({
                 <Typography>
                   <FormattedMessage id="merankabandi.filter.location" />
                 </Typography>
-                {((Array.isArray(filters.provinces) ? filters.provinces.length : 0)
-                  + (Array.isArray(filters.communes) ? filters.communes.length : 0)
-                  + (Array.isArray(filters.collines) ? filters.collines.length : 0)) > 0 && (
+                {((Array.isArray(filters.provinces) ? filters.provinces.length : 0) +
+                  (Array.isArray(filters.communes) ? filters.communes.length : 0) +
+                  (Array.isArray(filters.collines) ? filters.collines.length : 0)) > 0 && (
                   <Box className={classes.filterCount}>
-                    {(Array.isArray(filters.provinces) ? filters.provinces.length : 0)
-                     + (Array.isArray(filters.communes) ? filters.communes.length : 0)
-                     + (Array.isArray(filters.collines) ? filters.collines.length : 0)}
+                    {(Array.isArray(filters.provinces) ? filters.provinces.length : 0) +
+                     (Array.isArray(filters.communes) ? filters.communes.length : 0) +
+                     (Array.isArray(filters.collines) ? filters.collines.length : 0)}
                   </Box>
                 )}
               </AccordionSummary>

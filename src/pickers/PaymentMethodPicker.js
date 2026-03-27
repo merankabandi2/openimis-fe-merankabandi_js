@@ -24,12 +24,14 @@ function PaymentMethodPicker({
     fetch();
   }, []);
 
-  const options = Array.isArray(paymentMethods) && paymentMethods !== undefined ? [
-    ...paymentMethods.map((paymentMethod) => ({
-      value: paymentMethod.name,
-      label: paymentMethod.name,
-    })),
-  ] : [];
+  const options = Array.isArray(paymentMethods) && paymentMethods !== undefined
+    ? [
+        ...paymentMethods.map((paymentMethod) => ({
+          value: paymentMethod.name,
+          label: paymentMethod.name,
+        })),
+      ]
+    : [];
 
   if (withNull) {
     options.unshift({

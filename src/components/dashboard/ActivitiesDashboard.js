@@ -182,12 +182,6 @@ const useStyles = makeStyles((theme) => ({
   sectionDivider: {
     margin: theme.spacing(6, 0, 4, 0),
   },
-  sectionTitle: {
-    marginTop: theme.spacing(4),
-    marginBottom: theme.spacing(2),
-    fontWeight: 600,
-    color: theme.palette.text.primary,
-  },
   sectionSubtitle: {
     marginBottom: theme.spacing(3),
   },
@@ -231,7 +225,7 @@ const useStyles = makeStyles((theme) => ({
 // Build filter string for GraphQL queries
 const buildFilter = (filters, dateField = null) => {
   const filterParts = [];
-  
+
   // Handle hierarchical location filters using numeric IDs
   // GraphQL converts Django's double underscore to camelCase with underscores
   if (Array.isArray(filters.collines) && filters.collines.length > 0) {
@@ -247,7 +241,7 @@ const buildFilter = (filters, dateField = null) => {
     const numericIds = filters.provinces.map(id => parseInt(decodeId(id))).join(', ');
     filterParts.push(`location_Parent_Parent_Id_In: [${numericIds}]`);
   }
-  
+
   // Apply date filters based on the specific date field for each query type
   if (dateField && filters.dateRange?.start) {
     let startDate = filters.dateRange.start;
@@ -263,7 +257,7 @@ const buildFilter = (filters, dateField = null) => {
       filterParts.push(`${dateField}_Gte: "${startDate}"`);
     }
   }
-  
+
   if (dateField && filters.dateRange?.end) {
     let endDate = filters.dateRange.end;
     if (endDate instanceof Date) {
@@ -278,11 +272,11 @@ const buildFilter = (filters, dateField = null) => {
       filterParts.push(`${dateField}_Lte: "${endDate}"`);
     }
   }
-  
+
   if (Array.isArray(filters.status) && filters.status.length > 0) {
     filterParts.push(`validationStatus_In: [${filters.status.map(s => `"${s}"`).join(', ')}]`);
   }
-  
+
   return filterParts.length > 0 ? `(${filterParts.join(', ')})` : '';
 };
 
@@ -290,10 +284,10 @@ const buildFilter = (filters, dateField = null) => {
 const loadActivitiesData = async (filters = {}) => {
   const csrfToken = localStorage.getItem('csrfToken');
   const baseHeaders = apiHeaders();
-  
+
   // Build filters for optimized query
   const dashboardFilters = {};
-  
+
   if (filters.provinces?.length > 0) {
     // Decode the Base64 UUID to get the numeric ID
     const provinceId = parseInt(decodeId(filters.provinces[0]));
@@ -312,10 +306,10 @@ const loadActivitiesData = async (filters = {}) => {
   if (filters.year) {
     dashboardFilters.year = filters.year;
   }
-  
+
   // Add date range filters for the dashboard query
   if (filters.dateRange?.start) {
-    let startDate = filters.dateRange.start;
+    const startDate = filters.dateRange.start;
     if (startDate instanceof Date) {
       dashboardFilters.startDate = startDate.toISOString().split('T')[0];
     } else if (typeof startDate === 'object' && startDate.toISOString) {
@@ -324,9 +318,9 @@ const loadActivitiesData = async (filters = {}) => {
       dashboardFilters.startDate = startDate;
     }
   }
-  
+
   if (filters.dateRange?.end) {
-    let endDate = filters.dateRange.end;
+    const endDate = filters.dateRange.end;
     if (endDate instanceof Date) {
       dashboardFilters.endDate = endDate.toISOString().split('T')[0];
     } else if (typeof endDate === 'object' && endDate.toISOString) {
@@ -335,12 +329,12 @@ const loadActivitiesData = async (filters = {}) => {
       dashboardFilters.endDate = endDate;
     }
   }
-  
+
   // Build filter strings for latest activities queries
   const sensitizationFilterString = buildFilter(filters, 'sensitizationDate');
   const behaviorFilterString = buildFilter(filters, 'reportDate');
   const microProjectFilterString = buildFilter(filters, 'reportDate');
-  
+
   const graphqlQuery = `
     query ActivitiesDashboard($filters: DashboardFiltersInput) {
       optimizedActivitiesDashboard(filters: $filters) {
@@ -506,22 +500,22 @@ const loadActivitiesData = async (filters = {}) => {
   }
 
   const result = await response.json();
-  
+
   if (result.errors) {
     console.error('GraphQL errors:', result.errors);
     throw new Error('Failed to fetch activities data');
   }
-  
+
   const { data } = result;
   const dashboardData = data.optimizedActivitiesDashboard;
-  
+
   // Transform optimized data to match expected structure
   const transformedData = {
     // Use optimized counts
     sensitizationTraining: { totalCount: dashboardData.byType.sensitizationTraining.total },
     behaviorChangePromotion: { totalCount: dashboardData.byType.behaviorChangePromotion.total },
     microProject: { totalCount: dashboardData.byType.microProject.total },
-    
+
     // Create stats arrays that match the expected structure for calculateStats
     sensitizationTrainingStats: {
       edges: Array(dashboardData.byType.sensitizationTraining.validated)
@@ -544,7 +538,7 @@ const loadActivitiesData = async (filters = {}) => {
           return item;
         })
     },
-    
+
     behaviorChangePromotionStats: {
       edges: Array(dashboardData.byType.behaviorChangePromotion.validated)
         .fill({ node: { validationStatus: 'VALIDATED', maleParticipants: 0, femaleParticipants: 0, twaParticipants: 0 } })
@@ -566,7 +560,7 @@ const loadActivitiesData = async (filters = {}) => {
           return item;
         })
     },
-    
+
     microProjectStats: {
       edges: Array(dashboardData.byType.microProject.validated)
         .fill({ node: { validationStatus: 'VALIDATED', maleParticipants: 0, femaleParticipants: 0, twaParticipants: 0, agricultureBeneficiaries: 0, livestockBeneficiaries: 0, commerceServicesBeneficiaries: 0 } })
@@ -591,19 +585,19 @@ const loadActivitiesData = async (filters = {}) => {
           return item;
         })
     },
-    
+
     // Latest activities for display
     sensitizationTrainingLatest: data.sensitizationTrainingLatest,
     behaviorChangePromotionLatest: data.behaviorChangePromotionLatest,
     microProjectLatest: data.microProjectLatest,
-    
+
     // Locations
     locations: data.locations,
-    
+
     // Monthly trends from optimized data
     monthlyTrends: dashboardData.monthlyTrends
   };
-  
+
   return transformedData;
 };
 
@@ -664,13 +658,13 @@ function ActivitiesDashboard() {
   // Helper function to translate category values
   const translateCategory = (category) => {
     if (!category) return '-';
-    
+
     // Try both lowercase and uppercase keys
     const keys = [
       `sensitizationTraining.category.${category}`,
       `sensitizationTraining.category.${category.toLowerCase()}`
     ];
-    
+
     for (const key of keys) {
       try {
         const translated = intl.formatMessage({ id: key });
@@ -682,7 +676,7 @@ function ActivitiesDashboard() {
         // If translation fails, continue to next key
       }
     }
-    
+
     // Fallback: Replace underscores with spaces and capitalize
     return category
       .replace(/_/g, ' ')
@@ -694,7 +688,7 @@ function ActivitiesDashboard() {
     setIsLoading(true);
     try {
       const result = await loadActivitiesData(filters);
-      
+
       setData({
         sensitizationTraining: result.sensitizationTrainingLatest?.edges?.map(edge => edge.node) || [],
         behaviorChangePromotion: result.behaviorChangePromotionLatest?.edges?.map(edge => edge.node) || [],
@@ -745,7 +739,7 @@ function ActivitiesDashboard() {
     const stats = {
       // Sensitization Training Stats
       totalTrainings: data.counts.sensitizationTraining,
-      trainingParticipants: data.stats.sensitizationTraining.reduce((sum, t) => 
+      trainingParticipants: data.stats.sensitizationTraining.reduce((sum, t) =>
         sum + t.maleParticipants + t.femaleParticipants + t.twaParticipants, 0),
       trainingMale: data.stats.sensitizationTraining.reduce((sum, t) => sum + t.maleParticipants, 0),
       trainingFemale: data.stats.sensitizationTraining.reduce((sum, t) => sum + t.femaleParticipants, 0),
@@ -756,7 +750,7 @@ function ActivitiesDashboard() {
 
       // Behavior Change Stats
       totalBehaviorChanges: data.counts.behaviorChangePromotion,
-      behaviorParticipants: data.stats.behaviorChangePromotion.reduce((sum, b) => 
+      behaviorParticipants: data.stats.behaviorChangePromotion.reduce((sum, b) =>
         sum + b.maleParticipants + b.femaleParticipants + b.twaParticipants, 0),
       behaviorMale: data.stats.behaviorChangePromotion.reduce((sum, b) => sum + b.maleParticipants, 0),
       behaviorFemale: data.stats.behaviorChangePromotion.reduce((sum, b) => sum + b.femaleParticipants, 0),
@@ -767,7 +761,7 @@ function ActivitiesDashboard() {
 
       // Micro Project Stats
       totalMicroProjects: data.counts.microProject,
-      microProjectParticipants: data.stats.microProject.reduce((sum, m) => 
+      microProjectParticipants: data.stats.microProject.reduce((sum, m) =>
         sum + m.maleParticipants + m.femaleParticipants + m.twaParticipants, 0),
       microProjectMale: data.stats.microProject.reduce((sum, m) => sum + m.maleParticipants, 0),
       microProjectFemale: data.stats.microProject.reduce((sum, m) => sum + m.femaleParticipants, 0),
@@ -775,7 +769,7 @@ function ActivitiesDashboard() {
       microProjectValidated: data.stats.microProject.filter(m => m.validationStatus === 'VALIDATED').length,
       microProjectPending: data.stats.microProject.filter(m => m.validationStatus === 'PENDING').length,
       microProjectRejected: data.stats.microProject.filter(m => m.validationStatus === 'REJECTED').length,
-      
+
       // Project Type Stats
       agricultureProjects: data.stats.microProject.reduce((sum, m) => sum + m.agricultureBeneficiaries, 0),
       livestockProjects: data.stats.microProject.reduce((sum, m) => sum + m.livestockBeneficiaries, 0),
@@ -847,7 +841,7 @@ function ActivitiesDashboard() {
 
     // Activities by Month - Use optimized monthly trends data if available
     let monthlyData;
-    
+
     if (data.monthlyTrends && data.monthlyTrends.length > 0) {
       // Use optimized monthly trends from materialized view
       const trendsByMonth = {};
@@ -855,7 +849,7 @@ function ActivitiesDashboard() {
         const monthKey = `${trend.year}-${String(trend.month).padStart(2, '0')}`;
         trendsByMonth[monthKey] = (trendsByMonth[monthKey] || 0) + trend.activityCount;
       });
-      
+
       const sortedMonths = Object.keys(trendsByMonth).sort();
       monthlyData = {
         series: [{
@@ -957,7 +951,7 @@ function ActivitiesDashboard() {
                 </Box>
               </TableCell>
               <TableCell align="center">
-                <Chip 
+                <Chip
                   label={formatMessage(intl, MODULE_NAME, `activities.status.${training.validationStatus.toLowerCase()}`)}
                   color={getStatusColor(training.validationStatus)}
                   size="small"
@@ -1116,7 +1110,7 @@ function ActivitiesDashboard() {
               {formatMessage(intl, MODULE_NAME, 'dashboard.activities.title')}
             </Typography>
             <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.activities.refresh')}>
-              <IconButton 
+              <IconButton
                 className={classes.refreshButton}
                 onClick={loadData}
                 disabled={isLoading}
@@ -1323,7 +1317,7 @@ function ActivitiesDashboard() {
                 <div className={classes.chartContainer}>
                   <ReactApexChart
                     options={{
-                      chart: { 
+                      chart: {
                         type: 'bar',
                         toolbar: { show: false }
                       },
@@ -1341,7 +1335,7 @@ function ActivitiesDashboard() {
                         }
                       },
                       colors: ['#e3f2fd', '#5a8dee'],
-                      legend: { 
+                      legend: {
                         position: 'bottom',
                         labels: {
                           colors: '#333'
@@ -1353,7 +1347,7 @@ function ActivitiesDashboard() {
                       tooltip: {
                         y: {
                           formatter: function (val) {
-                            return val + ' ' + formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.participants')
+                            return val + ' ' + formatMessage(intl, MODULE_NAME, 'dashboard.activities.chart.participants');
                           }
                         }
                       }
@@ -1399,11 +1393,11 @@ function ActivitiesDashboard() {
           {/* Section Divider */}
           <Box mt={6} mb={4}>
             <Divider />
-            <Typography 
-              variant="h5" 
-              align="center" 
-              style={{ 
-                marginTop: theme.spacing(4), 
+            <Typography
+              variant="h5"
+              align="center"
+              style={{
+                marginTop: theme.spacing(4),
                 marginBottom: theme.spacing(2),
                 fontWeight: 600,
                 color: theme.palette.text.primary
@@ -1453,16 +1447,16 @@ function ActivitiesDashboard() {
                 }
               />
             </Tabs>
-            
+
             <Box p={3}>
               {activeTab === 0 && (
                 <>
                   {renderSensitizationTable()}
                   {data.sensitizationTraining.length > 10 && (
-                    <Typography 
-                      variant="caption" 
-                      color="textSecondary" 
-                      align="center" 
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      align="center"
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >
@@ -1475,10 +1469,10 @@ function ActivitiesDashboard() {
                 <>
                   {renderBehaviorChangeTable()}
                   {data.behaviorChangePromotion.length > 10 && (
-                    <Typography 
-                      variant="caption" 
-                      color="textSecondary" 
-                      align="center" 
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      align="center"
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >
@@ -1491,10 +1485,10 @@ function ActivitiesDashboard() {
                 <>
                   {renderMicroProjectTable()}
                   {data.microProject.length > 10 && (
-                    <Typography 
-                      variant="caption" 
-                      color="textSecondary" 
-                      align="center" 
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      align="center"
                       display="block"
                       style={{ marginTop: theme.spacing(2) }}
                     >

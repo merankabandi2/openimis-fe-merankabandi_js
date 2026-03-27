@@ -20,12 +20,12 @@ import {
   deleteMonetaryTransfer,
   fetchMonetaryTransfer,
   updateMonetaryTransfer,
+  ACTION_TYPE
 } from '../actions';
 import {
   MODULE_NAME,
   RIGHT_MONETARY_TRANSFER_UPDATE,
 } from '../constants';
-import { ACTION_TYPE } from '../actions';
 import { mutationLabel, pageTitle } from '../utils/string-utils';
 import MonetaryTransferHeadPanel from '../components/me/MonetaryTransferHeadPanel';
 
@@ -91,15 +91,15 @@ function MonetaryTransferPage({
 
   const mandatoryFieldsEmpty = () => {
     if (
-      editedMonetaryTransfer?.transferDate
-      && editedMonetaryTransfer?.location
-      && editedMonetaryTransfer?.programme
-      && editedMonetaryTransfer?.paymentAgency
-      && editedMonetaryTransfer?.plannedAmount !== undefined
-      && editedMonetaryTransfer?.plannedAmount !== null
-      && editedMonetaryTransfer?.transferredAmount !== undefined
-      && editedMonetaryTransfer?.transferredAmount !== null
-      && !editedMonetaryTransfer?.isDeleted) return false;
+      editedMonetaryTransfer?.transferDate &&
+      editedMonetaryTransfer?.location &&
+      editedMonetaryTransfer?.programme &&
+      editedMonetaryTransfer?.paymentAgency &&
+      editedMonetaryTransfer?.plannedAmount !== undefined &&
+      editedMonetaryTransfer?.plannedAmount !== null &&
+      editedMonetaryTransfer?.transferredAmount !== undefined &&
+      editedMonetaryTransfer?.transferredAmount !== null &&
+      !editedMonetaryTransfer?.isDeleted) return false;
     return true;
   };
 

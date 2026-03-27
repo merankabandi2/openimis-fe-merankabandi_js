@@ -16,9 +16,8 @@ import {
   journalize,
   PublishedComponent,
 } from '@openimis/fe-core';
-import { fetchIndicators, deleteIndicator } from '../../actions';
+import { fetchIndicators, deleteIndicator, ACTION_TYPE } from '../../actions';
 import { INDICATOR_ROUTE, RIGHT_INDICATOR_UPDATE } from '../../constants';
-import { ACTION_TYPE } from '../../actions';
 
 function IndicatorSearcher({
   fetchIndicators,
@@ -139,9 +138,9 @@ function IndicatorSearcher({
       <div style={{ padding: '16px' }}>
         <div style={{ marginBottom: '8px' }}>
           <label>{formatMessage('indicator.name')}</label>
-          <input 
-            type="text" 
-            value={filters.name || ''} 
+          <input
+            type="text"
+            value={filters.name || ''}
             onChange={(e) => onChangeFilters({ ...filters, name: e.target.value })}
             style={{ marginLeft: '8px' }}
           />

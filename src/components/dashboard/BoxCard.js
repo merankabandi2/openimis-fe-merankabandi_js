@@ -63,11 +63,13 @@ function BoxCard({
   return (
     <Card className={`${className} ${classes.root}`}>
       <CardContent style={{ padding: compact ? '12px 16px' : '16px' }}>
-        {isLoading ? (
+        {isLoading
+          ? (
           <div className={classes.loadingContainer}>
             <CircularProgress size={40} style={{ color: color || 'inherit' }} />
           </div>
-        ) : (
+            )
+          : (
           <Box className={classes.contentWrapper}>
             <Box className={classes.textWrapper}>
               <Typography className={classes.label} color="textSecondary" variant="overline">
@@ -88,7 +90,7 @@ function BoxCard({
               {React.cloneElement(icon, { fontSize: compact ? 'default' : 'large' })}
             </Avatar>
           </Box>
-        )}
+            )}
       </CardContent>
     </Card>
   );

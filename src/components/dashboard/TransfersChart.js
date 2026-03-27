@@ -152,7 +152,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
         optimizedFilters.collineId = parseInt(decodeId(filters.collines[0]));
       }
       if (filters.benefitPlan) optimizedFilters.benefitPlanId = decodeId(filters.benefitPlan);
-      
+
       const response = await fetch(`${baseApiUrl}/graphql`, {
         method: 'post',
         headers: apiHeaders(),
@@ -179,11 +179,11 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
       }
 
       const result = await response.json();
-      
+
       if (result.errors) {
         throw new Error(result.errors[0]?.message || 'GraphQL errors occurred');
       }
-      
+
       const transferData = result.data?.optimizedMonetaryTransferBeneficiaryData;
       setData({ monetaryTransferBeneficiaryData: transferData || [] });
       setError(null);
@@ -212,7 +212,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
       const totalPaid = item.malePaid + item.femalePaid;
       const totalUnpaid = item.maleUnpaid + item.femaleUnpaid;
       const paidRate = total > 0 ? (totalPaid / total * 100).toFixed(1) : 0;
-      
+
       return {
         transferType: item.transferType,
         total,
@@ -236,8 +236,8 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
       totalUnpaid: seriesData.reduce((sum, item) => sum + item.totalUnpaid, 0),
       overallPaidRate: 0,
     };
-    overallStats.overallPaidRate = overallStats.totalBeneficiaries > 0 
-      ? (overallStats.totalPaid / overallStats.totalBeneficiaries * 100).toFixed(1) 
+    overallStats.overallPaidRate = overallStats.totalBeneficiaries > 0
+      ? (overallStats.totalPaid / overallStats.totalBeneficiaries * 100).toFixed(1)
       : 0;
 
     // Format transfer type names for display
@@ -261,24 +261,26 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
   const { categories, series, seriesData, stats } = formatChartData(data);
 
   // Create detail series only when seriesData has data
-  const detailSeries = seriesData && seriesData.length > 0 ? [
-    {
-      name: 'Paiements Hommes - Effectués',
-      data: seriesData.map(item => item.malePaid),
-    },
-    {
-      name: 'Paiements Hommes - En Attente',
-      data: seriesData.map(item => item.maleUnpaid),
-    },
-    {
-      name: 'Paiements Femmes - Effectués',
-      data: seriesData.map(item => item.femalePaid),
-    },
-    {
-      name: 'Paiements Femmes - En Attente',
-      data: seriesData.map(item => item.femaleUnpaid),
-    },
-  ] : [];
+  const detailSeries = seriesData && seriesData.length > 0
+    ? [
+        {
+          name: 'Paiements Hommes - Effectués',
+          data: seriesData.map(item => item.malePaid),
+        },
+        {
+          name: 'Paiements Hommes - En Attente',
+          data: seriesData.map(item => item.maleUnpaid),
+        },
+        {
+          name: 'Paiements Femmes - Effectués',
+          data: seriesData.map(item => item.femalePaid),
+        },
+        {
+          name: 'Paiements Femmes - En Attente',
+          data: seriesData.map(item => item.femaleUnpaid),
+        },
+      ]
+    : [];
 
   // Chart options - using a radial bar chart for better visual appeal
   const chartOptions = {
@@ -294,7 +296,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
         startAngle: -90,
         endAngle: 90,
         track: {
-          background: "#e7e7e7",
+          background: '#e7e7e7',
           strokeWidth: '97%',
           margin: 5,
           dropShadow: {
@@ -319,7 +321,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
             fontWeight: 700,
             color: theme.palette.text.primary,
             formatter: function (val) {
-              return val + "%";
+              return val + '%';
             }
           }
         }
@@ -405,7 +407,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
     tooltip: {
       y: {
         formatter: function (val) {
-          return val.toLocaleString('fr-FR') + " paiements";
+          return val.toLocaleString('fr-FR') + ' paiements';
         },
       },
     },
@@ -416,7 +418,6 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
     },
     colors: ['#00D9FF', '#00A3E0', '#FF6B6B', '#FF4757'],
   };
-
 
   return (
     <Paper className={classes.paper}>
@@ -522,7 +523,7 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
           {!loading && !error && (!seriesData || seriesData.length === 0) && (
             <Box className={classes.noDataMessage}>
               <Typography variant="h6" gutterBottom>
-                Aucune donnée disponible 
+                Aucune donnée disponible
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Sélectionnez une année ou modifiez les filtres pour afficher les données
