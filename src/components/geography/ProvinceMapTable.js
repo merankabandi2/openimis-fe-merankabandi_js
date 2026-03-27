@@ -182,7 +182,16 @@ function ProvinceMapTable({
       {/* Map section */}
       <Paper elevation={1}>
         <Box className={classes.mapSection}>
-          <MapComponent filters={mapFilters} isLoading={isLoading} />
+          <MapComponent
+            filters={mapFilters}
+            isLoading={isLoading}
+            onFeatureClick={(provinceName) => {
+              const province = provinces.find((p) => p.name === provinceName);
+              if (province && province.uuid) {
+                onProvinceClick(province.uuid);
+              }
+            }}
+          />
         </Box>
       </Paper>
 

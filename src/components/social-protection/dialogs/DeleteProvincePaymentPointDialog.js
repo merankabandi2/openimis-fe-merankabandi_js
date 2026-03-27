@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
@@ -9,6 +10,8 @@ import {
   CircularProgress,
 } from '@material-ui/core';
 import { useModulesManager, useTranslations } from '@openimis/fe-core';
+import { deleteProvincePaymentPoint } from '../../../actions';
+import { MODULE_NAME } from '../../../constants';
 
 function DeleteProvincePaymentPointDialog({
   open,
@@ -16,19 +19,27 @@ function DeleteProvincePaymentPointDialog({
   onClose,
   onConfirm,
 }) {
+  const dispatch = useDispatch();
   const modulesManager = useModulesManager();
-  const { formatMessage, formatMessageWithValues } = useTranslations('merankabandi', modulesManager);
-
-  const loading = false;
-  const error = false;
+  const { formatMessage, formatMessageWithValues } = useTranslations(MODULE_NAME, modulesManager);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleConfirm = async () => {
-    if (!paymentPoint) return;
-
+    if (!paymentPoint?.id) return;
+    setLoading(true);
+    setError(false);
     try {
-      onConfirm();
+      await dispatch(deleteProvincePaymentPoint(
+        paymentPoint.id,
+        formatMessage('provincePaymentPoint.mutation.deleteLabel'),
+      ));
+      if (onConfirm) onConfirm();
     } catch (err) {
       console.error('Error deleting payment point:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
     }
   };
 

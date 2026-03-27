@@ -25,6 +25,7 @@ import ProvincePaymentPointChips from '../ProvincePaymentPointChips';
 function AddProvincePaymentPointDialog({
   location,
   buttonLabel,
+  onSuccess,
   addProvincePaymentPoint,
   addingProvincePaymentPoint,
   addedProvincePaymentPoint,
@@ -99,7 +100,7 @@ function AddProvincePaymentPointDialog({
 
     addProvincePaymentPoint(params, formatMessage('provincePaymentPoint.mutation.add'));
     handleClose();
-    window.location.reload();
+    if (onSuccess) onSuccess();
   };
 
   return (

@@ -120,6 +120,7 @@ const loadStats = async (filters = {}) => {
     query OptimizedLocationByBenefitPlan($filters: DashboardFiltersInput) {
       optimizedLocationByBenefitPlan(filters: $filters) {
         id
+        uuid
         code
         name
         countSelected
@@ -149,7 +150,7 @@ const loadStats = async (filters = {}) => {
   }
 };
 
-function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
+function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFeatureClick }) {
   const classes = useStyles();
   const mapContainerRef = useRef(null);
   const [burundiGeoJSON, setBurundiGeoJSON] = useState(null);
@@ -176,7 +177,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
         setLocationData(locations);
         const lookup = {};
         locations.forEach((loc) => {
-          lookup[loc.name] = loc;
+          lookup[loc.name] = { ...loc };
         });
         setLocationLookup(lookup);
         setLoading(false);
@@ -290,6 +291,12 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false }) {
       mouseout: (e) => {
         setHoveredProvince(null);
         e.target.setStyle(getStyle(feature, false));
+      },
+      click: () => {
+        if (onFeatureClick) {
+          const name = feature.properties.shapeName || feature.properties.name;
+          onFeatureClick(name, feature.properties);
+        }
       },
     });
 

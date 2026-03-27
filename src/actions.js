@@ -22,6 +22,7 @@ export const ACTION_TYPE = {
   SEARCH_BENEFIT_PLAN_PROVINCES: 'MERANKABANDI_BENEFIT_PLAN_PROVINCES',
   GENERATE_PROVINCE_PAYROLL: 'MERANKABANDI_GENERATE_PROVINCE_PAYROLL',
   ADD_PROVINCE_PAYMENT_POINT: 'MERANKABANDI_ADD_PROVINCE_PAYMENT_POINT',
+  DELETE_PROVINCE_PAYMENT_POINT: 'MERANKABANDI_DELETE_PROVINCE_PAYMENT_POINT',
 
   // M&E Activities
   SEARCH_SENSITIZATION_TRAININGS: 'MERANKABANDI_SENSITIZATION_TRAININGS',
@@ -82,6 +83,7 @@ export const MUTATION_SERVICE = {
   PAYROLL: {
     GENERATE_PROVINCE: 'generateProvincePayroll',
     ADD_PROVINCE_PAYMENT_POINT: 'addProvincePaymentPoint',
+    DELETE_PROVINCE_PAYMENT_POINT: 'deleteProvincePaymentPoint',
   },
   MONETARY_TRANSFER: {
     CREATE: 'createMonetaryTransfer',
@@ -292,6 +294,15 @@ export function addProvincePaymentPoint(params, clientMutationLabel) {
     MUTATION_SERVICE.PAYROLL.ADD_PROVINCE_PAYMENT_POINT,
     formatProvincePaymentPointGQL(params),
     ACTION_TYPE.ADD_PROVINCE_PAYMENT_POINT,
+    clientMutationLabel,
+  );
+}
+
+export function deleteProvincePaymentPoint(provincePaymentPointId, clientMutationLabel) {
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PAYROLL.DELETE_PROVINCE_PAYMENT_POINT,
+    `ids: ["${provincePaymentPointId}"]`,
+    ACTION_TYPE.DELETE_PROVINCE_PAYMENT_POINT,
     clientMutationLabel,
   );
 }

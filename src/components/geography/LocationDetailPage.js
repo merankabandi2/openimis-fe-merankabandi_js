@@ -176,7 +176,7 @@ function LocationDetailPage({ locationUuid }) {
   const [benefitPlanId, setBenefitPlanId] = useState(null);
   const [year, setYear] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [refreshPaymentPoints, setRefreshPaymentPoints] = useState(false);
+  const [refreshPaymentPoints, setRefreshPaymentPoints] = useState(0);
 
   // Step 1: resolve UUID to location ID
   const { data: locationLookupData, isLoading: locationLookupLoading } = useGraphqlQuery(
@@ -693,6 +693,7 @@ function LocationDetailPage({ locationUuid }) {
               <AddProvincePaymentPointDialog
                 location={{ id: locationId, benefitPlanId }}
                 buttonLabel={formatMessage('geography.detail.paymentPoint.assign')}
+                onSuccess={() => setRefreshPaymentPoints((prev) => prev + 1)}
               />
             </Box>
             <ProvincePaymentPointChips

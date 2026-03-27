@@ -55,6 +55,9 @@ const STORE_STATE = {
   addingProvincePaymentPoint: false,
   addedProvincePaymentPoint: false,
   errorProvincePaymentPoint: null,
+  deletingProvincePaymentPoint: false,
+  deletedProvincePaymentPoint: false,
+  errorDeleteProvincePaymentPoint: null,
 
   // M&E Activities
   fetchingSensitizationTrainings: false,
@@ -241,6 +244,27 @@ function reducer(state = STORE_STATE, action) {
         ...state,
         addingProvincePaymentPoint: false,
         errorProvincePaymentPoint: formatServerError(action.payload),
+      };
+
+    // ─── Delete Province Payment Point ───────────────────────────────────────
+    case REQUEST(ACTION_TYPE.DELETE_PROVINCE_PAYMENT_POINT):
+      return {
+        ...state,
+        deletingProvincePaymentPoint: true,
+        deletedProvincePaymentPoint: false,
+        errorDeleteProvincePaymentPoint: null,
+      };
+    case SUCCESS(ACTION_TYPE.DELETE_PROVINCE_PAYMENT_POINT):
+      return {
+        ...state,
+        deletingProvincePaymentPoint: false,
+        deletedProvincePaymentPoint: true,
+      };
+    case ERROR(ACTION_TYPE.DELETE_PROVINCE_PAYMENT_POINT):
+      return {
+        ...state,
+        deletingProvincePaymentPoint: false,
+        errorDeleteProvincePaymentPoint: formatServerError(action.payload),
       };
 
     // ─── Province Payroll Mutation ─────────────────────────────────────────────
