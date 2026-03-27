@@ -350,10 +350,6 @@ function DevelopmentIndicatorsTabPanel({
   const processedData = React.useMemo(() => {
     const sectionMap = {};
     
-    // Debug logging
-    console.log('Development Indicators:', developmentIndicators.indicators);
-    console.log('Achievements:', indicatorAchievements);
-
     // Group indicators by section
     developmentIndicators.indicators.forEach((indicator) => {
       let sectionId = 'no-section';

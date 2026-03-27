@@ -352,10 +352,6 @@ function IntermediateIndicatorsTabPanel({
   const processedData = React.useMemo(() => {
     const sectionMap = {};
     
-    // Debug logging
-    console.log('Intermediate Indicators:', intermediateIndicators);
-    console.log('Achievements:', indicatorAchievements);
-
     // Group indicators by section
     intermediateIndicators.forEach((indicator) => {
       const sectionId = indicator.section?.id || 'no-section';

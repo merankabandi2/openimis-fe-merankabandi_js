@@ -348,17 +348,6 @@ const CLEAR_DASHBOARD_CACHE = `
   }
 `;
 
-// Cache configuration
-const CACHE_CONFIG = {
-  summary: { staleTime: 5 * 60 * 1000, cacheTime: 30 * 60 * 1000 }, // 5min stale, 30min cache
-  breakdown: { staleTime: 10 * 60 * 1000, cacheTime: 60 * 60 * 1000 }, // 10min stale, 1hr cache
-  performance: { staleTime: 10 * 60 * 1000, cacheTime: 60 * 60 * 1000 }, // 10min stale, 1hr cache
-  trends: { staleTime: 30 * 60 * 1000, cacheTime: 2 * 60 * 60 * 1000 }, // 30min stale, 2hr cache
-  grievances: { staleTime: 5 * 60 * 1000, cacheTime: 30 * 60 * 1000 }, // 5min stale, 30min cache
-  stats: { staleTime: 60 * 60 * 1000, cacheTime: 4 * 60 * 60 * 1000 }, // 1hr stale, 4hr cache
-  health: { staleTime: 5 * 60 * 1000, cacheTime: 15 * 60 * 1000 }, // 5min stale, 15min cache
-};
-
 /**
  * Main optimized dashboard hook
  */

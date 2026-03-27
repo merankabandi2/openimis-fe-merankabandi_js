@@ -16,7 +16,6 @@ import {
   journalize,
 } from '@openimis/fe-core';
 import { fetchPmtFormulas, deletePmtFormula } from '../../actions';
-import { ACTION_TYPE } from '../../actions';
 import { MODULE_NAME, RIGHT_BENEFIT_PLAN_SEARCH, ROUTE_PMT_FORMULA } from '../../constants';
 
 function PmtFormulaSearcher({

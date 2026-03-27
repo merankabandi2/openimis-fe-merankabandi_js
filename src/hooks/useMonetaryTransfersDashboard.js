@@ -102,14 +102,6 @@ export const useMonetaryTransfersDashboard = (filters = {}) => {
     { skip: false },
   );
 
-  // Debug logging
-  console.log('MonetaryTransfersDashboard hook:', {
-    variables,
-    data,
-    error,
-    isLoading,
-  });
-
   // Process the data
   const processedData = useMemo(() => {
     if (!data) {

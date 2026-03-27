@@ -389,7 +389,7 @@ const SystemHealthIndicator = ({ health }) => {
 /**
  * Main optimized dashboard component
  */
-const OptimizedMEDashboard = ({ filters = {}, autoRefresh = false }) => {
+const OptimizedMEDashboard = ({ filters = {} }) => {
   const [autoRefreshInterval, setAutoRefreshInterval] = useState(REFRESH_INTERVALS.off);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
