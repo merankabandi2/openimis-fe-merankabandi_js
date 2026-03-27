@@ -1,6 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
+import React, { useState, useMemo } from 'react';
 import {
   Container,
   Grid,
@@ -13,7 +11,14 @@ import {
   Fade,
   Box,
   Avatar,
-  Button,
+  Tabs,
+  Tab,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  CircularProgress,
 } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
 import { useIntl } from 'react-intl';
@@ -31,6 +36,7 @@ import MonetaryTransferChart from './MonetaryTransferChart';
 import BenefitConsumptionByProvinces from './BenefitConsumptionByProvinces';
 import { useMonetaryTransfersDashboard } from '../../hooks/useMonetaryTransfersDashboard';
 import { useOptimizedDashboard } from '../../hooks/useOptimizedDashboard';
+import { usePaymentByLocation, usePaymentByProgram, usePaymentTrends } from '../../hooks/usePaymentReporting';
 import ModernDashboardFilters from '../filters/ModernDashboardFilters';
 
 // Create a custom theme
@@ -107,37 +113,6 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: '0 5px 25px rgba(0,0,0,.1)',
     },
   },
-  statsBox: {
-    backgroundColor: '#fff',
-    padding: theme.spacing(2),
-    borderRadius: theme.spacing(1),
-    boxShadow: '0 0 20px rgba(0,0,0,.06)',
-    height: '100%',
-    transition: 'all 0.3s ease',
-    position: 'relative',
-    overflow: 'hidden',
-    '&:hover': {
-      boxShadow: '0 5px 25px rgba(0,0,0,.1)',
-      transform: 'translateY(-2px)',
-    },
-  },
-  chartContainer: {
-    height: '400px',
-    position: 'relative',
-  },
-  sectionTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 600,
-    color: theme.palette.text.primary,
-    marginBottom: theme.spacing(2),
-    marginTop: theme.spacing(3),
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-  },
-  sectionIcon: {
-    color: theme.palette.primary.main,
-  },
   summaryCard: {
     padding: theme.spacing(3),
     borderRadius: theme.spacing(2),
@@ -198,11 +173,71 @@ const useStyles = makeStyles((theme) => ({
   exportButton: {
     marginLeft: theme.spacing(1),
   },
+  tabsContainer: {
+    marginTop: theme.spacing(3),
+  },
+  tabsPaper: {
+    backgroundColor: '#fff',
+    borderRadius: theme.spacing(1),
+    boxShadow: '0 0 20px rgba(0,0,0,.06)',
+  },
+  tabContent: {
+    padding: theme.spacing(3),
+  },
+  tableContainer: {
+    overflowX: 'auto',
+  },
+  tableHeader: {
+    backgroundColor: '#f5f7fa',
+  },
+  tableHeaderCell: {
+    fontWeight: 600,
+    color: theme.palette.text.primary,
+  },
+  tableRow: {
+    '&:hover': {
+      backgroundColor: '#f5f7fa',
+    },
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing(6),
+  },
+  noDataMessage: {
+    textAlign: 'center',
+    padding: theme.spacing(4),
+    color: theme.palette.text.secondary,
+  },
+  viewExternalButton: {
+    marginLeft: theme.spacing(1),
+  },
+  sectionTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 600,
+    color: theme.palette.text.primary,
+    marginBottom: theme.spacing(2),
+    marginTop: theme.spacing(3),
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
+  sectionIcon: {
+    color: theme.palette.primary.main,
+  },
 }));
+
+// Tab panel component
+function TabPanel({ children, value, index }) {
+  if (value !== index) return null;
+  return <Box className={useStyles().tabContent}>{children}</Box>;
+}
 
 // Dashboard component
 function TransfertDashboard() {
   const intl = useIntl();
+  const classes = useStyles();
   const [filters, setFilters] = useState({
     provinces: [],
     communes: [],
@@ -211,6 +246,7 @@ function TransfertDashboard() {
     year: null,
     dateRange: { start: null, end: null },
   });
+  const [activeTab, setActiveTab] = useState(0);
 
   // Convert filters to optimized dashboard format
   const optimizedFilters = useMemo(() => ({
@@ -232,15 +268,12 @@ function TransfertDashboard() {
     includeTransfers: true,
   });
 
-  // Legacy monetary transfers hook for compatibility with existing charts
-  const legacyFilters = useMemo(() => {
-    const converted = {
-      locationId: filters.provinces?.length > 0 ? filters.provinces[0] : '',
-      benefitPlanId: filters.benefitPlan || '',
-      year: filters.year || '',
-    };
-    return converted;
-  }, [filters]);
+  // Legacy monetary transfers hook for KPIs
+  const legacyFilters = useMemo(() => ({
+    locationId: filters.provinces?.length > 0 ? filters.provinces[0] : '',
+    benefitPlanId: filters.benefitPlan || '',
+    year: filters.year || '',
+  }), [filters]);
 
   const {
     totalBeneficiaries,
@@ -250,9 +283,34 @@ function TransfertDashboard() {
     totalHouseholds,
     totalIndividuals,
     monetaryTransferData,
+    externalPlannedAmount,
+    externalTransferredAmount,
+    internalAmount,
     isLoading: legacyLoading,
-    error,
   } = useMonetaryTransfersDashboard(legacyFilters);
+
+  // Payment reporting hooks for tabs
+  const reportingFilters = useMemo(() => ({
+    provinceId: optimizedFilters.provinceId,
+    communeId: optimizedFilters.communeId,
+    year: optimizedFilters.year,
+    benefitPlanId: optimizedFilters.benefitPlanId,
+  }), [optimizedFilters]);
+
+  const {
+    locations: locationData,
+    isLoading: locationLoading,
+  } = usePaymentByLocation('province', reportingFilters);
+
+  const {
+    programs: programData,
+    isLoading: programLoading,
+  } = usePaymentByProgram(reportingFilters);
+
+  const {
+    trends: trendsData,
+    isLoading: trendsLoading,
+  } = usePaymentTrends('quarter', reportingFilters);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
@@ -262,7 +320,10 @@ function TransfertDashboard() {
     await refetchAll();
   };
 
-  const classes = useStyles();
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const isLoading = performanceLoading || legacyLoading;
 
   // Helper function to format numbers
@@ -314,6 +375,213 @@ function TransfertDashboard() {
     ? Math.round((displayData.totalAmountReceived / displayData.totalAmount) * 100)
     : 0;
 
+  // Payment source breakdown for pie chart
+  const sourceBreakdownSeries = useMemo(() => {
+    const internal = internalAmount || 0;
+    const external = externalTransferredAmount || 0;
+    if (internal === 0 && external === 0) return [];
+    return [internal, external];
+  }, [internalAmount, externalTransferredAmount]);
+
+  const sourceBreakdownLabels = useMemo(() => [
+    formatMessage(intl, MODULE_NAME, 'dashboard.transfers.source.internal'),
+    formatMessage(intl, MODULE_NAME, 'dashboard.transfers.source.external'),
+  ], [intl]);
+
+  // Trends chart data
+  const trendsChartData = useMemo(() => {
+    if (!trendsData || trendsData.length === 0) return { categories: [], amountSeries: [], beneficiarySeries: [] };
+    return {
+      categories: trendsData.map((t) => t.period),
+      amountSeries: trendsData.map((t) => parseFloat(t.paymentAmount || 0)),
+      beneficiarySeries: trendsData.map((t) => parseInt(t.beneficiaryCount || 0, 10)),
+    };
+  }, [trendsData]);
+
+  // Render location table
+  const renderLocationTable = () => {
+    if (locationLoading) {
+      return (
+        <Box className={classes.loadingContainer}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (!locationData || locationData.length === 0) {
+      return (
+        <Box className={classes.noDataMessage}>
+          <Typography>{formatMessage(intl, MODULE_NAME, 'dashboard.transfers.noData')}</Typography>
+        </Box>
+      );
+    }
+    return (
+      <Box className={classes.tableContainer}>
+        <Table>
+          <TableHead className={classes.tableHeader}>
+            <TableRow>
+              <TableCell className={classes.tableHeaderCell}>
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.province')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.payments')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.amount')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.beneficiaries')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.femalePercent')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.twaPercent')}
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {locationData.map((loc) => (
+              <TableRow key={loc.provinceId || loc.provinceName} className={classes.tableRow}>
+                <TableCell>{loc.provinceName}</TableCell>
+                <TableCell align="right">{formatNumber(loc.paymentCount)}</TableCell>
+                <TableCell align="right">{formatCurrency(loc.paymentAmount)}</TableCell>
+                <TableCell align="right">{formatNumber(loc.beneficiaryCount)}</TableCell>
+                <TableCell align="right">
+                  {loc.femalePercentage != null ? `${Math.round(loc.femalePercentage)}%` : '-'}
+                </TableCell>
+                <TableCell align="right">
+                  {loc.twaPercentage != null ? `${Math.round(loc.twaPercentage)}%` : '-'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+    );
+  };
+
+  // Render program table
+  const renderProgramTable = () => {
+    if (programLoading) {
+      return (
+        <Box className={classes.loadingContainer}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (!programData || programData.length === 0) {
+      return (
+        <Box className={classes.noDataMessage}>
+          <Typography>{formatMessage(intl, MODULE_NAME, 'dashboard.transfers.noData')}</Typography>
+        </Box>
+      );
+    }
+    return (
+      <Box className={classes.tableContainer}>
+        <Table>
+          <TableHead className={classes.tableHeader}>
+            <TableRow>
+              <TableCell className={classes.tableHeaderCell}>
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.program')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.payments')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.amount')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.beneficiaries')}
+              </TableCell>
+              <TableCell className={classes.tableHeaderCell} align="right">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.table.coverage')}
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {programData.map((prog) => (
+              <TableRow key={prog.benefitPlanId || prog.benefitPlanName} className={classes.tableRow}>
+                <TableCell>{prog.benefitPlanName}</TableCell>
+                <TableCell align="right">{formatNumber(prog.paymentCount)}</TableCell>
+                <TableCell align="right">{formatCurrency(prog.paymentAmount)}</TableCell>
+                <TableCell align="right">{formatNumber(prog.beneficiaryCount)}</TableCell>
+                <TableCell align="right">
+                  {prog.provincesCovered != null ? `${prog.provincesCovered}` : '-'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+    );
+  };
+
+  // Render trends chart
+  const renderTrendsChart = () => {
+    if (trendsLoading) {
+      return (
+        <Box className={classes.loadingContainer}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (trendsChartData.categories.length === 0) {
+      return (
+        <Box className={classes.noDataMessage}>
+          <Typography>{formatMessage(intl, MODULE_NAME, 'dashboard.transfers.noData')}</Typography>
+        </Box>
+      );
+    }
+    return (
+      <ReactApexChart
+        options={{
+          chart: { type: 'line', toolbar: { show: true } },
+          xaxis: {
+            categories: trendsChartData.categories,
+            title: { text: formatMessage(intl, MODULE_NAME, 'dashboard.transfers.trends.period') },
+          },
+          yaxis: [
+            {
+              title: { text: formatMessage(intl, MODULE_NAME, 'dashboard.transfers.trends.amount') },
+              labels: {
+                formatter: (val) => `${Number(val).toLocaleString('fr-FR')}`,
+              },
+            },
+            {
+              opposite: true,
+              title: { text: formatMessage(intl, MODULE_NAME, 'dashboard.transfers.trends.beneficiaries') },
+              labels: {
+                formatter: (val) => `${Number(val).toLocaleString('fr-FR')}`,
+              },
+            },
+          ],
+          stroke: { curve: 'smooth', width: [3, 3] },
+          colors: ['#5a8dee', '#ff8f00'],
+          legend: { position: 'top' },
+          tooltip: {
+            shared: true,
+            intersect: false,
+          },
+          markers: { size: 4 },
+        }}
+        series={[
+          {
+            name: formatMessage(intl, MODULE_NAME, 'dashboard.transfers.trends.amount'),
+            type: 'line',
+            data: trendsChartData.amountSeries,
+          },
+          {
+            name: formatMessage(intl, MODULE_NAME, 'dashboard.transfers.trends.beneficiaries'),
+            type: 'line',
+            data: trendsChartData.beneficiarySeries,
+          },
+        ]}
+        type="line"
+        height={400}
+      />
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className={classes.wrapper}>
@@ -353,7 +621,7 @@ function TransfertDashboard() {
             filterTypes={['location', 'benefitPlan', 'year']}
           />
 
-          {/* Summary Card */}
+          {/* KPI Cards Row */}
           <Fade in={!isLoading}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
@@ -412,7 +680,7 @@ function TransfertDashboard() {
             </Grid>
           </Fade>
 
-          {/* Vulnerable Groups & Demographics */}
+          {/* Demographics Row */}
           {breakdown?.genderBreakdown && (
             <Grid container spacing={2} style={{ marginTop: 16, marginBottom: 16 }}>
               <Grid item xs={12} sm={4}>
@@ -467,80 +735,140 @@ function TransfertDashboard() {
             </Grid>
           )}
 
-          {/* Charts Section */}
-          <Typography className={classes.sectionTitle}>
-            <TrendingUpIcon className={classes.sectionIcon} />
-            {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.detailedAnalysis')}
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Paper className={classes.box}>
-                <MonetaryTransferChart
-                  filters={legacyFilters}
-                  monetaryTransferData={monetaryTransferData}
-                />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Paper className={classes.box}>
-                <BenefitConsumptionByProvinces
-                  filters={legacyFilters}
-                  optimizedData={breakdown?.locationBreakdown}
-                />
-              </Paper>
-            </Grid>
-            {breakdown?.genderBreakdown && (
-              <Grid item xs={12} md={6}>
-                <Paper className={classes.box}>
-                  <Typography variant="h6" gutterBottom>
-                    {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.genderDistribution')}
-                  </Typography>
-                  <ReactApexChart
-                    options={{
-                      chart: { type: 'donut' },
-                      labels: [
-                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.men'),
-                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.women'),
-                        formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.twa'),
-                      ],
-                      colors: ['#5a8dee', '#e91e63', '#ff8f00'],
-                      legend: { position: 'bottom' },
-                      plotOptions: {
-                        pie: {
-                          donut: {
-                            size: '65%',
-                            labels: {
-                              show: true,
-                              total: { show: true, showAlways: true, fontSize: '16px', fontWeight: 600 },
+          {/* Tabs Section */}
+          <Box className={classes.tabsContainer}>
+            <Paper className={classes.tabsPaper}>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                indicatorColor="primary"
+                textColor="primary"
+                variant="fullWidth"
+              >
+                <Tab label={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.tabs.overview')} />
+                <Tab label={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.tabs.byLocation')} />
+                <Tab label={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.tabs.byProgram')} />
+                <Tab label={formatMessage(intl, MODULE_NAME, 'dashboard.transfers.tabs.trends')} />
+              </Tabs>
+
+              {/* Overview Tab */}
+              <TabPanel value={activeTab} index={0}>
+                <Grid container spacing={3}>
+                  {/* Payment source breakdown pie chart */}
+                  {sourceBreakdownSeries.length > 0 && (
+                    <Grid item xs={12} md={6}>
+                      <Paper className={classes.box}>
+                        <Typography variant="h6" gutterBottom>
+                          {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.sourceBreakdown')}
+                        </Typography>
+                        <ReactApexChart
+                          options={{
+                            chart: { type: 'pie' },
+                            labels: sourceBreakdownLabels,
+                            colors: ['#5a8dee', '#ff8f00'],
+                            legend: { position: 'bottom' },
+                            dataLabels: {
+                              enabled: true,
+                              formatter: (val) => `${val.toFixed(1)}%`,
                             },
-                          },
-                        },
-                      },
-                      dataLabels: {
-                        enabled: true,
-                        formatter(val) { return `${val.toFixed(1)}%`; },
-                      },
-                    }}
-                    series={[
-                      breakdown.genderBreakdown.maleBeneficiaries || 0,
-                      breakdown.genderBreakdown.femaleBeneficiaries || 0,
-                      breakdown.genderBreakdown.twaBeneficiaries || 0,
-                    ]}
-                    type="donut"
-                    height={350}
-                  />
-                </Paper>
-              </Grid>
-            )}
-          </Grid>
+                            tooltip: {
+                              y: {
+                                formatter: (val) => formatCurrency(val),
+                              },
+                            },
+                          }}
+                          series={sourceBreakdownSeries}
+                          type="pie"
+                          height={350}
+                        />
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {/* Gender distribution donut chart */}
+                  {breakdown?.genderBreakdown && (
+                    <Grid item xs={12} md={6}>
+                      <Paper className={classes.box}>
+                        <Typography variant="h6" gutterBottom>
+                          {formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.genderDistribution')}
+                        </Typography>
+                        <ReactApexChart
+                          options={{
+                            chart: { type: 'donut' },
+                            labels: [
+                              formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.men'),
+                              formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.women'),
+                              formatMessage(intl, MODULE_NAME, 'dashboard.transfers.chart.twa'),
+                            ],
+                            colors: ['#5a8dee', '#e91e63', '#ff8f00'],
+                            legend: { position: 'bottom' },
+                            plotOptions: {
+                              pie: {
+                                donut: {
+                                  size: '65%',
+                                  labels: {
+                                    show: true,
+                                    total: { show: true, showAlways: true, fontSize: '16px', fontWeight: 600 },
+                                  },
+                                },
+                              },
+                            },
+                            dataLabels: {
+                              enabled: true,
+                              formatter(val) { return `${val.toFixed(1)}%`; },
+                            },
+                          }}
+                          series={[
+                            breakdown.genderBreakdown.maleBeneficiaries || 0,
+                            breakdown.genderBreakdown.femaleBeneficiaries || 0,
+                            breakdown.genderBreakdown.twaBeneficiaries || 0,
+                          ]}
+                          type="donut"
+                          height={350}
+                        />
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {/* Quarterly amounts bar chart */}
+                  <Grid item xs={12} md={6}>
+                    <Paper className={classes.box}>
+                      <MonetaryTransferChart filters={legacyFilters} />
+                    </Paper>
+                  </Grid>
+
+                  {/* Beneficiaries by Province */}
+                  <Grid item xs={12} md={6}>
+                    <Paper className={classes.box}>
+                      <BenefitConsumptionByProvinces
+                        filters={legacyFilters}
+                        optimizedData={breakdown?.locationBreakdown}
+                      />
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </TabPanel>
+
+              {/* By Location Tab */}
+              <TabPanel value={activeTab} index={1}>
+                {renderLocationTable()}
+              </TabPanel>
+
+              {/* By Program Tab */}
+              <TabPanel value={activeTab} index={2}>
+                {renderProgramTable()}
+              </TabPanel>
+
+              {/* Trends Tab */}
+              <TabPanel value={activeTab} index={3}>
+                {renderTrendsChart()}
+              </TabPanel>
+            </Paper>
+          </Box>
         </Container>
       </div>
     </ThemeProvider>
   );
 }
 
-const mapStateToProps = () => ({});
-
-const mapDispatchToProps = (dispatch) => bindActionCreators({}, dispatch);
-
-export default connect(mapStateToProps, mapDispatchToProps)(TransfertDashboard);
+export default TransfertDashboard;
