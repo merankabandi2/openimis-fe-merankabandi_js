@@ -190,6 +190,12 @@ export const RIGHT_INDICATOR_ACHIEVEMENT_CREATE = 160014;
 export const RIGHT_INDICATOR_ACHIEVEMENT_UPDATE = 160015;
 export const RIGHT_INDICATOR_ACHIEVEMENT_DELETE = 160016;
 
+// M&E menu-level rights (distinct from entity CRUD rights above)
+export const RIGHT_ME_DASHBOARD = 160013;
+export const RIGHT_ME_INDICATORS = 160014;
+export const RIGHT_ME_MONETARY_TRANSFERS = 160015;
+export const RIGHT_ME_RESULT_FRAMEWORK = 160016;
+
 export const RIGHT_KOBO_ETL_VIEW = '180001';
 export const RIGHT_KOBO_ETL_RUN = '180002';
 
