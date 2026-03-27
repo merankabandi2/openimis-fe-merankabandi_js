@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Typography, Box, Button, TablePagination, CircularProgress,
@@ -15,7 +15,7 @@ function WizardBeneficiaryList({ intl, benefitPlanId, selectedLocation, dispatch
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const fetchBeneficiaries = (currentPage, currentPageSize) => {
+  const fetchBeneficiaries = useCallback((currentPage, currentPageSize) => {
     setLoading(true);
     const first = currentPageSize;
     const offset = currentPage * currentPageSize;
@@ -48,7 +48,7 @@ function WizardBeneficiaryList({ intl, benefitPlanId, selectedLocation, dispatch
         }
       })
       .finally(() => setLoading(false));
-  };
+  }, [benefitPlanId, selectedLocation?.uuid, selectedLocation?.type, dispatch]);
 
   useEffect(() => {
     if (benefitPlanId) fetchBeneficiaries(page, pageSize);

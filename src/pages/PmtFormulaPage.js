@@ -108,7 +108,6 @@ function PmtFormulaPage({
         formatMessageWithValues('pmtFormula.mutation.createLabel', label),
       );
     }
-    back();
   };
 
   const deleteFormulaCallback = () => deletePmtFormula(

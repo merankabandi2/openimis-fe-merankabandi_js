@@ -116,7 +116,7 @@ class PmtFormulaForm extends FormPanel {
             )}
           </Typography>
           {variables.map((v, i) => (
-            <div key={i} className={classes.variableRow}>
+            <div key={v.field || `var-${i}`} className={classes.variableRow}>
               <TextInput
                 module={MODULE_NAME}
                 label="pmtFormula.variable.field"

@@ -135,7 +135,6 @@ function MonetaryTransferPage({
         formatMessageWithValues('monetaryTransfer.mutation.createLabel', mutationLabel(monetaryTransfer)),
       );
     }
-    back();
   };
 
   const deleteMonetaryTransferCallback = () => deleteMonetaryTransfer(
