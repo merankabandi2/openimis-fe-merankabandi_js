@@ -5,46 +5,10 @@
 
 import { useGraphqlQuery } from '@openimis/fe-core';
 import { useState, useCallback, useMemo } from 'react';
-
-// GraphQL Query for optimized activities dashboard
-const OPTIMIZED_ACTIVITIES_DASHBOARD = `
-  query OptimizedActivitiesDashboard($filters: DashboardFiltersInput) {
-    optimizedActivitiesDashboard(filters: $filters) {
-      summary {
-        totalActivities
-        totalMaleParticipants
-        totalFemaleParticipants
-        totalTwaParticipants
-        totalParticipants
-        avgFemalePercentage
-        avgTwaInclusionRate
-        provincesWithActivities
-      }
-      byActivityType {
-        activityType
-        activityCount
-        maleParticipants
-        femaleParticipants
-        twaParticipants
-        totalParticipants
-      }
-      byProvince {
-        province
-        provinceId
-        activityCount
-        totalParticipants
-      }
-      microProjects {
-        totalProjects
-        agricultureProjects
-        livestockProjects
-        commerceProjects
-        totalBeneficiaries
-      }
-      lastUpdated
-    }
-  }
-`;
+import {
+  OPTIMIZED_ACTIVITIES_DASHBOARD,
+  OPTIMIZED_RESULTS_FRAMEWORK,
+} from '../graphql/dashboardQueries';
 
 export const useOptimizedActivitiesDashboard = (filters = {}, options = {}) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -107,39 +71,6 @@ export const useOptimizedActivitiesDashboard = (filters = {}, options = {}) => {
 /**
  * Hook for Results Framework Dashboard
  */
-const OPTIMIZED_RESULTS_FRAMEWORK = `
-  query OptimizedResultsFramework($filters: DashboardFiltersInput) {
-    optimizedResultsFramework(filters: $filters) {
-      summary {
-        totalSections
-        totalIndicators
-        totalAchievements
-        avgAchievementRate
-        targetsMet
-        targetsMissed
-      }
-      bySection {
-        sectionId
-        sectionName
-        totalIndicators
-        totalAchievements
-        avgAchievementRate
-        targetsMet
-        targetsMissed
-      }
-      indicatorPerformance {
-        indicatorId
-        indicatorName
-        targetValue
-        totalAchieved
-        achievementPercentage
-        status
-      }
-      lastUpdated
-    }
-  }
-`;
-
 export const useOptimizedResultsFramework = (filters = {}, options = {}) => {
   const [refreshing, setRefreshing] = useState(false);
 

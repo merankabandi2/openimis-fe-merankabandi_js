@@ -11,6 +11,10 @@
 
 import { useGraphqlQuery, useGraphqlMutation } from '@openimis/fe-core';
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import {
+  OPTIMIZED_ACTIVITIES_DASHBOARD,
+  OPTIMIZED_RESULTS_FRAMEWORK,
+} from '../graphql/dashboardQueries';
 
 // GraphQL Queries for optimized dashboard
 const OPTIMIZED_DASHBOARD_SUMMARY = `
@@ -204,78 +208,6 @@ const OPTIMIZED_GRIEVANCE_DASHBOARD = `
         category
         count
         percentage
-      }
-      lastUpdated
-    }
-  }
-`;
-
-const OPTIMIZED_ACTIVITIES_DASHBOARD = `
-  query OptimizedActivitiesDashboard($filters: DashboardFiltersInput) {
-    optimizedActivitiesDashboard(filters: $filters) {
-      summary {
-        totalActivities
-        totalMaleParticipants
-        totalFemaleParticipants
-        totalTwaParticipants
-        totalParticipants
-        avgFemalePercentage
-        avgTwaInclusionRate
-        provincesWithActivities
-      }
-      byActivityType {
-        activityType
-        activityCount
-        maleParticipants
-        femaleParticipants
-        twaParticipants
-        totalParticipants
-      }
-      byProvince {
-        province
-        provinceId
-        activityCount
-        totalParticipants
-      }
-      microProjects {
-        totalProjects
-        agricultureProjects
-        livestockProjects
-        commerceProjects
-        totalBeneficiaries
-      }
-      lastUpdated
-    }
-  }
-`;
-
-const OPTIMIZED_RESULTS_FRAMEWORK = `
-  query OptimizedResultsFramework($filters: DashboardFiltersInput) {
-    optimizedResultsFramework(filters: $filters) {
-      summary {
-        totalSections
-        totalIndicators
-        totalAchievements
-        avgAchievementRate
-        targetsMet
-        targetsMissed
-      }
-      bySection {
-        sectionId
-        sectionName
-        totalIndicators
-        totalAchievements
-        avgAchievementRate
-        targetsMet
-        targetsMissed
-      }
-      indicatorPerformance {
-        indicatorId
-        indicatorName
-        targetValue
-        totalAchieved
-        achievementPercentage
-        status
       }
       lastUpdated
     }
