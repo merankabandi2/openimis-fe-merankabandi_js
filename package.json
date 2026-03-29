@@ -14,8 +14,9 @@
     "start": "rollup -c -w",
     "prepare": "npm run build"
   },
-  "peerDependency": {
-    "react-intl": "^5.8.1"
+  "peerDependencies": {
+    "react-intl": "^5.8.1",
+    "react-redux": "^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -54,6 +55,7 @@
     "apexcharts": "^3.41.0",
     "leaflet": "^1.9.4",
     "react-apexcharts": "1.4.1",
-    "react-leaflet": "2"
+    "react-leaflet": "2",
+    "recharts": "^2.15.4"
   }
 }

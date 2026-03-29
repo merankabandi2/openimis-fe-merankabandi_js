@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import React from 'react';
-import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, MonetizationOn } from '@material-ui/icons';
+import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, MonetizationOn, Map as MapIcon, Person } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
@@ -122,6 +122,17 @@ import ApprovedPayrollsPage from './pages/ApprovedPayrollsPage';
 import PendingPayrollsPage from './pages/PendingPayrollsPage';
 import ReconciledPayrollsPage from './pages/ReconciledPayrollsPage';
 
+// Grievance Workflow Pages
+import MyTasksPage from './pages/MyTasksPage';
+import WorkflowTemplatesPage from './pages/WorkflowTemplatesPage';
+import RoleAssignmentsPage from './pages/RoleAssignmentsPage';
+
+// Geography Pages
+import ProvincesPage from './pages/ProvincesPage';
+import ProvinceDetailPage from './pages/ProvinceDetailPage';
+import CommuneDetailPage from './pages/CommuneDetailPage';
+import CollineDetailPage from './pages/CollineDetailPage';
+
 // Payroll tab panel contributions
 import {
   BenefitConsumptionsTabLabel,
@@ -178,6 +189,15 @@ import {
   ROUTE_PAYROLLS_APPROVED,
   ROUTE_PAYROLLS_PENDING,
   ROUTE_PAYROLLS_RECONCILED,
+  ROUTE_GEOGRAPHY_PROVINCES,
+  ROUTE_GEOGRAPHY_PROVINCE,
+  ROUTE_GEOGRAPHY_COMMUNE,
+  ROUTE_GEOGRAPHY_COLLINE,
+  ROUTE_GRIEVANCE_MY_TASKS,
+  ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES,
+  ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS,
+  RIGHT_GRIEVANCE_TASK_VIEW,
+  RIGHT_GRIEVANCE_WORKFLOW_ADMIN,
 } from './constants';
 
 // Reducer
@@ -200,7 +220,7 @@ const DEFAULT_CONFIG = {
   'individual.Individual.headPanel': [BeneficiaryPhotoPanel],
 
   // Centered app title in the header bar
-  'core.AppBar': [AppBarTitle],
+  'core.AppBar': [],
 
   // Custom home page dashboard
   'home.HomePage.customDashboard': HomePageContainer,
@@ -288,9 +308,18 @@ const DEFAULT_CONFIG = {
     { path: `${ROUTE_BENEFICIARY_SELECTION_WIZARD}/:benefit_plan_uuid?`, component: BeneficiarySelectionWizardPage },
     { path: ROUTE_PMT_FORMULAS, component: PmtFormulasPage },
     { path: `${ROUTE_PMT_FORMULA}/:formula_id?`, component: PmtFormulaPage },
+    { path: `${ROUTE_PAYMENT_NEW_PAYMENT}/:payroll_uuid?`, component: MerankabandiPayrollPage },
     { path: ROUTE_PAYROLLS_APPROVED, component: ApprovedPayrollsPage },
     { path: ROUTE_PAYROLLS_PENDING, component: PendingPayrollsPage },
     { path: ROUTE_PAYROLLS_RECONCILED, component: ReconciledPayrollsPage },
+    { path: ROUTE_GEOGRAPHY_PROVINCES, component: ProvincesPage },
+    { path: `${ROUTE_GEOGRAPHY_PROVINCE}/:uuid`, component: ProvinceDetailPage },
+    { path: `${ROUTE_GEOGRAPHY_COMMUNE}/:uuid`, component: CommuneDetailPage },
+    { path: `${ROUTE_GEOGRAPHY_COLLINE}/:uuid`, component: CollineDetailPage },
+    // Grievance workflow
+    { path: ROUTE_GRIEVANCE_MY_TASKS, component: MyTasksPage },
+    { path: ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES, component: WorkflowTemplatesPage },
+    { path: ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS, component: RoleAssignmentsPage },
   ],
 
   // Payment menu items (contributed to PaymentMainMenu via 'payment.MainMenu' key
@@ -377,6 +406,13 @@ const DEFAULT_CONFIG = {
       filter: (rights) => rights.includes(RIGHT_ME_INDICATORS),
       id: 'merankabandi.me.activitiesDashboard',
     },
+    {
+      text: <FormattedMessage module="merankabandi" id="geography.menu" />,
+      icon: <MapIcon />,
+      route: `/${ROUTE_GEOGRAPHY_PROVINCES}`,
+      filter: (rights) => rights.includes(RIGHT_ME_DASHBOARD),
+      id: 'merankabandi.me.geography',
+    },
   ],
 
   // Items contributed to social protection menu
@@ -394,6 +430,27 @@ const DEFAULT_CONFIG = {
       route: `/${ROUTE_KOBO_ETL_ADMIN}`,
       filter: (rights) => rights.includes(RIGHT_KOBO_ETL_VIEW),
       id: 'merankabandi.koboETLAdmin',
+    },
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.myTasks" />,
+      icon: <ListAlt />,
+      route: `/${ROUTE_GRIEVANCE_MY_TASKS}`,
+      filter: (rights) => rights.includes(RIGHT_GRIEVANCE_TASK_VIEW),
+      id: 'merankabandi.grievanceMyTasks',
+    },
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.workflowTemplates" />,
+      icon: <Assessment />,
+      route: `/${ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES}`,
+      filter: (rights) => rights.includes(RIGHT_GRIEVANCE_WORKFLOW_ADMIN),
+      id: 'merankabandi.workflowTemplates',
+    },
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.roleAssignments" />,
+      icon: <Person />,
+      route: `/${ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS}`,
+      filter: (rights) => rights.includes(RIGHT_GRIEVANCE_WORKFLOW_ADMIN),
+      id: 'merankabandi.roleAssignments',
     },
   ],
 

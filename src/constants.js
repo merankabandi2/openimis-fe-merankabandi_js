@@ -19,7 +19,7 @@ export const GROUP_HEAD_PANEL_CONTRIBUTION_KEY = 'group.Group.headPanel';
 // Payroll / Payment Request
 export const PAYROLL_MODULE_NAME = 'payroll';
 export const ROUTE_PAYMENT_REQUEST = 'paymentrequest';
-export const ROUTE_PAYMENT_NEW_PAYMENT = 'payrolls/payroll';
+export const ROUTE_PAYMENT_NEW_PAYMENT = 'paymentrequest/paymentrequest';
 export const ROUTE_PAYROLLS_APPROVED = 'payrollsApproved';
 export const ROUTE_PAYROLLS_PENDING = 'payrollsPending';
 export const ROUTE_PAYROLLS_RECONCILED = 'payrollsReconciled';
@@ -132,6 +132,12 @@ export const SELECTION_STATUS = {
   COMMUNITY_REJECTED: 'COMMUNITY_REJECTED',
 };
 
+// Geography
+export const ROUTE_GEOGRAPHY_PROVINCES = 'geography/provinces';
+export const ROUTE_GEOGRAPHY_PROVINCE = 'geography/province';
+export const ROUTE_GEOGRAPHY_COMMUNE = 'geography/commune';
+export const ROUTE_GEOGRAPHY_COLLINE = 'geography/colline';
+
 // --- M&E Menu ---
 export const ME_MAIN_MENU_CONTRIBUTION_KEY = 'me.MainMenu';
 export const SOCIAL_PROTECTION_MAIN_MENU_CONTRIBUTION_KEY = 'socialProtection.MainMenu';
@@ -197,8 +203,8 @@ export const RIGHT_ME_INDICATORS = 160014;
 export const RIGHT_ME_MONETARY_TRANSFERS = 160015;
 export const RIGHT_ME_RESULT_FRAMEWORK = 160016;
 
-export const RIGHT_KOBO_ETL_VIEW = '180001';
-export const RIGHT_KOBO_ETL_RUN = '180002';
+export const RIGHT_KOBO_ETL_VIEW = 180001;
+export const RIGHT_KOBO_ETL_RUN = 180002;
 
 // --- M&E Tab Values ---
 export const MICRO_PROJECT_LIST_TAB_VALUE = 'microProjectIndicatorsListTab';
@@ -213,6 +219,15 @@ export const ME_INDICATORS_TABS_LABEL_CONTRIBUTION_KEY = 'meIndicators.TabPanel.
 export const ME_INDICATORS_TABS_PANEL_CONTRIBUTION_KEY = 'meIndicators.TabPanel.panel';
 export const ME_RESULT_FRAMEWORK_TABS_LABEL_CONTRIBUTION_KEY = 'meResultFrameWork.TabPanel.label';
 export const ME_RESULT_FRAMEWORK_TABS_PANEL_CONTRIBUTION_KEY = 'meResultFrameWork.TabPanel.panel';
+
+// --- Grievance Workflow Routes ---
+export const ROUTE_GRIEVANCE_MY_TASKS = 'grievance/my-tasks';
+export const ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES = 'grievance/workflow-templates';
+export const ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS = 'grievance/role-assignments';
+
+// --- Grievance Workflow Rights ---
+export const RIGHT_GRIEVANCE_TASK_VIEW = 160017;
+export const RIGHT_GRIEVANCE_WORKFLOW_ADMIN = 160018;
 
 // --- Helper ---
 export const locationAtLevel = (lowestLevelLoc, level) => {
