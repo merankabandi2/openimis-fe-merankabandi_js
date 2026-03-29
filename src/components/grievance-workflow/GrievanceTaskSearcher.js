@@ -53,6 +53,7 @@ function GrievanceTaskSearcher({
     ['status', true],
     ['assignedRole', true],
     ['dueDate', true],
+    null,
   ];
 
   const itemFormatters = () => [

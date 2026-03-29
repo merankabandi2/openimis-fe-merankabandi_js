@@ -8,7 +8,7 @@ import {
 import {
   CheckCircle, Lock, PlayArrow, SkipNext, Warning, Person,
 } from '@material-ui/icons';
-import { useModulesManager, useTranslations } from '@openimis/fe-core';
+import { useModulesManager, useTranslations, journalize } from '@openimis/fe-core';
 import { fetchGrievanceWorkflows, completeGrievanceTask, skipGrievanceTask } from '../../actions';
 
 const MODULE_NAME = 'merankabandi';
@@ -36,6 +36,9 @@ function WorkflowTracker({
   fetchGrievanceWorkflows,
   completeGrievanceTask,
   skipGrievanceTask,
+  submittingMutation,
+  mutation,
+  journalize,
 }) {
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations(MODULE_NAME, modulesManager);
@@ -45,6 +48,14 @@ function WorkflowTracker({
       fetchGrievanceWorkflows([`ticket_Id: "${ticketId}"`]);
     }
   }, [ticketId]);
+
+  // Refetch after mutation completes
+  useEffect(() => {
+    if (!submittingMutation && mutation?.clientMutationId) {
+      journalize(mutation);
+      fetchGrievanceWorkflows([`ticket_Id: "${ticketId}"`]);
+    }
+  }, [submittingMutation]);
 
   if (fetchingGrievanceWorkflows) {
     return <Box display="flex" justifyContent="center" p={3}><CircularProgress /></Box>;
@@ -66,7 +77,6 @@ function WorkflowTracker({
       { manual_completion: true },
       formatMessage('workflow.task.completeLabel'),
     );
-    setTimeout(() => fetchGrievanceWorkflows([`ticket_Id: "${ticketId}"`]), 1000);
   };
 
   const handleSkip = (task) => {
@@ -75,7 +85,6 @@ function WorkflowTracker({
       'Skipped by operator',
       formatMessage('workflow.task.skipLabel'),
     );
-    setTimeout(() => fetchGrievanceWorkflows([`ticket_Id: "${ticketId}"`]), 1000);
   };
 
   return (
@@ -182,12 +191,15 @@ function WorkflowTracker({
 const mapStateToProps = (state) => ({
   grievanceWorkflows: state.merankabandi.grievanceWorkflows,
   fetchingGrievanceWorkflows: state.merankabandi.fetchingGrievanceWorkflows,
+  submittingMutation: state.merankabandi.submittingMutation,
+  mutation: state.merankabandi.mutation,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchGrievanceWorkflows,
   completeGrievanceTask,
   skipGrievanceTask,
+  journalize,
 }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(WorkflowTracker);
