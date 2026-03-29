@@ -113,39 +113,58 @@ function MEDashboard({ rights, locations }) {
 
       const headers = apiHeaders();
       const [summaryResponse, beneficiaryResponse, refugeeHostResponse, quarterlyResponse, twaResponse] = await Promise.all([
-        fetch(`${baseApiUrl}/merankabandi/dashboard/summary/?${params}`, {
+        fetch(`${baseApiUrl}/merankabandi/dashboard/optimized/summary/?${params}`, {
           headers,
         }),
-        fetch(`${baseApiUrl}/merankabandi/dashboard/beneficiary-breakdown/?${params}`, {
+        fetch(`${baseApiUrl}/merankabandi/dashboard/optimized/beneficiary-breakdown/?${params}`, {
           headers,
         }),
-        fetch(`${baseApiUrl}/merankabandi/dashboard/refugee-host-breakdown/?${params}`, {
+        fetch(`${baseApiUrl}/merankabandi/dashboard/optimized/refugee-host-breakdown/?${params}`, {
           headers,
         }),
-        fetch(`${baseApiUrl}/merankabandi/dashboard/quarterly-rollup/?year=${filters.year}`, {
+        fetch(`${baseApiUrl}/merankabandi/dashboard/optimized/quarterly-trends/?year=${filters.year}`, {
           headers,
         }),
-        fetch(`${baseApiUrl}/merankabandi/dashboard/twa-metrics/?${params}`, {
+        fetch(`${baseApiUrl}/merankabandi/dashboard/optimized/twa-metrics/?${params}`, {
           headers,
         }),
       ]);
 
-      const summaryData = await summaryResponse.json();
-      const beneficiaryData = await beneficiaryResponse.json();
-      const refugeeHostData = await refugeeHostResponse.json();
-      const quarterlyData = await quarterlyResponse.json();
-      const twaData = await twaResponse.json();
+      const safeJson = async (resp) => {
+        try {
+          if (!resp.ok) return { success: false, data: null };
+          return await resp.json();
+        } catch { return { success: false, data: null }; }
+      };
 
-      if (summaryData.success && beneficiaryData.success && refugeeHostData.success && quarterlyData.success && twaData.success) {
+      const summaryData = await safeJson(summaryResponse);
+      const beneficiaryData = await safeJson(beneficiaryResponse);
+      const refugeeHostData = await safeJson(refugeeHostResponse);
+      const quarterlyData = await safeJson(quarterlyResponse);
+      const twaData = await safeJson(twaResponse);
+
+      if (summaryData.success) {
+        // Build the overview object from summary + beneficiary breakdown
+        const summ = summaryData.data?.summary || {};
+        const gender = beneficiaryData.data?.gender_breakdown || {};
+        const totalBen = summ.total_beneficiaries || 0;
+
+        const overview = {
+          total_planned_beneficiaries: totalBen,
+          female_percentage: gender.female_beneficiaries_percentage || 0,
+          twa_inclusion_rate: gender.twa_beneficiaries_percentage || 0,
+          host_community_percentage: 0,
+        };
+
         setDashboardData({
-          summary: summaryData.data,
-          beneficiaryBreakdown: beneficiaryData.data,
-          refugeeHostBreakdown: refugeeHostData.data,
-          quarterlyData: quarterlyData.data,
-          twaData: twaData.data,
+          summary: { ...summaryData.data, overview },
+          beneficiaryBreakdown: beneficiaryData.data || null,
+          refugeeHostBreakdown: refugeeHostData.data || null,
+          quarterlyData: quarterlyData.data || null,
+          twaData: twaData.data || null,
         });
       } else {
-        throw new Error('Failed to fetch dashboard data');
+        throw new Error('Failed to fetch dashboard summary');
       }
     } catch (err) {
       setError(err.message);
@@ -162,7 +181,16 @@ function MEDashboard({ rights, locations }) {
       if (filters.endDate) params.append('end_date', filters.endDate);
       if (filters.locationId) params.append('location_id', filters.locationId);
 
-      const response = await fetch(`${baseApiUrl}/merankabandi/export/excel/${reportType}/?${params}`, {
+      const exportUrls = {
+        monetary_transfers: `${baseApiUrl}/merankabandi/monetary-transfers/export/?${params}`,
+        subcomponents: `${baseApiUrl}/merankabandi/export/subcomponents/?${params}`,
+      };
+      const url = exportUrls[reportType];
+      if (!url) {
+        console.warn(`Export not implemented for: ${reportType}`);
+        return;
+      }
+      const response = await fetch(url, {
         headers: apiHeaders(),
       });
 
@@ -511,7 +539,7 @@ function MEDashboard({ rights, locations }) {
             <Card className={classes.card}>
               <CardContent className={classes.cardContent}>
                 <Typography variant="h6" gutterBottom>
-                  {formatMessage('dashboard.me.chart.quarterlyTrends', { year: filters.year })}
+                  {`Tendances Trimestrielles ${filters.year || ''}`}
                 </Typography>
                 <div className={classes.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -551,6 +579,7 @@ function MEDashboard({ rights, locations }) {
                   onClick={() => handleExport('accompanying_measures')}
                   startIcon={<ExportIcon />}
                   className={classes.exportButton}
+                  disabled
                 >
                   {formatMessage('dashboard.me.export.accompanyingMeasures')}
                 </Button>
@@ -559,6 +588,7 @@ function MEDashboard({ rights, locations }) {
                   onClick={() => handleExport('microprojects')}
                   startIcon={<ExportIcon />}
                   className={classes.exportButton}
+                  disabled
                 >
                   {formatMessage('dashboard.me.export.microProjects')}
                 </Button>

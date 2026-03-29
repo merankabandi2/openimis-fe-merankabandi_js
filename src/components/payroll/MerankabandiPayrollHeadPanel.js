@@ -44,6 +44,9 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
       } catch (e) { /* ignore parse errors */ }
     }
 
+    // Derive province from commune's parent for the province picker
+    const provinceValue = payrollLocation?.parent || payroll?.province || null;
+
     let effectiveBenefitPlanId = benefitPlanId;
     if (!effectiveBenefitPlanId && payroll?.paymentPlan?.benefitPlan) {
       const benefitPlan = JSON.parse(payroll.paymentPlan.benefitPlan);
@@ -54,15 +57,32 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
     return (
       <>
         <Grid container className={classes.item}>
-          <Grid xs={12}>
+          <Grid item xs={6} className={classes.item}>
             <PublishedComponent
-              pubRef="location.CommuneLocation"
+              pubRef="location.LocationPicker"
+              locationLevel={0}
               withNull
               required
               readOnly={readOnly}
-              filterLabels={false}
+              value={provinceValue}
+              onChange={(province) => {
+                this.updateAttribute('province', province);
+                this.updateAttribute('location', null);
+              }}
+              label={formatMessage(intl, 'merankabandi', 'payroll.province')}
+            />
+          </Grid>
+          <Grid item xs={6} className={classes.item}>
+            <PublishedComponent
+              pubRef="location.LocationPicker"
+              locationLevel={1}
+              parentLocation={provinceValue}
+              withNull
+              required
+              readOnly={readOnly || !provinceValue}
               value={payrollLocation}
-              onChange={(locations) => this.updateAttribute('location', locations)}
+              onChange={(commune) => this.updateAttribute('location', commune)}
+              label={formatMessage(intl, 'merankabandi', 'payroll.commune')}
             />
           </Grid>
           <Grid item xs={3} className={classes.item}>

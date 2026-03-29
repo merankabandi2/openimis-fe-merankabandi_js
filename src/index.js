@@ -20,6 +20,7 @@ import BeneficiaryPhotoPanel from './components/individual/BeneficiaryPhotoPanel
 
 // AppBar contribution (centered title in header)
 import AppBarTitle from './components/AppBarTitle';
+import AppBarOverrides from './components/AppBarOverrides';
 
 // Social protection extensions (Benefit Plan Provinces tab)
 import {
@@ -220,7 +221,7 @@ const DEFAULT_CONFIG = {
   'individual.Individual.headPanel': [BeneficiaryPhotoPanel],
 
   // Centered app title in the header bar
-  'core.AppBar': [],
+  'core.AppBar': [AppBarOverrides],
 
   // Custom home page dashboard
   'home.HomePage.customDashboard': HomePageContainer,

@@ -50,7 +50,9 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
   },
   mapSection: {
-    height: 400,
+    height: 500,
+    position: 'relative',
+    overflow: 'hidden',
     marginBottom: theme.spacing(2),
   },
   filterBar: {
@@ -185,10 +187,14 @@ function ProvinceMapTable({
           <MapComponent
             filters={mapFilters}
             isLoading={isLoading}
-            onFeatureClick={(provinceName) => {
-              const province = provinces.find((p) => p.name === provinceName);
-              if (province && province.uuid) {
-                onProvinceClick(province.uuid);
+            onFeatureClick={(provinceName, properties, locationInfo) => {
+              if (locationInfo && locationInfo.uuid) {
+                onProvinceClick(locationInfo.uuid);
+              } else {
+                const province = provinces.find((p) => p.name === provinceName);
+                if (province && province.uuid) {
+                  onProvinceClick(province.uuid);
+                }
               }
             }}
           />

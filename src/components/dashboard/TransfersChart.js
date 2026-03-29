@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { baseApiUrl, apiHeaders, decodeId } from '@openimis/fe-core';
 import {
-  Grid, Typography,
-  Paper, CircularProgress, Box, Chip, Avatar,
+  Typography, Paper, CircularProgress, Box, Chip,
 } from '@material-ui/core';
 import { withTheme, withStyles } from '@material-ui/core/styles';
 import ReactApexChart from 'react-apexcharts';
-import TrendingUpIcon from '@material-ui/icons/TrendingUp';
-import TrendingDownIcon from '@material-ui/icons/TrendingDown';
 
 const styles = (theme) => ({
   paper: {
@@ -24,29 +21,6 @@ const styles = (theme) => ({
     alignItems: 'center',
     width: '100%',
   },
-  cardContent: {
-    padding: theme.spacing(0),
-  },
-  chartContainer: {
-    height: props => props.compact ? 280 : 350,
-    position: 'relative',
-    '& .apexcharts-canvas': {
-      borderRadius: theme.spacing(1),
-    },
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120,
-  },
-  noDataMessage: {
-    textAlign: 'center',
-    padding: theme.spacing(4),
-    color: theme.palette.text.secondary,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: theme.spacing(2),
-  },
   statsContainer: {
     display: 'flex',
     gap: theme.spacing(2),
@@ -55,7 +29,7 @@ const styles = (theme) => ({
   },
   statCard: {
     flex: 1,
-    minWidth: 120,
+    minWidth: 100,
     padding: theme.spacing(1.5),
     borderRadius: theme.spacing(1),
     backgroundColor: theme.palette.background.paper,
@@ -78,57 +52,14 @@ const styles = (theme) => ({
     fontSize: '0.75rem',
     color: theme.palette.text.secondary,
     marginTop: theme.spacing(0.5),
+    textAlign: 'center',
   },
-  legendContainer: {
-    display: 'flex',
-    gap: theme.spacing(1),
-    marginTop: theme.spacing(2),
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(0.5),
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: '50%',
+  noDataMessage: {
+    textAlign: 'center',
+    padding: theme.spacing(4),
+    color: theme.palette.text.secondary,
   },
 });
-
-const buildFilter = (filters) => {
-  const { locationId, benefitPlanId, year } = filters;
-
-  const itemFilters = {
-    year: (val) => `year: ${val}`,
-    locationId: (val) => `parentLocation: "${val}", parentLocationLevel: 0`,
-    benefitPlanId: (val) => `benefitPlanUuid: "${decodeId(val)}"`,
-  };
-
-  // Build the filter string
-  const filterParts = [];
-
-  // Process year filter (special handling for array results)
-  if (itemFilters.year && year) {
-    const yearFilter = itemFilters.year(year);
-    if (Array.isArray(yearFilter)) {
-      filterParts.push(...yearFilter);
-    } else {
-      filterParts.push(yearFilter);
-    }
-  }
-
-  if (itemFilters.locationId && locationId) {
-    filterParts.push(itemFilters.locationId(locationId));
-  }
-
-  if (itemFilters.benefitPlanId && benefitPlanId) {
-    filterParts.push(itemFilters.benefitPlanId(benefitPlanId));
-  }
-  return filterParts.length ? `(${filterParts.join(', ')})` : '';
-};
 
 function TransfersChart({ classes, theme, filters = {}, compact = false, header = true }) {
   const [data, setData] = useState(null);
@@ -138,10 +69,8 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
   const loadTransfersData = async () => {
     setLoading(true);
     try {
-      // Build filters object for optimized query
       const optimizedFilters = {};
       if (filters.year) optimizedFilters.year = filters.year;
-      // Handle hierarchical location filters
       if (filters.provinces && filters.provinces.length > 0) {
         optimizedFilters.provinceId = parseInt(decodeId(filters.provinces[0]));
       }
@@ -168,24 +97,16 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
               totalUnpaid
             }
           }`,
-          variables: {
-            filters: optimizedFilters
-          }
+          variables: { filters: optimizedFilters },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch transfers data');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch transfers data');
       const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message || 'GraphQL errors occurred');
-      }
+      if (result.errors) throw new Error(result.errors[0]?.message);
 
       const transferData = result.data?.optimizedMonetaryTransferBeneficiaryData;
-      setData({ monetaryTransferBeneficiaryData: transferData || [] });
+      setData(transferData || []);
       setError(null);
     } catch (err) {
       console.error('Error loading transfers data:', err);
@@ -200,338 +121,220 @@ function TransfersChart({ classes, theme, filters = {}, compact = false, header 
     loadTransfersData();
   }, [filters]);
 
-  // Format data for ApexCharts
-  const formatChartData = (rawData) => {
-    if (!rawData?.monetaryTransferBeneficiaryData?.length) {
-      return { categories: [], series: [], seriesData: [], stats: {} };
-    }
-
-    // Calculate total for each type and prepare series data
-    let seriesData = rawData.monetaryTransferBeneficiaryData.map((item) => {
-      const total = item.malePaid + item.maleUnpaid + item.femalePaid + item.femaleUnpaid;
-      const totalPaid = item.malePaid + item.femalePaid;
-      const totalUnpaid = item.maleUnpaid + item.femaleUnpaid;
-      const paidRate = total > 0 ? (totalPaid / total * 100).toFixed(1) : 0;
-
-      return {
-        transferType: item.transferType,
-        total,
-        totalPaid,
-        totalUnpaid,
-        paidRate,
-        malePaid: item.malePaid,
-        maleUnpaid: item.maleUnpaid,
-        femalePaid: item.femalePaid,
-        femaleUnpaid: item.femaleUnpaid,
-      };
-    });
-
-    // Filter out empty data
-    seriesData = seriesData.filter((item) => item.total > 0);
-
-    // Calculate overall stats
-    const overallStats = {
-      totalBeneficiaries: seriesData.reduce((sum, item) => sum + item.total, 0),
-      totalPaid: seriesData.reduce((sum, item) => sum + item.totalPaid, 0),
-      totalUnpaid: seriesData.reduce((sum, item) => sum + item.totalUnpaid, 0),
-      overallPaidRate: 0,
-    };
-    overallStats.overallPaidRate = overallStats.totalBeneficiaries > 0
-      ? (overallStats.totalPaid / overallStats.totalBeneficiaries * 100).toFixed(1)
-      : 0;
-
-    // Format transfer type names for display
-    const formatTransferType = (type) => {
-      // Shorten long transfer type names
-      return type
-        .replace('Transferts monétaires', 'TM')
-        .replace('Transferts monetaires', 'TM')
-        .replace('d\'urgence', 'd\'urg.')
-        .replace('aux ménages refugiés', 'Refugiés')
-        .replace('réguliers', 'Réguliers');
-    };
-
-    // Create series for radial chart
-    const categories = seriesData.map(item => formatTransferType(item.transferType));
-    const series = seriesData.map(item => parseFloat(item.paidRate));
-
-    return { categories, series, seriesData, stats: overallStats };
-  };
-
-  const { categories, series, seriesData, stats } = formatChartData(data);
-
-  // Create detail series only when seriesData has data
-  const detailSeries = seriesData && seriesData.length > 0
-    ? [
-        {
-          name: 'Paiements Hommes - Effectués',
-          data: seriesData.map(item => item.malePaid),
-        },
-        {
-          name: 'Paiements Hommes - En Attente',
-          data: seriesData.map(item => item.maleUnpaid),
-        },
-        {
-          name: 'Paiements Femmes - Effectués',
-          data: seriesData.map(item => item.femalePaid),
-        },
-        {
-          name: 'Paiements Femmes - En Attente',
-          data: seriesData.map(item => item.femaleUnpaid),
-        },
-      ]
-    : [];
-
-  // Chart options - using a radial bar chart for better visual appeal
-  const chartOptions = {
-    chart: {
-      type: 'radialBar',
-      offsetY: -20,
-      sparkline: {
-        enabled: true,
-      },
+  // Aggregate all transfer types
+  const stats = (data || []).reduce(
+    (acc, item) => {
+      acc.malePaid += item.malePaid || 0;
+      acc.maleUnpaid += item.maleUnpaid || 0;
+      acc.femalePaid += item.femalePaid || 0;
+      acc.femaleUnpaid += item.femaleUnpaid || 0;
+      return acc;
     },
+    { malePaid: 0, maleUnpaid: 0, femalePaid: 0, femaleUnpaid: 0 },
+  );
+
+  const totalPaid = stats.malePaid + stats.femalePaid;
+  const totalUnpaid = stats.maleUnpaid + stats.femaleUnpaid;
+  const total = totalPaid + totalUnpaid;
+  const paidRate = total > 0 ? ((totalPaid / total) * 100).toFixed(1) : 0;
+  const maleTotal = stats.malePaid + stats.maleUnpaid;
+  const femaleTotal = stats.femalePaid + stats.femaleUnpaid;
+  const malePct = total > 0 ? Math.round((maleTotal / total) * 100) : 0;
+  const femalePct = total > 0 ? Math.round((femaleTotal / total) * 100) : 0;
+
+  // Donut chart: Paid vs Pending
+  const donutOptions = {
+    chart: {
+      type: 'donut',
+      fontFamily: '"Titillium Web", "Roboto", sans-serif',
+    },
+    labels: ['Effectués', 'En Attente'],
+    colors: ['#00E396', '#FF4560'],
     plotOptions: {
-      radialBar: {
-        startAngle: -90,
-        endAngle: 90,
-        track: {
-          background: '#e7e7e7',
-          strokeWidth: '97%',
-          margin: 5,
-          dropShadow: {
-            enabled: true,
-            top: 2,
-            left: 0,
-            color: '#999',
-            opacity: 0.2,
-            blur: 2
-          }
-        },
-        dataLabels: {
-          name: {
+      pie: {
+        donut: {
+          size: '70%',
+          labels: {
             show: true,
-            offsetY: -10,
-            fontSize: '16px',
-            color: theme.palette.text.primary,
-          },
-          value: {
-            offsetY: 5,
-            fontSize: '22px',
-            fontWeight: 700,
-            color: theme.palette.text.primary,
-            formatter: function (val) {
-              return val + '%';
-            }
-          }
-        }
-      }
-    },
-    grid: {
-      padding: {
-        top: -10
-      }
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shade: 'light',
-        shadeIntensity: 0.4,
-        inverseColors: false,
-        opacityFrom: 1,
-        opacityTo: 1,
-        stops: [0, 50, 53, 91]
-      },
-    },
-    labels: categories,
-    colors: ['#00E396', '#FEB019', '#FF4560', '#775DD0'],
-  };
-
-  // Alternative chart for detailed view
-  const detailChartOptions = {
-    chart: {
-      type: 'bar',
-      stacked: true,
-      toolbar: {
-        show: false,
-      },
-      animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 800,
-      },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: '60%',
-        borderRadius: 8,
-        dataLabels: {
-          total: {
-            enabled: true,
-            style: {
-              fontSize: '12px',
-              fontWeight: 600,
+            name: { show: true, fontSize: '14px' },
+            value: {
+              show: true,
+              fontSize: '18px',
+              fontWeight: 700,
+              formatter: (val) => Number(val).toLocaleString('fr-FR'),
+            },
+            total: {
+              show: true,
+              label: 'Taux',
+              fontSize: '13px',
+              formatter: () => `${paidRate}%`,
             },
           },
         },
       },
     },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      show: true,
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: categories,
-      labels: {
-        style: {
-          fontSize: '12px',
-        },
-      },
-    },
-    yaxis: {
-      title: {
-        text: 'Nombre de paiements',
-        style: {
-          fontSize: '12px',
-        },
-      },
-    },
-    fill: {
-      opacity: 1,
-    },
+    dataLabels: { enabled: false },
+    legend: { show: false },
+    stroke: { width: 2 },
     tooltip: {
       y: {
-        formatter: function (val) {
-          return val.toLocaleString('fr-FR') + ' paiements';
-        },
+        formatter: (val) => `${val.toLocaleString('fr-FR')} paiements`,
       },
     },
-    legend: {
-      position: 'top',
-      horizontalAlign: 'center',
-      offsetY: 0,
-    },
-    colors: ['#00D9FF', '#00A3E0', '#FF6B6B', '#FF4757'],
   };
+
+  // Horizontal bar: gender breakdown (paid vs pending per gender)
+  const genderBarOptions = {
+    chart: {
+      type: 'bar',
+      stacked: true,
+      stackType: '100%',
+      toolbar: { show: false },
+      fontFamily: '"Titillium Web", "Roboto", sans-serif',
+    },
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        barHeight: '60%',
+        borderRadius: 4,
+      },
+    },
+    xaxis: {
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      labels: {
+        style: { fontSize: '12px', fontWeight: 600 },
+      },
+    },
+    grid: { show: false },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => `${val.toFixed(0)}%`,
+      style: { fontSize: '11px', fontWeight: 600 },
+    },
+    colors: ['#00E396', '#FF4560'],
+    legend: { show: false },
+    tooltip: {
+      y: {
+        formatter: (val) => `${val.toLocaleString('fr-FR')} paiements`,
+      },
+    },
+  };
+
+  const genderBarSeries = [
+    { name: 'Effectués', data: [stats.femalePaid, stats.malePaid] },
+    { name: 'En Attente', data: [stats.femaleUnpaid, stats.maleUnpaid] },
+  ];
+
+  const genderBarCategories = [
+    `Femmes (${femalePct}%)`,
+    `Hommes (${malePct}%)`,
+  ];
 
   return (
     <Paper className={classes.paper}>
-      <Grid container spacing={2}>
-        {header && (
-          <div className={classes.cardHeader}>
-            <Typography variant="h6" className={classes.title}>
-              Enregistrements de Paiements
-            </Typography>
+      {header && (
+        <div className={classes.cardHeader}>
+          <Typography variant="h6">Enregistrements de Paiements</Typography>
+        </div>
+      )}
+
+      {loading && (
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {error && (
+        <Box my={2}>
+          <Typography color="error" align="center">
+            Erreur: {error.message}
+          </Typography>
+        </Box>
+      )}
+
+      {!loading && !error && total > 0 && (
+        <>
+          {/* Summary cards */}
+          <div className={classes.statsContainer}>
+            <div className={classes.statCard}>
+              <Typography className={classes.statValue}>
+                {total.toLocaleString('fr-FR')}
+              </Typography>
+              <Typography className={classes.statLabel}>Total Paiements</Typography>
+            </div>
+            <div className={classes.statCard} style={{ borderColor: '#00E396' }}>
+              <Typography className={classes.statValue} style={{ color: '#00E396' }}>
+                {totalPaid.toLocaleString('fr-FR')}
+              </Typography>
+              <Typography className={classes.statLabel}>
+                Effectués ({paidRate}%)
+              </Typography>
+            </div>
+            <div className={classes.statCard} style={{ borderColor: '#FF4560' }}>
+              <Typography className={classes.statValue} style={{ color: '#FF4560' }}>
+                {totalUnpaid.toLocaleString('fr-FR')}
+              </Typography>
+              <Typography className={classes.statLabel}>En Attente</Typography>
+            </div>
           </div>
-        )}
 
-        <Grid item xs={12} className={classes.cardContent}>
-          {loading && (
-            <Box display="flex" justifyContent="center" my={4}>
-              <CircularProgress />
-            </Box>
-          )}
+          {/* Donut: paid rate */}
+          <ReactApexChart
+            options={donutOptions}
+            series={[totalPaid, totalUnpaid]}
+            type="donut"
+            height={compact ? 200 : 240}
+          />
 
-          {error && (
-            <Box my={2}>
-              <Typography color="error" align="center">
-                Erreur lors du chargement des données: {error.message}
-              </Typography>
-            </Box>
-          )}
+          {/* Gender breakdown bar */}
+          <Box mt={1}>
+            <Typography variant="caption" color="textSecondary" style={{ fontWeight: 600, marginLeft: 8 }}>
+              Répartition par genre
+            </Typography>
+            <ReactApexChart
+              options={{ ...genderBarOptions, xaxis: { ...genderBarOptions.xaxis, categories: genderBarCategories } }}
+              series={genderBarSeries}
+              type="bar"
+              height={100}
+            />
+          </Box>
 
-          {!loading && !error && seriesData && seriesData.length > 0 && (
-            <>
-              {/* Summary Stats */}
-              <div className={classes.statsContainer}>
-                <div className={classes.statCard}>
-                  <Typography className={classes.statValue}>
-                    {stats.totalBeneficiaries.toLocaleString('fr-FR')}
-                  </Typography>
-                  <Typography className={classes.statLabel}>
-                    Total Paiements
-                  </Typography>
-                </div>
-                <div className={classes.statCard} style={{ borderColor: '#00E396' }}>
-                  <Typography className={classes.statValue} style={{ color: '#00E396' }}>
-                    {stats.totalPaid.toLocaleString('fr-FR')}
-                  </Typography>
-                  <Typography className={classes.statLabel}>
-                    Effectués ({stats.overallPaidRate}%)
-                  </Typography>
-                </div>
-                <div className={classes.statCard} style={{ borderColor: '#FF4560' }}>
-                  <Typography className={classes.statValue} style={{ color: '#FF4560' }}>
-                    {stats.totalUnpaid.toLocaleString('fr-FR')}
-                  </Typography>
-                  <Typography className={classes.statLabel}>
-                    En Attente
-                  </Typography>
-                </div>
-              </div>
-
-              {/* Main Chart */}
-              <div className={classes.chartContainer}>
-                <ReactApexChart
-                  options={detailChartOptions}
-                  series={detailSeries}
-                  type="bar"
-                  height="100%"
+          {/* Per transfer-type breakdown */}
+          {(data || []).filter((d) => (d.malePaid + d.maleUnpaid + d.femalePaid + d.femaleUnpaid) > 0).map((item, i) => {
+            const itemTotal = item.malePaid + item.maleUnpaid + item.femalePaid + item.femaleUnpaid;
+            const itemPaid = item.malePaid + item.femalePaid;
+            const itemRate = itemTotal > 0 ? ((itemPaid / itemTotal) * 100).toFixed(1) : 0;
+            return (
+              <Box key={i} mx={1} mb={1} display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2" style={{ fontWeight: 600 }}>
+                  {item.transferType}
+                </Typography>
+                <Chip
+                  size="small"
+                  label={`${itemRate}% effectué`}
+                  style={{
+                    backgroundColor: parseFloat(itemRate) > 80 ? '#e8f5e9' : '#ffebee',
+                    color: parseFloat(itemRate) > 80 ? '#2e7d32' : '#c62828',
+                    fontWeight: 600,
+                  }}
                 />
-              </div>
-
-              {/* Transfer Type Details */}
-              <Box mt={2}>
-                {seriesData.map((item, index) => (
-                  <Box key={index} mb={1.5}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                      <Typography variant="body2" style={{ fontWeight: 600 }}>
-                        {item.transferType}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={`${item.paidRate}% effectué`}
-                        style={{
-                          backgroundColor: parseFloat(item.paidRate) > 80 ? '#e8f5e9' : '#ffebee',
-                          color: parseFloat(item.paidRate) > 80 ? '#2e7d32' : '#c62828',
-                          fontWeight: 600,
-                        }}
-                      />
-                    </Box>
-                    <Box display="flex" gap={1} flexWrap="wrap">
-                      <Typography variant="caption" color="textSecondary">
-                        Total paiements: {item.total.toLocaleString('fr-FR')}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        • Hommes: {((item.malePaid + item.maleUnpaid) / item.total * 100).toFixed(0)}%
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        • Femmes: {((item.femalePaid + item.femaleUnpaid) / item.total * 100).toFixed(0)}%
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
               </Box>
-            </>
-          )}
+            );
+          })}
+        </>
+      )}
 
-          {!loading && !error && (!seriesData || seriesData.length === 0) && (
-            <Box className={classes.noDataMessage}>
-              <Typography variant="h6" gutterBottom>
-                Aucune donnée disponible
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Sélectionnez une année ou modifiez les filtres pour afficher les données
-              </Typography>
-            </Box>
-          )}
-        </Grid>
-      </Grid>
+      {!loading && !error && total === 0 && (
+        <Box className={classes.noDataMessage}>
+          <Typography variant="body2" color="textSecondary">
+            Aucune donnée disponible
+          </Typography>
+        </Box>
+      )}
     </Paper>
   );
 }

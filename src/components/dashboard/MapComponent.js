@@ -9,7 +9,7 @@ import {
   Fade,
 } from '@material-ui/core';
 import {
-  Map, TileLayer, GeoJSON, Tooltip as LeafletTooltip,
+  Map, TileLayer,
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { baseApiUrl, apiHeaders, decodeId } from '@openimis/fe-core';
@@ -26,7 +26,6 @@ const useStyles = makeStyles((theme) => ({
   mapContainer: {
     width: '100%',
     height: '100%',
-    minHeight: '650px',
     position: 'relative',
     borderRadius: theme.spacing(1),
     overflow: 'hidden',
@@ -81,7 +80,8 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '650px',
+    height: '100%',
+    minHeight: 300,
     flexDirection: 'column',
   },
 }));
@@ -153,6 +153,8 @@ const loadStats = async (filters = {}) => {
 function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFeatureClick }) {
   const classes = useStyles();
   const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const geoJsonLayerRef = useRef(null);
   const [burundiGeoJSON, setBurundiGeoJSON] = useState(null);
   const [locationData, setLocationData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -295,7 +297,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
       click: () => {
         if (onFeatureClick) {
           const name = feature.properties.shapeName || feature.properties.name;
-          onFeatureClick(name, feature.properties);
+          onFeatureClick(name, feature.properties, locationInfo);
         }
       },
     });
@@ -354,6 +356,31 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
     }
   };
 
+  // Add/update native Leaflet GeoJSON layer with proper onEachFeature binding
+  // Depends on loading state so the effect re-runs when the Map component mounts
+  useEffect(() => {
+    if (loading || parentLoading) return;
+    const map = mapRef.current?.leafletElement;
+    if (!map || !burundiGeoJSON) return;
+
+    // Remove previous layer
+    if (geoJsonLayerRef.current) {
+      map.removeLayer(geoJsonLayerRef.current);
+    }
+
+    // Create native Leaflet GeoJSON layer with onEachFeature
+    geoJsonLayerRef.current = L.geoJSON(burundiGeoJSON, {
+      style: getStyle,
+      onEachFeature,
+    }).addTo(map);
+
+    return () => {
+      if (geoJsonLayerRef.current && map) {
+        map.removeLayer(geoJsonLayerRef.current);
+      }
+    };
+  }, [burundiGeoJSON, locationLookup, onFeatureClick, loading, parentLoading]);
+
   // Calculate statistics
   const totalBeneficiaries = locationData.reduce((sum, loc) => sum + getTotalCount(loc), 0);
   const activeProvinces = locationData.filter(loc => getTotalCount(loc) > 0).length;
@@ -370,9 +397,10 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
   }
 
   return (
-    <Box ref={mapContainerRef} style={{ position: 'relative', height: '100%' }}>
+    <Box ref={mapContainerRef} style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
       <div className={classes.mapContainer}>
         <Map
+          ref={mapRef}
           className={classes.tiles}
           center={[-3.39, 29.90]}
           zoom={fullMap ? 8 : 8.3}
@@ -385,14 +413,6 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-
-          {burundiGeoJSON && locationLookup && (
-            <GeoJSON
-              data={burundiGeoJSON}
-              style={getStyle}
-              onEachFeature={onEachFeature}
-            />
-          )}
         </Map>
 
         {/* Legend */}

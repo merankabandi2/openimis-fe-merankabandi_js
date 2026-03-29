@@ -62,7 +62,7 @@ const BENEFIT_PLANS_QUERY = `
 
 const LOCATION_BY_UUID_QUERY = `
   query LocationByUuid($uuid: String!) {
-    location(uuid: $uuid) {
+    locations(uuid: $uuid) {
       edges {
         node {
           id
@@ -186,7 +186,7 @@ function LocationDetailPage({ locationUuid }) {
   );
 
   const resolvedLocation = useMemo(() => {
-    const edges = locationLookupData?.location?.edges;
+    const edges = locationLookupData?.locations?.edges;
     if (edges && edges.length > 0) return edges[0].node;
     return null;
   }, [locationLookupData]);
@@ -259,9 +259,9 @@ function LocationDetailPage({ locationUuid }) {
     }
   };
 
-  const navigateToPayroll = (communeId) => {
+  const navigateToPayroll = (communeUuid) => {
     const params = new URLSearchParams();
-    params.set('commune', communeId || locationId);
+    params.set('communeUuid', communeUuid || resolvedLocation?.uuid || locationUuid);
     if (benefitPlanId) params.set('benefitPlan', benefitPlanId);
     history.push(`/${ROUTE_PAYMENT_NEW_PAYMENT}?${params.toString()}`);
   };
@@ -397,7 +397,7 @@ function LocationDetailPage({ locationUuid }) {
                         startIcon={<PaymentIcon />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigateToPayroll(child.id);
+                          navigateToPayroll(child.uuid);
                         }}
                       >
                         {formatMessage('geography.detail.action.initiatePayment')}

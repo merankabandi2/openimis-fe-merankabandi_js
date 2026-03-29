@@ -13,6 +13,7 @@ import {
   coreConfirm,
   clearConfirm,
   journalize,
+  useGraphqlQuery,
 } from '@openimis/fe-core';
 import {
   fetchPayroll,
@@ -65,11 +66,53 @@ function MerankabandiPayrollPage({
   const [readOnly, setReadOnly] = useState(false);
   const [isPayrollFromFailedInvoices, setIsPayrollFromFailedInvoices] = useState(false);
   const [confirmedAction, setConfirmedAction] = useState(() => null);
+  const [prefillApplied, setPrefillApplied] = useState(false);
   const prevSubmittingMutationRef = useRef();
 
   const RIGHT_PAYROLL_CREATE = modulesManager.getRef('payroll.payrollCreateRight');
 
   const back = () => history.goBack();
+
+  // Read query parameters for prefilling from geography page
+  const queryParams = new URLSearchParams(history.location?.search || '');
+  const communeUuidParam = queryParams.get('communeUuid');
+
+  const COMMUNE_QUERY = `
+    query CommuneByUuid($uuid: String!) {
+      locations(uuid: $uuid) {
+        edges {
+          node {
+            id
+            uuid
+            code
+            name
+            type
+            parent { id uuid name type }
+          }
+        }
+      }
+    }
+  `;
+
+  const { data: communeData } = useGraphqlQuery(
+    COMMUNE_QUERY,
+    { uuid: communeUuidParam },
+    { skip: !communeUuidParam },
+  );
+
+  // Prefill province + commune from query params
+  useEffect(() => {
+    if (prefillApplied || payrollUuid) return;
+    const communeNode = communeData?.locations?.edges?.[0]?.node;
+    if (communeNode && communeUuidParam) {
+      setEditedPayroll((prev) => ({
+        ...prev,
+        location: communeNode,
+        province: communeNode.parent || null,
+      }));
+      setPrefillApplied(true);
+    }
+  }, [communeData, communeUuidParam, prefillApplied, payrollUuid]);
 
   useEffect(() => {
     if (createPayrollFromFailedInvoices === PAYROLL_FROM_FAILED_INVOICES_URL_PARAM) {
