@@ -157,6 +157,42 @@ const STORE_STATE = {
   calculatingIndicatorValue: false,
   calculatedIndicatorValue: null,
   errorCalculateIndicatorValue: null,
+
+  // Workflow engine
+  fetchingGrievanceWorkflows: false,
+  fetchedGrievanceWorkflows: false,
+  grievanceWorkflows: [],
+  grievanceWorkflowsPageInfo: {},
+  grievanceWorkflowsTotalCount: 0,
+  errorGrievanceWorkflows: null,
+  fetchingGrievanceWorkflow: false,
+  fetchedGrievanceWorkflow: false,
+  grievanceWorkflow: null,
+  errorGrievanceWorkflow: null,
+  fetchingGrievanceTasks: false,
+  fetchedGrievanceTasks: false,
+  grievanceTasks: [],
+  grievanceTasksPageInfo: {},
+  grievanceTasksTotalCount: 0,
+  errorGrievanceTasks: null,
+  fetchingWorkflowTemplates: false,
+  fetchedWorkflowTemplates: false,
+  workflowTemplates: [],
+  workflowTemplatesPageInfo: {},
+  workflowTemplatesTotalCount: 0,
+  errorWorkflowTemplates: null,
+  fetchingRoleAssignments: false,
+  fetchedRoleAssignments: false,
+  roleAssignments: [],
+  roleAssignmentsPageInfo: {},
+  roleAssignmentsTotalCount: 0,
+  errorRoleAssignments: null,
+  fetchingReplacementRequests: false,
+  fetchedReplacementRequests: false,
+  replacementRequests: [],
+  replacementRequestsPageInfo: {},
+  replacementRequestsTotalCount: 0,
+  errorReplacementRequests: null,
 };
 
 function reducer(state = STORE_STATE, action) {
@@ -825,6 +861,103 @@ function reducer(state = STORE_STATE, action) {
       };
     case FINALIZE_SNAPSHOT_RESP:
       return dispatchMutationResp(state, 'finalizeSnapshot', action);
+
+    // Workflow engine - Workflows
+    case REQUEST(ACTION_TYPE.SEARCH_GRIEVANCE_WORKFLOWS):
+      return { ...state, fetchingGrievanceWorkflows: true, fetchedGrievanceWorkflows: false, grievanceWorkflows: [], grievanceWorkflowsPageInfo: {}, grievanceWorkflowsTotalCount: 0, errorGrievanceWorkflows: null };
+    case SUCCESS(ACTION_TYPE.SEARCH_GRIEVANCE_WORKFLOWS):
+      return { ...state, fetchingGrievanceWorkflows: false, fetchedGrievanceWorkflows: true, grievanceWorkflows: parseData(action.payload.data.grievanceWorkflows)?.map((w) => ({ ...w, id: decodeId(w.id) })), grievanceWorkflowsPageInfo: pageInfo(action.payload.data.grievanceWorkflows), grievanceWorkflowsTotalCount: action.payload.data.grievanceWorkflows?.totalCount ?? 0, errorGrievanceWorkflows: formatGraphQLError(action.payload) };
+    case ERROR(ACTION_TYPE.SEARCH_GRIEVANCE_WORKFLOWS):
+      return { ...state, fetchingGrievanceWorkflows: false, errorGrievanceWorkflows: formatServerError(action.payload) };
+
+    case REQUEST(ACTION_TYPE.GET_GRIEVANCE_WORKFLOW):
+      return { ...state, fetchingGrievanceWorkflow: true, fetchedGrievanceWorkflow: false, grievanceWorkflow: null, errorGrievanceWorkflow: null };
+    case SUCCESS(ACTION_TYPE.GET_GRIEVANCE_WORKFLOW): {
+      const wfs = parseData(action.payload.data.grievanceWorkflows);
+      return { ...state, fetchingGrievanceWorkflow: false, fetchedGrievanceWorkflow: true, grievanceWorkflow: wfs?.length > 0 ? { ...wfs[0], id: decodeId(wfs[0].id) } : null, errorGrievanceWorkflow: formatGraphQLError(action.payload) };
+    }
+    case CLEAR(ACTION_TYPE.GRIEVANCE_WORKFLOW):
+      return { ...state, fetchingGrievanceWorkflow: false, fetchedGrievanceWorkflow: false, grievanceWorkflow: null, errorGrievanceWorkflow: null };
+
+    // Workflow engine - Tasks
+    case REQUEST(ACTION_TYPE.SEARCH_GRIEVANCE_TASKS):
+      return { ...state, fetchingGrievanceTasks: true, fetchedGrievanceTasks: false, grievanceTasks: [], grievanceTasksPageInfo: {}, grievanceTasksTotalCount: 0, errorGrievanceTasks: null };
+    case SUCCESS(ACTION_TYPE.SEARCH_GRIEVANCE_TASKS):
+      return { ...state, fetchingGrievanceTasks: false, fetchedGrievanceTasks: true, grievanceTasks: parseData(action.payload.data.grievanceTasks)?.map((t) => ({ ...t, id: decodeId(t.id) })), grievanceTasksPageInfo: pageInfo(action.payload.data.grievanceTasks), grievanceTasksTotalCount: action.payload.data.grievanceTasks?.totalCount ?? 0, errorGrievanceTasks: formatGraphQLError(action.payload) };
+    case ERROR(ACTION_TYPE.SEARCH_GRIEVANCE_TASKS):
+      return { ...state, fetchingGrievanceTasks: false, errorGrievanceTasks: formatServerError(action.payload) };
+
+    // Workflow engine - Templates
+    case REQUEST(ACTION_TYPE.SEARCH_WORKFLOW_TEMPLATES):
+      return { ...state, fetchingWorkflowTemplates: true, fetchedWorkflowTemplates: false, workflowTemplates: [], workflowTemplatesPageInfo: {}, workflowTemplatesTotalCount: 0, errorWorkflowTemplates: null };
+    case SUCCESS(ACTION_TYPE.SEARCH_WORKFLOW_TEMPLATES):
+      return { ...state, fetchingWorkflowTemplates: false, fetchedWorkflowTemplates: true, workflowTemplates: parseData(action.payload.data.workflowTemplates)?.map((t) => ({ ...t, id: decodeId(t.id) })), workflowTemplatesPageInfo: pageInfo(action.payload.data.workflowTemplates), workflowTemplatesTotalCount: action.payload.data.workflowTemplates?.totalCount ?? 0, errorWorkflowTemplates: formatGraphQLError(action.payload) };
+    case ERROR(ACTION_TYPE.SEARCH_WORKFLOW_TEMPLATES):
+      return { ...state, fetchingWorkflowTemplates: false, errorWorkflowTemplates: formatServerError(action.payload) };
+
+    // Workflow engine - Role Assignments
+    case REQUEST(ACTION_TYPE.SEARCH_ROLE_ASSIGNMENTS):
+      return { ...state, fetchingRoleAssignments: true, fetchedRoleAssignments: false, roleAssignments: [], roleAssignmentsPageInfo: {}, roleAssignmentsTotalCount: 0, errorRoleAssignments: null };
+    case SUCCESS(ACTION_TYPE.SEARCH_ROLE_ASSIGNMENTS):
+      return { ...state, fetchingRoleAssignments: false, fetchedRoleAssignments: true, roleAssignments: parseData(action.payload.data.roleAssignments)?.map((r) => ({ ...r, id: decodeId(r.id) })), roleAssignmentsPageInfo: pageInfo(action.payload.data.roleAssignments), roleAssignmentsTotalCount: action.payload.data.roleAssignments?.totalCount ?? 0, errorRoleAssignments: formatGraphQLError(action.payload) };
+    case ERROR(ACTION_TYPE.SEARCH_ROLE_ASSIGNMENTS):
+      return { ...state, fetchingRoleAssignments: false, errorRoleAssignments: formatServerError(action.payload) };
+
+    // Workflow engine - Replacement Requests
+    case REQUEST(ACTION_TYPE.SEARCH_REPLACEMENT_REQUESTS):
+      return { ...state, fetchingReplacementRequests: true, fetchedReplacementRequests: false, replacementRequests: [], replacementRequestsPageInfo: {}, replacementRequestsTotalCount: 0, errorReplacementRequests: null };
+    case SUCCESS(ACTION_TYPE.SEARCH_REPLACEMENT_REQUESTS):
+      return { ...state, fetchingReplacementRequests: false, fetchedReplacementRequests: true, replacementRequests: parseData(action.payload.data.replacementRequests)?.map((r) => ({ ...r, id: decodeId(r.id) })), replacementRequestsPageInfo: pageInfo(action.payload.data.replacementRequests), replacementRequestsTotalCount: action.payload.data.replacementRequests?.totalCount ?? 0, errorReplacementRequests: formatGraphQLError(action.payload) };
+    case ERROR(ACTION_TYPE.SEARCH_REPLACEMENT_REQUESTS):
+      return { ...state, fetchingReplacementRequests: false, errorReplacementRequests: formatServerError(action.payload) };
+
+    // Workflow engine - Mutations
+    case REQUEST(ACTION_TYPE.COMPLETE_GRIEVANCE_TASK):
+    case REQUEST(ACTION_TYPE.SKIP_GRIEVANCE_TASK):
+    case REQUEST(ACTION_TYPE.REASSIGN_GRIEVANCE_TASK):
+    case REQUEST(ACTION_TYPE.APPROVE_REPLACEMENT_REQUEST):
+    case REQUEST(ACTION_TYPE.REJECT_REPLACEMENT_REQUEST):
+    case REQUEST(ACTION_TYPE.CREATE_WORKFLOW_TEMPLATE):
+    case REQUEST(ACTION_TYPE.UPDATE_WORKFLOW_TEMPLATE):
+    case REQUEST(ACTION_TYPE.DELETE_WORKFLOW_TEMPLATE):
+    case REQUEST(ACTION_TYPE.CREATE_ROLE_ASSIGNMENT):
+    case REQUEST(ACTION_TYPE.UPDATE_ROLE_ASSIGNMENT):
+    case REQUEST(ACTION_TYPE.DELETE_ROLE_ASSIGNMENT):
+      return dispatchMutationReq(state, action);
+    case ERROR(ACTION_TYPE.COMPLETE_GRIEVANCE_TASK):
+    case ERROR(ACTION_TYPE.SKIP_GRIEVANCE_TASK):
+    case ERROR(ACTION_TYPE.REASSIGN_GRIEVANCE_TASK):
+    case ERROR(ACTION_TYPE.APPROVE_REPLACEMENT_REQUEST):
+    case ERROR(ACTION_TYPE.REJECT_REPLACEMENT_REQUEST):
+    case ERROR(ACTION_TYPE.CREATE_WORKFLOW_TEMPLATE):
+    case ERROR(ACTION_TYPE.UPDATE_WORKFLOW_TEMPLATE):
+    case ERROR(ACTION_TYPE.DELETE_WORKFLOW_TEMPLATE):
+    case ERROR(ACTION_TYPE.CREATE_ROLE_ASSIGNMENT):
+    case ERROR(ACTION_TYPE.UPDATE_ROLE_ASSIGNMENT):
+    case ERROR(ACTION_TYPE.DELETE_ROLE_ASSIGNMENT):
+      return dispatchMutationErr(state, action);
+    case SUCCESS(ACTION_TYPE.COMPLETE_GRIEVANCE_TASK):
+      return dispatchMutationResp(state, MUTATION_SERVICE.GRIEVANCE_TASK.COMPLETE, action);
+    case SUCCESS(ACTION_TYPE.SKIP_GRIEVANCE_TASK):
+      return dispatchMutationResp(state, MUTATION_SERVICE.GRIEVANCE_TASK.SKIP, action);
+    case SUCCESS(ACTION_TYPE.REASSIGN_GRIEVANCE_TASK):
+      return dispatchMutationResp(state, MUTATION_SERVICE.GRIEVANCE_TASK.REASSIGN, action);
+    case SUCCESS(ACTION_TYPE.APPROVE_REPLACEMENT_REQUEST):
+      return dispatchMutationResp(state, MUTATION_SERVICE.REPLACEMENT_REQUEST.APPROVE, action);
+    case SUCCESS(ACTION_TYPE.REJECT_REPLACEMENT_REQUEST):
+      return dispatchMutationResp(state, MUTATION_SERVICE.REPLACEMENT_REQUEST.REJECT, action);
+    case SUCCESS(ACTION_TYPE.CREATE_WORKFLOW_TEMPLATE):
+      return dispatchMutationResp(state, MUTATION_SERVICE.WORKFLOW_TEMPLATE.CREATE, action);
+    case SUCCESS(ACTION_TYPE.UPDATE_WORKFLOW_TEMPLATE):
+      return dispatchMutationResp(state, MUTATION_SERVICE.WORKFLOW_TEMPLATE.UPDATE, action);
+    case SUCCESS(ACTION_TYPE.DELETE_WORKFLOW_TEMPLATE):
+      return dispatchMutationResp(state, MUTATION_SERVICE.WORKFLOW_TEMPLATE.DELETE, action);
+    case SUCCESS(ACTION_TYPE.CREATE_ROLE_ASSIGNMENT):
+      return dispatchMutationResp(state, MUTATION_SERVICE.ROLE_ASSIGNMENT.CREATE, action);
+    case SUCCESS(ACTION_TYPE.UPDATE_ROLE_ASSIGNMENT):
+      return dispatchMutationResp(state, MUTATION_SERVICE.ROLE_ASSIGNMENT.UPDATE, action);
+    case SUCCESS(ACTION_TYPE.DELETE_ROLE_ASSIGNMENT):
+      return dispatchMutationResp(state, MUTATION_SERVICE.ROLE_ASSIGNMENT.DELETE, action);
 
     // ─── Generic Mutations ─────────────────────────────────────────────────────
     case REQUEST(ACTION_TYPE.MUTATION):

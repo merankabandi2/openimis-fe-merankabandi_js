@@ -74,6 +74,26 @@ export const ACTION_TYPE = {
 
   // Grievance config (dispatches into grievanceSocialProtection reducer)
   GET_GRIEVANCE_CONFIGURATION: 'GET_GRIEVANCE_CONFIGURATION',
+
+  // Workflow engine
+  SEARCH_GRIEVANCE_WORKFLOWS: 'MERANKABANDI_SEARCH_GRIEVANCE_WORKFLOWS',
+  SEARCH_GRIEVANCE_TASKS: 'MERANKABANDI_SEARCH_GRIEVANCE_TASKS',
+  SEARCH_WORKFLOW_TEMPLATES: 'MERANKABANDI_SEARCH_WORKFLOW_TEMPLATES',
+  SEARCH_ROLE_ASSIGNMENTS: 'MERANKABANDI_SEARCH_ROLE_ASSIGNMENTS',
+  SEARCH_REPLACEMENT_REQUESTS: 'MERANKABANDI_SEARCH_REPLACEMENT_REQUESTS',
+  GET_GRIEVANCE_WORKFLOW: 'MERANKABANDI_GET_GRIEVANCE_WORKFLOW',
+  GRIEVANCE_WORKFLOW: 'MERANKABANDI_GRIEVANCE_WORKFLOW',
+  COMPLETE_GRIEVANCE_TASK: 'MERANKABANDI_COMPLETE_GRIEVANCE_TASK',
+  SKIP_GRIEVANCE_TASK: 'MERANKABANDI_SKIP_GRIEVANCE_TASK',
+  REASSIGN_GRIEVANCE_TASK: 'MERANKABANDI_REASSIGN_GRIEVANCE_TASK',
+  APPROVE_REPLACEMENT_REQUEST: 'MERANKABANDI_APPROVE_REPLACEMENT_REQUEST',
+  REJECT_REPLACEMENT_REQUEST: 'MERANKABANDI_REJECT_REPLACEMENT_REQUEST',
+  CREATE_WORKFLOW_TEMPLATE: 'MERANKABANDI_CREATE_WORKFLOW_TEMPLATE',
+  UPDATE_WORKFLOW_TEMPLATE: 'MERANKABANDI_UPDATE_WORKFLOW_TEMPLATE',
+  DELETE_WORKFLOW_TEMPLATE: 'MERANKABANDI_DELETE_WORKFLOW_TEMPLATE',
+  CREATE_ROLE_ASSIGNMENT: 'MERANKABANDI_CREATE_ROLE_ASSIGNMENT',
+  UPDATE_ROLE_ASSIGNMENT: 'MERANKABANDI_UPDATE_ROLE_ASSIGNMENT',
+  DELETE_ROLE_ASSIGNMENT: 'MERANKABANDI_DELETE_ROLE_ASSIGNMENT',
 };
 
 export const MUTATION_SERVICE = {
@@ -109,6 +129,25 @@ export const MUTATION_SERVICE = {
     CREATE: 'createPmtFormula',
     UPDATE: 'updatePmtFormula',
     DELETE: 'deletePmtFormula',
+  },
+  GRIEVANCE_TASK: {
+    COMPLETE: 'completeGrievanceTask',
+    SKIP: 'skipGrievanceTask',
+    REASSIGN: 'reassignGrievanceTask',
+  },
+  REPLACEMENT_REQUEST: {
+    APPROVE: 'approveReplacementRequest',
+    REJECT: 'rejectReplacementRequest',
+  },
+  WORKFLOW_TEMPLATE: {
+    CREATE: 'createWorkflowTemplate',
+    UPDATE: 'updateWorkflowTemplate',
+    DELETE: 'deleteWorkflowTemplate',
+  },
+  ROLE_ASSIGNMENT: {
+    CREATE: 'createRoleAssignment',
+    UPDATE: 'updateRoleAssignment',
+    DELETE: 'deleteRoleAssignment',
   },
 };
 
@@ -652,4 +691,162 @@ const GRIEVANCE_CONFIGURATION_PROJECTION = () => [
 export function fetchGrievanceConfiguration(params) {
   const payload = formatQuery('grievanceConfig', params, GRIEVANCE_CONFIGURATION_PROJECTION());
   return graphql(payload, ACTION_TYPE.GET_GRIEVANCE_CONFIGURATION);
+}
+
+// ---- Workflow engine ----
+
+const GRIEVANCE_WORKFLOW_PROJECTION = () => [
+  'id', 'status', 'startedAt', 'completedAt', 'templateName', 'templateLabel',
+  'tasks{edges{node{id,stepName,stepLabel,actionType,status,assignedRole,assignedUserName,startedAt,completedAt,dueDate,result,isAutomated,requiredFields,blockedById}}}',
+];
+
+const GRIEVANCE_TASK_PROJECTION = () => [
+  'id', 'stepName', 'stepLabel', 'actionType', 'status',
+  'assignedRole', 'assignedUserName', 'startedAt', 'completedAt',
+  'dueDate', 'result', 'isAutomated', 'requiredFields', 'blockedById',
+  'ticket{id,title,code,status,category}',
+  'workflow{id,templateName,templateLabel}',
+];
+
+const WORKFLOW_TEMPLATE_PROJECTION = () => [
+  'id', 'name', 'label', 'caseType', 'description', 'isActive',
+  'steps{edges{node{id,name,label,order,role,isRequired,actionType}}}',
+];
+
+const ROLE_ASSIGNMENT_PROJECTION = () => [
+  'id', 'role', 'userName', 'isActive',
+  'location{id,name,code,type}',
+  'user{id}',
+];
+
+const REPLACEMENT_REQUEST_PROJECTION = () => [
+  'id', 'replacedSocialId', 'motif', 'relationship',
+  'newNom', 'newPrenom', 'newDateNaissance', 'newSexe',
+  'newTelephone', 'newCni', 'status', 'jsonExt',
+  'ticket{id,title,code}',
+];
+
+export function fetchGrievanceWorkflows(params) {
+  const payload = formatPageQueryWithCount('grievanceWorkflows', params, GRIEVANCE_WORKFLOW_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_GRIEVANCE_WORKFLOWS);
+}
+
+export function fetchGrievanceWorkflow(params) {
+  const payload = formatPageQuery('grievanceWorkflows', params, GRIEVANCE_WORKFLOW_PROJECTION());
+  return graphql(payload, ACTION_TYPE.GET_GRIEVANCE_WORKFLOW);
+}
+
+export function clearGrievanceWorkflow() {
+  return (dispatch) => {
+    dispatch({ type: CLEAR(ACTION_TYPE.GRIEVANCE_WORKFLOW) });
+  };
+}
+
+export function fetchGrievanceTasks(params) {
+  const payload = formatPageQueryWithCount('grievanceTasks', params, GRIEVANCE_TASK_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_GRIEVANCE_TASKS);
+}
+
+export function fetchWorkflowTemplates(params) {
+  const payload = formatPageQueryWithCount('workflowTemplates', params, WORKFLOW_TEMPLATE_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_WORKFLOW_TEMPLATES);
+}
+
+export function fetchRoleAssignments(params) {
+  const payload = formatPageQueryWithCount('roleAssignments', params, ROLE_ASSIGNMENT_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_ROLE_ASSIGNMENTS);
+}
+
+export function fetchReplacementRequests(params) {
+  const payload = formatPageQueryWithCount('replacementRequests', params, REPLACEMENT_REQUEST_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_REPLACEMENT_REQUESTS);
+}
+
+export function completeGrievanceTask(taskId, result, clientMutationLabel) {
+  const gql = `
+    taskId: "${taskId}"
+    ${result ? `result: ${JSON.stringify(JSON.stringify(result))}` : ''}
+  `;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.GRIEVANCE_TASK.COMPLETE, gql,
+    ACTION_TYPE.COMPLETE_GRIEVANCE_TASK, clientMutationLabel,
+  );
+}
+
+export function skipGrievanceTask(taskId, reason, clientMutationLabel) {
+  const gql = `
+    taskId: "${taskId}"
+    ${reason ? `reason: "${formatGQLString(reason)}"` : ''}
+  `;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.GRIEVANCE_TASK.SKIP, gql,
+    ACTION_TYPE.SKIP_GRIEVANCE_TASK, clientMutationLabel,
+  );
+}
+
+export function reassignGrievanceTask(taskId, userId, clientMutationLabel) {
+  const gql = `taskId: "${taskId}" userId: "${userId}"`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.GRIEVANCE_TASK.REASSIGN, gql,
+    ACTION_TYPE.REASSIGN_GRIEVANCE_TASK, clientMutationLabel,
+  );
+}
+
+export function approveReplacementRequest(requestId, clientMutationLabel) {
+  const gql = `requestId: "${requestId}"`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.REPLACEMENT_REQUEST.APPROVE, gql,
+    ACTION_TYPE.APPROVE_REPLACEMENT_REQUEST, clientMutationLabel,
+  );
+}
+
+export function rejectReplacementRequest(requestId, reason, clientMutationLabel) {
+  const gql = `requestId: "${requestId}" reason: "${formatGQLString(reason)}"`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.REPLACEMENT_REQUEST.REJECT, gql,
+    ACTION_TYPE.REJECT_REPLACEMENT_REQUEST, clientMutationLabel,
+  );
+}
+
+export function createWorkflowTemplate(template, clientMutationLabel) {
+  const gql = `
+    name: "${formatGQLString(template.name)}"
+    label: "${formatGQLString(template.label)}"
+    caseType: "${formatGQLString(template.caseType)}"
+    ${template.description ? `description: "${formatGQLString(template.description)}"` : ''}
+    ${template.isActive != null ? `isActive: ${template.isActive}` : ''}
+  `;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.WORKFLOW_TEMPLATE.CREATE, gql,
+    ACTION_TYPE.CREATE_WORKFLOW_TEMPLATE, clientMutationLabel,
+  );
+}
+
+export function deleteWorkflowTemplate(ids, clientMutationLabel) {
+  const gql = `ids: [${ids.map((id) => `"${id}"`).join(', ')}]`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.WORKFLOW_TEMPLATE.DELETE, gql,
+    ACTION_TYPE.DELETE_WORKFLOW_TEMPLATE, clientMutationLabel,
+  );
+}
+
+export function createRoleAssignment(assignment, clientMutationLabel) {
+  const gql = `
+    role: "${formatGQLString(assignment.role)}"
+    userId: "${assignment.userId}"
+    ${assignment.locationId ? `locationId: ${assignment.locationId}` : ''}
+    ${assignment.isActive != null ? `isActive: ${assignment.isActive}` : ''}
+  `;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.ROLE_ASSIGNMENT.CREATE, gql,
+    ACTION_TYPE.CREATE_ROLE_ASSIGNMENT, clientMutationLabel,
+  );
+}
+
+export function deleteRoleAssignment(ids, clientMutationLabel) {
+  const gql = `ids: [${ids.map((id) => `"${id}"`).join(', ')}]`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.ROLE_ASSIGNMENT.DELETE, gql,
+    ACTION_TYPE.DELETE_ROLE_ASSIGNMENT, clientMutationLabel,
+  );
 }
