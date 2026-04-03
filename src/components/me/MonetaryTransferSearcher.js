@@ -105,8 +105,8 @@ function MonetaryTransferSearcher({
     'beneficiaries.paid',
     'plannedAmount',
     'transferredAmount',
-    'emptyLabel',
-    'emptyLabel',
+    '',
+    '',
   ];
 
   const sorts = () => [

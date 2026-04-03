@@ -66,43 +66,53 @@ function isBase64Encoded(str) {
   return base64RegExp.test(str);
 }
 
-export const PAYMENT_POINT_PROJECTION = (modulesManager) => [
-  'id',
-  'name',
-  'isDeleted',
-  `location ${modulesManager.getProjection('location.Location.FlatProjection')}`,
-  `ppm ${modulesManager.getProjection('admin.UserPicker.projection')}`,
-  'jsonExt',
-];
+export const PAYMENT_POINT_PROJECTION = (modulesManager) => {
+  const locationProj = modulesManager.getProjection('location.Location.FlatProjection');
+  const ppmProj = modulesManager.getProjection('admin.UserPicker.projection');
+  return [
+    'id',
+    'name',
+    'isDeleted',
+    `location ${locationProj}`,
+    `ppm ${ppmProj}`,
+  ];
+};
 
-const PAYROLL_PROJECTION = (modulesManager) => [
-  'id',
-  'name',
-  'paymentMethod',
-  'paymentPlan { code, id, name, benefitPlan }',
-  `paymentPoint { ${PAYMENT_POINT_PROJECTION(modulesManager).join(' ')} }`,
-  'paymentCycle { code, startDate, endDate }',
-  'benefitConsumption{status, benefitAttachment{bill{amountTotal}}}',
-  'jsonExt',
-  'status',
-  'dateValidFrom',
-  'dateValidTo',
-  'isDeleted',
-];
+const PAYROLL_PROJECTION = (modulesManager) => {
+  const ppFields = PAYMENT_POINT_PROJECTION(modulesManager);
+  return [
+    'id',
+    'name',
+    'paymentMethod',
+    'paymentPlan { code, id, name, benefitPlan }',
+    `paymentPoint { ${ppFields.join(', ')} }`,
+    'paymentCycle { code, startDate, endDate }',
+    'benefitConsumption{status, benefitAttachment{bill{amountTotal}}}',
+    'jsonExt',
+    'status',
+    'dateValidFrom',
+    'dateValidTo',
+    'isDeleted',
+  ];
+};
 
-const PAYROLL_SEARCHER_PROJECTION = (modulesManager) => [
-  'id',
-  'name',
-  'paymentMethod',
-  'paymentPlan { code, id, name, benefitPlan }',
-  `paymentPoint { ${PAYMENT_POINT_PROJECTION(modulesManager).join(' ')} }`,
-  'paymentCycle { code, startDate, endDate }',
-  'jsonExt',
-  'status',
-  'dateValidFrom',
-  'dateValidTo',
-  'isDeleted',
-];
+const PAYROLL_SEARCHER_PROJECTION = (modulesManager) => {
+  const ppFields = PAYMENT_POINT_PROJECTION(modulesManager);
+  return [
+    'id',
+    'name',
+    'paymentMethod',
+    'paymentPlan { code, id, name, benefitPlan }',
+    `paymentPoint { ${ppFields.join(', ')} }`,
+    'paymentCycle { code, startDate, endDate }',
+    'benefitPlanNameCode',
+    'jsonExt',
+    'status',
+    'dateValidFrom',
+    'dateValidTo',
+    'isDeleted',
+  ];
+};
 
 const PERFORM_MUTATION = (mutationType, mutationInput, ACTION, clientMutationLabel) => {
   const mutation = formatMutation(mutationType, mutationInput, clientMutationLabel);

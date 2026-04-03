@@ -194,6 +194,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
   // Calculate total count for a location
   const getTotalCount = (location) => {
     return (location.countPotential || 0) +
+           (location.countSelected || 0) +
            (location.countValidated || 0) +
            (location.countActive || 0) +
            (location.countGraduated || 0) +
@@ -233,6 +234,7 @@ function MapComponent({ filters, isLoading: parentLoading, fullMap = false, onFe
     // Determine color based on dominant status
     const statusCounts = {
       potential: locationInfo.countPotential || 0,
+      selected: locationInfo.countSelected || 0,
       validated: locationInfo.countValidated || 0,
       active: locationInfo.countActive || 0,
       graduated: locationInfo.countGraduated || 0,

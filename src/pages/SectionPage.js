@@ -122,8 +122,8 @@ function SectionPage({
   const openDeleteSectionConfirmDialog = () => {
     setConfirmedAction(() => deleteSectionCallback);
     coreConfirm(
-      formatMessageWithValues('section.delete.confirm.title', pageTitle(section)),
-      formatMessage('section.delete.confirm.message'),
+      formatMessageWithValues('section.deleteConfirm.title', pageTitle(section)),
+      formatMessageWithValues('section.deleteConfirm.message', { name: section?.name }),
     );
   };
 

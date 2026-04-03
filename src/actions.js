@@ -541,7 +541,7 @@ export function updateSection(section, clientMutationLabel) {
 }
 
 export function deleteSection(section, clientMutationLabel) {
-  const sectionUuids = `ids: ["${section?.id}"]`;
+  const sectionUuids = `ids: [${section?.id}]`;
   return PERFORM_MUTATION(
     MUTATION_SERVICE.SECTION.DELETE,
     sectionUuids,
@@ -588,7 +588,7 @@ export function updateIndicatorAchievement(achievement, clientMutationLabel) {
 }
 
 export function deleteIndicatorAchievement(achievement, clientMutationLabel) {
-  const achievementUuids = `ids: ["${achievement?.id}"]`;
+  const achievementUuids = `ids: [${achievement?.id}]`;
   return PERFORM_MUTATION(
     MUTATION_SERVICE.INDICATOR_ACHIEVEMENT.DELETE,
     achievementUuids,

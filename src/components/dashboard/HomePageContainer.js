@@ -8,6 +8,7 @@ import {
   useModulesManager,
 } from '@openimis/fe-core';
 import Dashboard from './Dashboard';
+import SafeErrorBoundary from '../SafeErrorBoundary';
 
 const useStyles = makeStyles((theme) => ({
   container: theme.page,
@@ -45,13 +46,15 @@ function HomePageContainer() {
   }
 
   return (
-    <Grid container className={classes.container} spacing={2}>
-      <Grid item xs={12}>
-        <Box mt={2}>
-          <Dashboard />
-        </Box>
+    <SafeErrorBoundary>
+      <Grid container className={classes.container} spacing={2}>
+        <Grid item xs={12}>
+          <Box mt={2}>
+            <Dashboard />
+          </Box>
+        </Grid>
       </Grid>
-    </Grid>
+    </SafeErrorBoundary>
   );
 }
 

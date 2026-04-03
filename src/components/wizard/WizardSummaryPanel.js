@@ -25,9 +25,9 @@ function WizardSummaryPanel({ intl, benefitPlan, selectedLocation, dispatch }) {
       { key: 'communityValidated', status: SELECTION_STATUS.COMMUNITY_VALIDATED },
     ];
     const promises = statusQueries.map(({ status }) => {
-      const query = `{ individualGroup(benefitPlan_Id: "${benefitPlan.id}", jsonExt_Icontains: "\\"selection_status\\": \\"${status}\\"", first: 0) { totalCount } }`;
+      const query = `{ groupFiltered(benefitPlanId: "${benefitPlan.id}", jsonExtIcontains: "\\"selection_status\\": \\"${status}\\"", first: 0) { totalCount } }`;
       return dispatch(graphql(query, `MERANKABANDI_WIZARD_COUNT_${status}`))
-        .then((r) => r?.payload?.data?.individualGroup?.totalCount || 0);
+        .then((r) => r?.payload?.data?.groupFiltered?.totalCount || 0);
     });
     // Also count active GroupBeneficiaries
     promises.push(

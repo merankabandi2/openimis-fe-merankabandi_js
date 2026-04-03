@@ -47,8 +47,8 @@ function SectionSearcher({
 
   const openDeleteSectionConfirmDialog = () => {
     coreConfirm(
-      formatMessage('section.delete.confirm.title'),
-      formatMessageWithValues('section.delete.confirm.message', { name: sectionToDelete.name }),
+      formatMessage('section.deleteConfirm.title'),
+      formatMessageWithValues('section.deleteConfirm.message', { name: sectionToDelete.name }),
     );
   };
 
@@ -58,7 +58,7 @@ function SectionSearcher({
     if (sectionToDelete && confirmed) {
       deleteSection(
         sectionToDelete,
-        formatMessageWithValues('section.mutation.deleteLabel', { name: sectionToDelete.name }),
+        formatMessageWithValues('section.deleteConfirm.mutationLabel', { name: sectionToDelete.name }),
       );
       setDeletedSectionIds([...deletedSectionIds, sectionToDelete.id]);
     }
@@ -80,7 +80,7 @@ function SectionSearcher({
 
   const headers = () => [
     'section.name',
-    'emptyLabel',
+    '',
   ];
 
   const sorts = () => [
@@ -131,8 +131,14 @@ function SectionSearcher({
           <label>{formatMessage('section.name')}</label>
           <input
             type="text"
-            value={filters.name || ''}
-            onChange={(e) => onChangeFilters({ ...filters, name: e.target.value })}
+            value={filters?.name?.value || ''}
+            onChange={(e) => onChangeFilters([
+              {
+                id: 'name',
+                value: e.target.value || null,
+                filter: e.target.value ? `name_Icontains: "${e.target.value}"` : null,
+              },
+            ])}
             style={{ marginLeft: '8px' }}
           />
         </div>

@@ -54,7 +54,7 @@ function PayrollSearcherApproved({
     'payroll.paymentPoint',
     'payroll.status',
     'payroll.paymentMethod',
-    'emptyLabel',
+    '',
   ];
 
   const sorts = () => [
@@ -86,9 +86,7 @@ function PayrollSearcherApproved({
 
   const itemFormatters = () => [
     (payroll) => payroll.name,
-    (payroll) => (payroll.benefitPlan
-      ? `${payroll.benefitPlan.code} ${payroll.benefitPlan.name}`
-      : ''),
+    (payroll) => payroll.benefitPlanNameCode || '',
     (payroll) => (payroll.paymentPoint
       ? `${payroll.paymentPoint.name}`
       : ''),

@@ -126,7 +126,12 @@ import ReconciledPayrollsPage from './pages/ReconciledPayrollsPage';
 // Grievance Workflow Pages
 import MyTasksPage from './pages/MyTasksPage';
 import WorkflowTemplatesPage from './pages/WorkflowTemplatesPage';
+import WorkflowTemplatePage from './pages/WorkflowTemplatePage';
 import RoleAssignmentsPage from './pages/RoleAssignmentsPage';
+import RoleAssignmentPage from './pages/RoleAssignmentPage';
+
+// Grievance Menu
+import GrievanceMainMenu from './menu/GrievanceMainMenu';
 
 // Geography Pages
 import ProvincesPage from './pages/ProvincesPage';
@@ -196,7 +201,9 @@ import {
   ROUTE_GEOGRAPHY_COLLINE,
   ROUTE_GRIEVANCE_MY_TASKS,
   ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES,
+  ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE,
   ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS,
+  ROUTE_GRIEVANCE_ROLE_ASSIGNMENT,
   RIGHT_GRIEVANCE_TASK_VIEW,
   RIGHT_GRIEVANCE_WORKFLOW_ADMIN,
 } from './constants';
@@ -287,6 +294,7 @@ const DEFAULT_CONFIG = {
   'core.MainMenu': [
     { name: 'PaymentMainMenu', component: PaymentMainMenu },
     { name: 'MEMainMenu', component: MEMainMenu },
+    { name: 'GrievanceMainMenu', component: GrievanceMainMenu },
   ],
 
   // Routes
@@ -320,7 +328,9 @@ const DEFAULT_CONFIG = {
     // Grievance workflow
     { path: ROUTE_GRIEVANCE_MY_TASKS, component: MyTasksPage },
     { path: ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES, component: WorkflowTemplatesPage },
+    { path: `${ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE}/:template_id?`, component: WorkflowTemplatePage },
     { path: ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS, component: RoleAssignmentsPage },
+    { path: `${ROUTE_GRIEVANCE_ROLE_ASSIGNMENT}/:assignment_id?`, component: RoleAssignmentPage },
   ],
 
   // Payment menu items (contributed to PaymentMainMenu via 'payment.MainMenu' key
@@ -432,6 +442,10 @@ const DEFAULT_CONFIG = {
       filter: (rights) => rights.includes(RIGHT_KOBO_ETL_VIEW),
       id: 'merankabandi.koboETLAdmin',
     },
+  ],
+
+  // Grievance workflow menu items (dedicated menu group)
+  'grievance.MainMenu': [
     {
       text: <FormattedMessage module="merankabandi" id="menu.grievance.myTasks" />,
       icon: <ListAlt />,

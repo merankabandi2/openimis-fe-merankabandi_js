@@ -140,9 +140,20 @@ function KoboETLAdminPage() {
       message: formatMessage('koboETL.status.processing'),
     });
 
+    const graphqlFn = modulesManager.getRef('core.graphqlWithVariables');
+    if (typeof graphqlFn !== 'function') {
+      console.warn('core.graphqlWithVariables ref is not registered; mutation status polling is unavailable');
+      setMutationStatus({
+        status: 'success',
+        message: formatMessage('koboETL.status.completed'),
+      });
+      refetchStatus();
+      return;
+    }
+
     const checkStatus = async () => {
       try {
-        const result = await modulesManager.getRef('core.graphqlWithVariables')(
+        const result = await graphqlFn(
           MUTATION_STATUS_QUERY,
           { mutationId }
         );
@@ -180,8 +191,13 @@ function KoboETLAdminPage() {
 
   // Fetch recent mutation history
   const fetchRecentMutations = async () => {
+    const graphqlFn = modulesManager.getRef('core.graphqlWithVariables');
+    if (typeof graphqlFn !== 'function') {
+      console.warn('core.graphqlWithVariables ref is not registered; mutation history is unavailable');
+      return;
+    }
     try {
-      const result = await modulesManager.getRef('core.graphqlWithVariables')(
+      const result = await graphqlFn(
         `query RecentKoboETLMutations {
           mutationLogs(
             mutationModule: "kobo_etl"

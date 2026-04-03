@@ -5,6 +5,7 @@ import {
 import { withStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import { injectIntl } from 'react-intl';
+import { withRouter } from 'react-router-dom';
 import {
   withModulesManager, formatMessage, PublishedComponent,
 } from '@openimis/fe-core';
@@ -35,7 +36,7 @@ const styles = (theme) => ({
 });
 
 function BeneficiarySelectionWizard({
-  intl, classes, benefitPlan, dispatch,
+  intl, classes, benefitPlan, dispatch, history,
 }) {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -249,7 +250,7 @@ function BeneficiarySelectionWizard({
         <Button
           variant="contained"
           color="primary"
-          onClick={activeStep === steps.length - 1 ? () => {} : handleNext}
+          onClick={activeStep === steps.length - 1 ? () => history.push('/socialProtection/benefitPlans') : handleNext}
           className={classes.button}
           disabled={submitting}
         >
@@ -267,5 +268,5 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 export default withModulesManager(
-  injectIntl(withStyles(styles)(connect(null, mapDispatchToProps)(BeneficiarySelectionWizard)))
+  withRouter(injectIntl(withStyles(styles)(connect(null, mapDispatchToProps)(BeneficiarySelectionWizard))))
 );

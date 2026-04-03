@@ -141,6 +141,7 @@ export const ROUTE_GEOGRAPHY_COLLINE = 'geography/colline';
 // --- M&E Menu ---
 export const ME_MAIN_MENU_CONTRIBUTION_KEY = 'me.MainMenu';
 export const SOCIAL_PROTECTION_MAIN_MENU_CONTRIBUTION_KEY = 'socialProtection.MainMenu';
+export const GRIEVANCE_MAIN_MENU_CONTRIBUTION_KEY = 'grievance.MainMenu';
 
 // --- M&E Routes ---
 export const ROUTE_ME_INDICATORS = 'me/indicators';
@@ -223,7 +224,9 @@ export const ME_RESULT_FRAMEWORK_TABS_PANEL_CONTRIBUTION_KEY = 'meResultFrameWor
 // --- Grievance Workflow Routes ---
 export const ROUTE_GRIEVANCE_MY_TASKS = 'grievance/my-tasks';
 export const ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES = 'grievance/workflow-templates';
+export const ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE = 'grievance/workflow-templates/template';
 export const ROUTE_GRIEVANCE_ROLE_ASSIGNMENTS = 'grievance/role-assignments';
+export const ROUTE_GRIEVANCE_ROLE_ASSIGNMENT = 'grievance/role-assignments/assignment';
 
 // --- Grievance Workflow Rights ---
 export const RIGHT_GRIEVANCE_TASK_VIEW = 160017;

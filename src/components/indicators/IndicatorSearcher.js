@@ -85,7 +85,7 @@ function IndicatorSearcher({
     'indicator.section',
     'indicator.baseline',
     'indicator.target',
-    'emptyLabel',
+    '',
   ];
 
   const sorts = () => [
@@ -140,8 +140,14 @@ function IndicatorSearcher({
           <label>{formatMessage('indicator.name')}</label>
           <input
             type="text"
-            value={filters.name || ''}
-            onChange={(e) => onChangeFilters({ ...filters, name: e.target.value })}
+            value={filters?.name?.value || ''}
+            onChange={(e) => onChangeFilters([
+              {
+                id: 'name',
+                value: e.target.value || null,
+                filter: e.target.value ? `name_Icontains: "${e.target.value}"` : null,
+              },
+            ])}
             style={{ marginLeft: '8px' }}
           />
         </div>
@@ -151,8 +157,14 @@ function IndicatorSearcher({
             <PublishedComponent
               pubRef="merankabandi.SectionPicker"
               withNull
-              value={filters.section}
-              onChange={(v) => onChangeFilters({ ...filters, section: v })}
+              value={filters?.section?.value || null}
+              onChange={(v) => onChangeFilters([
+                {
+                  id: 'section',
+                  value: v || null,
+                  filter: v ? `section_Id: "${v.id}"` : null,
+                },
+              ])}
             />
           </div>
         </div>

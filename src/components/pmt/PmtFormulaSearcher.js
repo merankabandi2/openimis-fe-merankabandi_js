@@ -77,7 +77,7 @@ function PmtFormulaSearcher({
     'pmtFormula.name',
     'pmtFormula.description',
     'pmtFormula.isActive',
-    'emptyLabel',
+    '',
   ];
 
   const sorts = () => [
