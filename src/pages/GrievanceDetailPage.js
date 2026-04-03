@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { injectIntl } from 'react-intl';
@@ -6,17 +6,19 @@ import { makeStyles } from '@material-ui/core/styles';
 import {
   Paper, Typography, Grid, Chip, Divider, Box, IconButton, Tooltip,
   Stepper, Step, StepLabel, StepContent, Avatar, Card, CardHeader, CardContent,
+  TextField, Button, Select, MenuItem, InputLabel, FormControl,
 } from '@material-ui/core';
 import {
   Person, LocationOn, Category, Flag, Phone, Assignment, CheckCircle,
   Cancel, HourglassEmpty, SkipNext, Lock, Edit, Print, ArrowBack,
-  Comment as CommentIcon, Timeline,
+  Comment as CommentIcon, Timeline, Send,
 } from '@material-ui/icons';
 import {
   Helmet, useModulesManager, useTranslations, useHistory, withHistory,
   withModulesManager, formatMessage, decodeId, journalize, useGraphqlQuery,
+  PublishedComponent,
 } from '@openimis/fe-core';
-import { fetchTicket, fetchTicketComments } from '../grievance-actions';
+import { fetchTicket, fetchTicketComments, createTicketComment } from '../grievance-actions';
 import { fetchGrievanceWorkflows, fetchReplacementRequests } from '../actions';
 import GrievanceTaskSearcher from '../components/grievance-workflow/GrievanceTaskSearcher';
 
@@ -45,6 +47,10 @@ const PRIORITY_COLORS = {
   High: '#f44336',
   Critical: '#9c27b0',
 };
+
+const WORKFLOW_ROLES = [
+  'OT', 'RTM', 'RSI', 'RDO', 'RVBG', 'RIUIRCH', 'RNES', 'RMACH', 'RCOM', 'SEP', 'RPM',
+];
 
 const useStyles = makeStyles((theme) => ({
   page: { ...theme.page, maxWidth: 1200, margin: '0 auto' },
@@ -85,6 +91,35 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center', padding: theme.spacing(3),
     color: theme.palette.text.secondary, fontStyle: 'italic',
   },
+  commentInputContainer: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: theme.spacing(1),
+    marginTop: theme.spacing(2),
+  },
+  commentInput: {
+    flex: 1,
+  },
+  commentFormRow: {
+    display: 'flex',
+    gap: theme.spacing(1),
+    marginTop: theme.spacing(1),
+  },
+  commentFormActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing(1),
+  },
+  commentMeta: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: theme.spacing(0.5),
+    marginTop: theme.spacing(0.5),
+  },
+  metaChip: {
+    height: 22,
+    fontSize: '0.7rem',
+  },
 }));
 
 function Field({ label, value, classes }) {
@@ -103,10 +138,14 @@ function GrievanceDetailPage({
   comments,
   grievanceWorkflows,
   replacementRequests,
+  submittingMutation,
+  mutation,
   fetchTicket: doFetchTicket,
   fetchTicketComments: doFetchComments,
   fetchGrievanceWorkflows: doFetchWorkflows,
   fetchReplacementRequests: doFetchReplacements,
+  createTicketComment: doCreateComment,
+  journalize: doJournalize,
 }) {
   const classes = useStyles();
   const modulesManager = useModulesManager();
@@ -128,6 +167,53 @@ function GrievanceDetailPage({
       doFetchReplacements([`ticket_Id: "${decodedId}"`]);
     }
   }, [ticket?.id]);
+
+  const [commentText, setCommentText] = useState('');
+  const [taggedUser, setTaggedUser] = useState(null);
+  const [taggedRole, setTaggedRole] = useState('');
+  const [actionText, setActionText] = useState('');
+  const [actionAssignee, setActionAssignee] = useState(null);
+  const [prevSubmitting, setPrevSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (prevSubmitting && !submittingMutation) {
+      doJournalize(mutation);
+      if (ticket?.id) {
+        doFetchTicket(modulesManager, [`id: "${ticketUuid}"`]);
+        doFetchComments({ id: ticket.id });
+        doFetchWorkflows([`ticket_Id: "${ticket.id}"`]);
+      }
+    }
+    setPrevSubmitting(submittingMutation);
+  }, [submittingMutation]);
+
+  const handleSendComment = () => {
+    const trimmed = commentText.trim();
+    if (!trimmed || !ticket?.id) return;
+    const extData = {
+      tagged_user_id: taggedUser?.id ? decodeId(taggedUser.id) : null,
+      tagged_role: taggedRole || null,
+      action: actionText || null,
+      action_assignee_id: actionAssignee?.id ? decodeId(actionAssignee.id) : null,
+      action_assignee_name: actionAssignee
+        ? `${actionAssignee.otherNames || ''} ${actionAssignee.lastName || ''}`.trim()
+        : null,
+    };
+    doCreateComment(
+      {
+        comment: trimmed,
+        jsonExt: JSON.stringify(extData),
+      },
+      { id: ticket.id },
+      'User',
+      fm('grievanceDetail.addComment'),
+    );
+    setCommentText('');
+    setTaggedUser(null);
+    setTaggedRole('');
+    setActionText('');
+    setActionAssignee(null);
+  };
 
   const jsonExt = useMemo(() => {
     if (!ticket?.jsonExt) return {};
@@ -208,6 +294,12 @@ function GrievanceDetailPage({
 
     // Add comments
     (comments || []).forEach((c) => {
+      let commentJsonExt = null;
+      if (c.jsonExt) {
+        try {
+          commentJsonExt = typeof c.jsonExt === 'string' ? JSON.parse(c.jsonExt) : c.jsonExt;
+        } catch { commentJsonExt = null; }
+      }
       events.push({
         type: 'comment',
         date: c.dateCreated,
@@ -215,6 +307,7 @@ function GrievanceDetailPage({
         subtitle: c.commenterTypeName || '',
         body: c.comment,
         isResolution: c.isResolution,
+        commentExt: commentJsonExt,
       });
     });
 
@@ -491,15 +584,115 @@ function GrievanceDetailPage({
                     </Typography>
                   }
                 />
-                {event.body && (
+                {(event.body || event.commentExt) && (
                   <CardContent className={classes.commentBody}>
-                    <Typography variant="body2" style={{ whiteSpace: 'pre-wrap' }}>
-                      {event.body}
-                    </Typography>
+                    {event.body && (
+                      <Typography variant="body2" style={{ whiteSpace: 'pre-wrap' }}>
+                        {event.body}
+                      </Typography>
+                    )}
+                    {event.commentExt && (
+                      <div className={classes.commentMeta}>
+                        {event.commentExt.tagged_role && (
+                          <Chip
+                            className={classes.metaChip}
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            label={`${fm('grievanceDetail.tagged')}: ${event.commentExt.tagged_role}`}
+                          />
+                        )}
+                        {event.commentExt.action && (
+                          <Chip
+                            className={classes.metaChip}
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            label={`${fm('grievanceDetail.actionRequired')}: ${event.commentExt.action}`}
+                          />
+                        )}
+                        {event.commentExt.action_assignee_name && (
+                          <Chip
+                            className={classes.metaChip}
+                            size="small"
+                            variant="outlined"
+                            label={`${fm('grievanceDetail.assignedTo')}: ${event.commentExt.action_assignee_name}`}
+                          />
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 )}
               </Card>
             ))}
+            <Divider style={{ margin: '8px 0' }} />
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              multiline
+              rows={3}
+              placeholder={fm('grievanceDetail.commentPlaceholder')}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              style={{ marginTop: 8 }}
+            />
+            <Grid container spacing={1} style={{ marginTop: 4 }}>
+              <Grid item xs={3}>
+                <PublishedComponent
+                  pubRef="admin.UserPicker"
+                  value={taggedUser}
+                  onChange={(user) => setTaggedUser(user)}
+                  withLabel
+                  label={fm('grievanceDetail.tagUser')}
+                />
+              </Grid>
+              <Grid item xs={3}>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <InputLabel>{fm('grievanceDetail.tagRole')}</InputLabel>
+                  <Select
+                    value={taggedRole}
+                    onChange={(e) => setTaggedRole(e.target.value)}
+                    label={fm('grievanceDetail.tagRole')}
+                  >
+                    <MenuItem value=""><em>-</em></MenuItem>
+                    {WORKFLOW_ROLES.map((role) => (
+                      <MenuItem key={role} value={role}>{role}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={3}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label={fm('grievanceDetail.action')}
+                  value={actionText}
+                  onChange={(e) => setActionText(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={3}>
+                <PublishedComponent
+                  pubRef="admin.UserPicker"
+                  value={actionAssignee}
+                  onChange={(user) => setActionAssignee(user)}
+                  withLabel
+                  label={fm('grievanceDetail.actionAssignee')}
+                />
+              </Grid>
+            </Grid>
+            <div className={classes.commentFormActions}>
+              <Button
+                variant="contained"
+                color="primary"
+                endIcon={<Send />}
+                disabled={!commentText.trim() || submittingMutation}
+                onClick={handleSendComment}
+              >
+                {fm('grievanceDetail.send')}
+              </Button>
+            </div>
           </Paper>
 
           {/* Submission info */}
@@ -535,6 +728,8 @@ const mapStateToProps = (state) => ({
   ticket: state.grievanceSocialProtection?.ticket,
   fetchingTicket: state.grievanceSocialProtection?.fetchingTicket,
   comments: state.grievanceSocialProtection?.ticketComments,
+  submittingMutation: state.grievanceSocialProtection?.submittingMutation,
+  mutation: state.grievanceSocialProtection?.mutation,
   grievanceWorkflows: state.merankabandi.grievanceWorkflows,
   replacementRequests: state.merankabandi.replacementRequests,
 });
@@ -542,6 +737,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchTicket,
   fetchTicketComments,
+  createTicketComment,
   fetchGrievanceWorkflows,
   fetchReplacementRequests,
   journalize,

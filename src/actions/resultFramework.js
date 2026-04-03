@@ -1,8 +1,8 @@
 import {
   formatPageQuery,
-  formatMutation,
   graphql,
 } from '@openimis/fe-core';
+const uuidv4 = () => crypto.randomUUID();
 
 // Action types
 export const RESULT_FRAMEWORK_SNAPSHOTS_REQ = 'MERANKABANDI_RESULT_FRAMEWORK_SNAPSHOTS_REQ';
@@ -98,25 +98,24 @@ export function calculateIndicatorValue(indicatorId, dateFrom, dateTo, locationI
 }
 
 export function createResultFrameworkSnapshot(name, description, dateFrom, dateTo) {
+  const clientMutationId = uuidv4();
   const mutation = `
-    mutation ($input: CreateResultFrameworkSnapshotInput!) {
-      createResultFrameworkSnapshot(input: $input) {
+    mutation {
+      createResultFrameworkSnapshot(input: {
+        clientMutationId: "${clientMutationId}"
+        name: "${name}"
+        ${description ? `description: "${description}"` : ''}
+        ${dateFrom ? `dateFrom: "${dateFrom}"` : ''}
+        ${dateTo ? `dateTo: "${dateTo}"` : ''}
+      }) {
         internalId
         clientMutationId
       }
     }
   `;
-
-  const input = formatMutation('createResultFrameworkSnapshot', {
-    name,
-    description,
-    dateFrom,
-    dateTo,
-  });
-
   return graphql(
     mutation,
-    { input },
+    {},
     CREATE_SNAPSHOT_REQ,
     CREATE_SNAPSHOT_RESP,
     CREATE_SNAPSHOT_ERR,
@@ -149,20 +148,21 @@ export function generateResultFrameworkDocument(snapshotId, format, dateFrom, da
 }
 
 export function finalizeSnapshot(snapshotId) {
+  const clientMutationId = uuidv4();
   const mutation = `
-    mutation ($input: FinalizeSnapshotInput!) {
-      finalizeSnapshot(input: $input) {
+    mutation {
+      finalizeSnapshot(input: {
+        clientMutationId: "${clientMutationId}"
+        snapshotId: "${snapshotId}"
+      }) {
         internalId
         clientMutationId
       }
     }
   `;
-
-  const input = formatMutation('finalizeSnapshot', { snapshotId });
-
   return graphql(
     mutation,
-    { input },
+    {},
     FINALIZE_SNAPSHOT_REQ,
     FINALIZE_SNAPSHOT_RESP,
     FINALIZE_SNAPSHOT_ERR,

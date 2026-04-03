@@ -692,6 +692,12 @@
 
   "merankabandi.dashboard.results.title": "Results Framework",
   "merankabandi.dashboard.results.refresh": "Refresh data",
+  "merankabandi.dashboard.results.snapshot": "Take a snapshot",
+  "merankabandi.dashboard.results.snapshot.title": "Create Results Framework Snapshot",
+  "merankabandi.dashboard.results.snapshot.name": "Snapshot name",
+  "merankabandi.dashboard.results.snapshot.description": "Description",
+  "merankabandi.dashboard.results.snapshot.create": "Create",
+  "merankabandi.dashboard.results.export": "Export as document",
   "merankabandi.dashboard.results.stat.totalIndicators": "Total Indicators",
   "merankabandi.dashboard.results.stat.achieved": "Objectives Achieved",
   "merankabandi.dashboard.results.stat.inProgress": "In Progress",

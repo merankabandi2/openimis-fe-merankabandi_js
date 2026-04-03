@@ -2,7 +2,7 @@
 import React from 'react';
 import { injectIntl } from 'react-intl';
 
-import { Grid, Divider, LinearProgress } from '@material-ui/core';
+import { Grid, LinearProgress } from '@material-ui/core';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 
 import {
@@ -11,8 +11,6 @@ import {
   PublishedComponent,
   withModulesManager,
 } from '@openimis/fe-core';
-import PaymentVerifyApproveForPaymentDialog from './dialogs/PaymentVerifyApproveForPaymentDialog';
-import FilterDialog from './FilterDialog';
 import PayrollStatusPicker from './PayrollStatusPicker';
 import { PAYROLL_STATUS } from '../../payroll-actions';
 
@@ -27,7 +25,7 @@ const styles = (theme) => ({
 class MerankabandiPayrollHeadPanel extends FormPanel {
   render() {
     const {
-      edited, classes, readOnly, intl, isPayrollFromFailedInvoices, benefitPlanId, user, task,
+      edited, classes, readOnly, intl, isPayrollFromFailedInvoices, benefitPlanId,
     } = this.props;
     const payroll = { ...edited };
 
@@ -119,16 +117,6 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
               readOnly={isPayrollFromFailedInvoices ? !isPayrollFromFailedInvoices : readOnly}
             />
           </Grid>
-          {readOnly && !isPayrollFromFailedInvoices && (
-            <Grid item xs={3} className={classes.item}>
-              <PayrollStatusPicker
-                required
-                withNull={false}
-                readOnly={readOnly}
-                value={!!payroll?.status && payroll.status}
-              />
-            </Grid>
-          )}
           <Grid item xs={3} className={classes.item}>
             <PublishedComponent
               pubRef="core.DatePicker"
@@ -140,39 +128,21 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
               readOnly={readOnly}
             />
           </Grid>
-          <Grid item xs={12} className={classes.item}>
-            <div style={{
-              float: 'right',
-              paddingRight: '16px',
-            }}
-            >
-              <PaymentVerifyApproveForPaymentDialog
-                classes={classes}
-                payrollDetail={payroll}
-                task={task}
-                user={user}
+          {readOnly && !isPayrollFromFailedInvoices && (
+            <Grid item xs={3} className={classes.item}>
+              <PayrollStatusPicker
+                required
+                withNull={false}
+                readOnly={readOnly}
+                value={!!payroll?.status && payroll.status}
               />
-            </div>
-          </Grid>
+            </Grid>
+          )}
         </Grid>
         {payroll?.status === PAYROLL_STATUS.GENERATING && (
           <div style={{ padding: '0 16px 16px 16px' }}>
             <LinearProgress variant="determinate" value={payroll.jsonExt?.progress || 0} />
           </div>
-        )}
-        <Divider />
-        {!isPayrollFromFailedInvoices && (
-          <FilterDialog
-            object={payroll?.paymentPlan?.benefitPlan
-              ? JSON.parse(JSON.parse(payroll.paymentPlan.benefitPlan))
-              : null}
-            objectToSave={payroll}
-            moduleName="social_protection"
-            objectType="BenefitPlan"
-            updateAttribute={this.updateAttribute}
-            readOnly={readOnly}
-            benefitPlanId={effectiveBenefitPlanId}
-          />
         )}
       </>
     );

@@ -81,10 +81,12 @@ class PaymentAgencyForm extends FormPanel {
             label={formatMessage(intl, MODULE_NAME, 'paymentAgency.paymentMethod')}
             value={edited?.paymentGateway ?? ''}
             onChange={(e) => {
-              this.updateAttribute('paymentGateway', e.target.value);
-              // Clear gateway config if not OnlinePush
-              if (e.target.value !== ONLINE_PUSH_METHOD) {
-                this.updateAttribute('gatewayConfig', '');
+              const val = e.target.value;
+              if (val !== ONLINE_PUSH_METHOD) {
+                // Clear gateway fields when not OnlinePush — single update to avoid race
+                this.props.onEditedChanged({ ...edited, paymentGateway: val, gatewayConfig: '', gatewayConnectorKey: '' });
+              } else {
+                this.updateAttribute('paymentGateway', val);
               }
             }}
             disabled={readOnly}

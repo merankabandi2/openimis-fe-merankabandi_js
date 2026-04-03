@@ -278,8 +278,8 @@ const DEFAULT_CONFIG = {
   ],
 
   // Payroll detail page tab panels (benefit consumptions, tasks, payment files)
-  'payroll.TabPanel.label': [BenefitConsumptionsTabLabel, PayrollTaskTabLabel, PayrollPaymentFilesTabLabel],
-  'payroll.TabPanel.panel': [BenefitConsumptionsTabPanel, PayrollTaskTabPanel, PayrollPaymentFilesTabPanel],
+  // payroll.TabPanel contributions are provided by the fork (openimis-fe-payroll_js)
+  // Do NOT duplicate them here or tabs appear twice
 
   // Payroll verification task (Burundi-specific: verification step before approval)
   'tasksManagement.tasks': [{

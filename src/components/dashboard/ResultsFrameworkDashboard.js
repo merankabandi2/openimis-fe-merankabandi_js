@@ -386,7 +386,7 @@ const loadResultsFrameworkData = async (filters = {}) => {
 };
 
 // Dashboard component
-function ResultsFrameworkDashboard() {
+function ResultsFrameworkDashboard({ createResultFrameworkSnapshot, generateResultFrameworkDocument }) {
   const intl = useIntl();
   const [data, setData] = useState({ sections: [], indicators: [], achievements: [] });
   const [isLoading, setIsLoading] = useState(true);
@@ -400,37 +400,28 @@ function ResultsFrameworkDashboard() {
   const [exportLoading, setExportLoading] = useState(false);
   const classes = useStyles();
 
-  const handleCreateSnapshot = async () => {
+  const handleCreateSnapshot = () => {
     setSnapshotLoading(true);
-    try {
-      const result = await createResultFrameworkSnapshot(
-        snapshotName,
-        snapshotDescription,
-        filters.dateFrom || null,
-        filters.dateTo || null,
-      );
-      if (result) {
-        setSnapshotDialogOpen(false);
-        setSnapshotName('');
-        setSnapshotDescription('');
-      }
-    } finally {
-      setSnapshotLoading(false);
-    }
+    createResultFrameworkSnapshot(
+      snapshotName,
+      snapshotDescription,
+      filters.dateFrom || null,
+      filters.dateTo || null,
+    );
+    setSnapshotDialogOpen(false);
+    setSnapshotName('');
+    setSnapshotDescription('');
+    setSnapshotLoading(false);
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
     setExportLoading(true);
-    try {
-      await generateResultFrameworkDocument(
-        null,
-        'docx',
-        filters.dateFrom || null,
-        filters.dateTo || null,
-      );
-    } finally {
-      setExportLoading(false);
-    }
+    const params = new URLSearchParams();
+    if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+    if (filters.dateTo) params.set('date_to', filters.dateTo);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    window.open(`${baseApiUrl}/merankabandi/export/result-framework/${qs}`, '_blank');
+    setExportLoading(false);
   };
 
   const loadData = async () => {
@@ -1047,6 +1038,9 @@ function ResultsFrameworkDashboard() {
 }
 
 const mapStateToProps = () => ({});
-const mapDispatchToProps = (dispatch) => bindActionCreators({}, dispatch);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch,
+  ...bindActionCreators({ createResultFrameworkSnapshot, generateResultFrameworkDocument }, dispatch),
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResultsFrameworkDashboard);

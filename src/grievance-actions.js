@@ -143,6 +143,7 @@ export function formatTicketCommentGQL(ticketComment, ticket, commenterType) {
     ${ticketComment.commenter ? `commenterId: "${decodeId(ticketComment.commenter.id)}"` : ''}
     ${commenterType ? `commenterType: "${commenterType}"` : ''}
     ${ticketComment.comment ? `comment: "${formatGQLString(ticketComment.comment)}"` : ''}
+    ${ticketComment.jsonExt ? `jsonExt: ${JSON.stringify(ticketComment.jsonExt)}` : ''}
   `;
 }
 
@@ -211,6 +212,7 @@ export function fetchTicketComments(ticket) {
       'commenterFirstName',
       'commenterLastName',
       'commenterDob',
+      'jsonExt',
     ];
     const payload = formatPageQueryWithCount(
       'comments',
@@ -224,7 +226,7 @@ export function fetchTicketComments(ticket) {
 
 export function createTicketComment(ticketComment, ticket, commenterType, clientMutationLabel) {
   const mutation = formatMutation(
-    'createComment',
+    'createTicketComment',
     formatTicketCommentGQL(ticketComment, ticket, commenterType),
     clientMutationLabel,
   );
