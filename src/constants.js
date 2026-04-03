@@ -121,6 +121,10 @@ export const ROUTE_BENEFICIARY_SELECTION_WIZARD = 'benefitPlans/selectionWizard'
 export const ROUTE_PMT_FORMULAS = 'configurations/pmt-formulas';
 export const ROUTE_PMT_FORMULA = 'configurations/pmt-formulas/formula';
 
+// Payment Agency admin
+export const ROUTE_PAYMENT_AGENCIES = 'configurations/payment-agencies';
+export const ROUTE_PAYMENT_AGENCY = 'configurations/payment-agencies/agency';
+
 // Selection status values (mirrors Group.json_ext.selection_status)
 export const SELECTION_STATUS = {
   SURVEYED: 'SURVEYED',
@@ -221,7 +225,12 @@ export const ME_INDICATORS_TABS_PANEL_CONTRIBUTION_KEY = 'meIndicators.TabPanel.
 export const ME_RESULT_FRAMEWORK_TABS_LABEL_CONTRIBUTION_KEY = 'meResultFrameWork.TabPanel.label';
 export const ME_RESULT_FRAMEWORK_TABS_PANEL_CONTRIBUTION_KEY = 'meResultFrameWork.TabPanel.panel';
 
-// --- Grievance Workflow Routes ---
+// --- Grievance Routes ---
+export const ROUTE_GRIEVANCE_DASHBOARD = 'grievance/dashboard';
+export const ROUTE_GRIEVANCE_DETAIL = 'grievance/detail';
+export const ROUTE_GRIEVANCE_TICKETS = 'grievance/tickets';
+export const ROUTE_GRIEVANCE_NEW_TICKET = 'grievance/newTicket';
+export const ROUTE_GRIEVANCE_EDIT_TICKET = 'grievance/ticket';
 export const ROUTE_GRIEVANCE_MY_TASKS = 'grievance/my-tasks';
 export const ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES = 'grievance/workflow-templates';
 export const ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE = 'grievance/workflow-templates/template';
@@ -231,6 +240,21 @@ export const ROUTE_GRIEVANCE_ROLE_ASSIGNMENT = 'grievance/role-assignments/assig
 // --- Grievance Workflow Rights ---
 export const RIGHT_GRIEVANCE_TASK_VIEW = 160017;
 export const RIGHT_GRIEVANCE_WORKFLOW_ADMIN = 160018;
+
+// --- Payment Schedule ---
+export const ROUTE_PAYMENT_SCHEDULE = 'payment-schedule';
+export const MAX_PAYMENT_ROUNDS = 12;
+export const STANDARD_TRANSFER_AMOUNT = 72000;
+
+export const PAYMENT_SCHEDULE_STATUS = {
+  PENDING: 'PENDING',
+  GENERATING: 'GENERATING',
+  APPROVED: 'APPROVED',
+  IN_PAYMENT: 'IN_PAYMENT',
+  RECONCILED: 'RECONCILED',
+  FAILED: 'FAILED',
+  REJECTED: 'REJECTED',
+};
 
 // --- Helper ---
 export const locationAtLevel = (lowestLevelLoc, level) => {

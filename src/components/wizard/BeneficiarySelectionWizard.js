@@ -5,9 +5,8 @@ import {
 import { withStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import { injectIntl } from 'react-intl';
-import { withRouter } from 'react-router-dom';
 import {
-  withModulesManager, formatMessage, PublishedComponent,
+  withModulesManager, withHistory, formatMessage, PublishedComponent,
 } from '@openimis/fe-core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import AssessmentIcon from '@material-ui/icons/Assessment';
@@ -267,6 +266,6 @@ const mapDispatchToProps = (dispatch) => ({
   dispatch,
 });
 
-export default withModulesManager(
-  withRouter(injectIntl(withStyles(styles)(connect(null, mapDispatchToProps)(BeneficiarySelectionWizard))))
-);
+export default withHistory(withModulesManager(
+  injectIntl(withStyles(styles)(connect(null, mapDispatchToProps)(BeneficiarySelectionWizard)))
+));

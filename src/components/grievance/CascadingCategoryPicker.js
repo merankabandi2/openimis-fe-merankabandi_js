@@ -107,6 +107,7 @@ function CascadingCategoryPicker({
   const { isLoading, data, error } = useGraphqlQuery(
     `query CategoryPicker {
         grievanceConfig{
+          grievanceTypes
           grievanceCategoriesHierarchical {
             name
             fullName
@@ -128,7 +129,6 @@ function CascadingCategoryPicker({
               }
             }
           }
-          accessibleCategories
         }
     }`,
     {},
@@ -137,11 +137,12 @@ function CascadingCategoryPicker({
 
   const categoryHierarchy = useMemo(() => {
     const categories = data?.grievanceConfig?.grievanceCategoriesHierarchical ?? [];
-    const accessibleCategories = data?.grievanceConfig?.accessibleCategories ?? [];
+    // grievanceTypes already returns only accessible categories (filtered by BE access control)
+    const accessibleCategories = data?.grievanceConfig?.grievanceTypes ?? [];
     const hierarchy = {};
 
     categories.forEach(category => {
-      const isAccessible = accessibleCategories.includes(category.name);
+      const isAccessible = accessibleCategories.includes(category.fullName || category.name);
       if (isAccessible) {
         hierarchy[category.name] = {
           ...category,
@@ -150,7 +151,7 @@ function CascadingCategoryPicker({
 
         if (category.children) {
           category.children.forEach(child => {
-            const isChildAccessible = accessibleCategories.includes(child.name);
+            const isChildAccessible = accessibleCategories.includes(child.fullName || child.name);
             if (isChildAccessible) {
               hierarchy[category.name].children[child.name] = {
                 ...child,
@@ -159,7 +160,7 @@ function CascadingCategoryPicker({
 
               if (child.children) {
                 child.children.forEach(grandchild => {
-                  const isGrandchildAccessible = accessibleCategories.includes(grandchild.name);
+                  const isGrandchildAccessible = accessibleCategories.includes(grandchild.fullName || grandchild.name);
                   if (isGrandchildAccessible) {
                     hierarchy[category.name].children[child.name].children[grandchild.name] = grandchild;
                   }

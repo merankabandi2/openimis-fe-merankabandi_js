@@ -7,6 +7,7 @@ import {
 import { CheckCircle, Visibility, SkipNext, AssignmentInd } from '@material-ui/icons';
 import { Searcher, useModulesManager, useTranslations, useHistory, journalize, PublishedComponent, decodeId } from '@openimis/fe-core';
 import { fetchGrievanceTasks, completeGrievanceTask, skipGrievanceTask, reassignGrievanceTask } from '../../actions';
+import GrievanceTaskFilter from './GrievanceTaskFilter';
 
 const MODULE_NAME = 'merankabandi';
 
@@ -25,6 +26,7 @@ function GrievanceTaskSearcher({
   grievanceTasksPageInfo,
   grievanceTasksTotalCount,
   assignedUserId,
+  ticketId,
   statusFilter,
   completeGrievanceTask,
   skipGrievanceTask,
@@ -54,9 +56,10 @@ function GrievanceTaskSearcher({
   const fetchData = useCallback((params) => {
     const filters = [...params];
     if (assignedUserId) filters.push(`assignedUser_Id: "${assignedUserId}"`);
+    if (ticketId) filters.push(`ticket_Id: "${ticketId}"`);
     if (statusFilter) filters.push(`status_In: [${statusFilter.map((s) => s).join(',')}]`);
     fetchGrievanceTasks(filters);
-  }, [assignedUserId, statusFilter]);
+  }, [assignedUserId, ticketId, statusFilter]);
 
   const handleComplete = (task) => {
     completeGrievanceTask(
@@ -135,7 +138,7 @@ function GrievanceTaskSearcher({
     (task) => (
       <div style={{ display: 'flex', gap: 4 }}>
         <Tooltip title={formatMessage('workflow.task.viewTicket')}>
-          <IconButton size="small" onClick={() => history.push(`/grievance/ticket/${task.ticket?.id}`)}>
+          <IconButton size="small" onClick={() => history.push(`/grievance/detail/${task.ticket?.id}`)}>
             <Visibility />
           </IconButton>
         </Tooltip>
@@ -164,10 +167,15 @@ function GrievanceTaskSearcher({
     ),
   ];
 
+  const taskFilter = ({ filters, onChangeFilters }) => (
+    <GrievanceTaskFilter filters={filters} onChangeFilters={onChangeFilters} />
+  );
+
   return (
     <>
       <Searcher
         module="merankabandi"
+        FilterPane={taskFilter}
         fetch={fetchData}
         items={grievanceTasks}
         itemsPageInfo={grievanceTasksPageInfo}

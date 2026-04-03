@@ -39,7 +39,10 @@ import {
 import { createTheme } from '@material-ui/core/styles';
 import { baseApiUrl, apiHeaders, formatMessage } from '@openimis/fe-core';
 import { MODULE_NAME } from '../../constants';
+import { createResultFrameworkSnapshot, generateResultFrameworkDocument } from '../../actions/resultFramework';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import CameraAltIcon from '@material-ui/icons/CameraAlt';
+import GetAppIcon from '@material-ui/icons/GetApp';
 import AssessmentIcon from '@material-ui/icons/Assessment';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
@@ -390,7 +393,45 @@ function ResultsFrameworkDashboard() {
   const [selectedIndicator, setSelectedIndicator] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
   const [filters, setFilters] = useState({ sectionId: '', dateFrom: '', dateTo: '' });
+  const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
+  const [snapshotName, setSnapshotName] = useState('');
+  const [snapshotDescription, setSnapshotDescription] = useState('');
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const classes = useStyles();
+
+  const handleCreateSnapshot = async () => {
+    setSnapshotLoading(true);
+    try {
+      const result = await createResultFrameworkSnapshot(
+        snapshotName,
+        snapshotDescription,
+        filters.dateFrom || null,
+        filters.dateTo || null,
+      );
+      if (result) {
+        setSnapshotDialogOpen(false);
+        setSnapshotName('');
+        setSnapshotDescription('');
+      }
+    } finally {
+      setSnapshotLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      await generateResultFrameworkDocument(
+        null,
+        'docx',
+        filters.dateFrom || null,
+        filters.dateTo || null,
+      );
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -571,15 +612,35 @@ function ResultsFrameworkDashboard() {
               <AssessmentIcon className={classes.titleIcon} />
               {formatMessage(intl, MODULE_NAME, 'dashboard.results.title')}
             </Typography>
-            <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.results.refresh')}>
-              <IconButton
-                className={classes.refreshButton}
-                onClick={loadData}
-                disabled={isLoading}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.results.snapshot')}>
+                <IconButton
+                  className={classes.refreshButton}
+                  onClick={() => setSnapshotDialogOpen(true)}
+                  disabled={isLoading || snapshotLoading}
+                >
+                  <CameraAltIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.results.export')}>
+                <IconButton
+                  className={classes.refreshButton}
+                  onClick={handleExport}
+                  disabled={isLoading || exportLoading}
+                >
+                  <GetAppIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={formatMessage(intl, MODULE_NAME, 'dashboard.results.refresh')}>
+                <IconButton
+                  className={classes.refreshButton}
+                  onClick={loadData}
+                  disabled={isLoading}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
           </div>
 
           {/* Filters */}
@@ -834,6 +895,43 @@ function ResultsFrameworkDashboard() {
               </Accordion>
             );
           })}
+
+          {/* Snapshot Dialog */}
+          <Dialog open={snapshotDialogOpen} onClose={() => setSnapshotDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>{formatMessage(intl, MODULE_NAME, 'dashboard.results.snapshot.title')}</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                label={formatMessage(intl, MODULE_NAME, 'dashboard.results.snapshot.name')}
+                fullWidth
+                value={snapshotName}
+                onChange={(e) => setSnapshotName(e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label={formatMessage(intl, MODULE_NAME, 'dashboard.results.snapshot.description')}
+                fullWidth
+                multiline
+                rows={3}
+                value={snapshotDescription}
+                onChange={(e) => setSnapshotDescription(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSnapshotDialogOpen(false)} color="default">
+                {formatMessage(intl, MODULE_NAME, 'dashboard.results.dialog.close')}
+              </Button>
+              <Button
+                onClick={handleCreateSnapshot}
+                color="primary"
+                variant="contained"
+                disabled={!snapshotName || snapshotLoading}
+              >
+                {formatMessage(intl, MODULE_NAME, 'dashboard.results.snapshot.create')}
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           {/* Indicator Detail Dialog */}
           <Dialog

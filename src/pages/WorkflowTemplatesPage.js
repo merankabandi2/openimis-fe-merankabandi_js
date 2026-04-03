@@ -7,8 +7,25 @@ import { Chip, Fab } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { fetchWorkflowTemplates } from '../actions';
 import { ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE, RIGHT_GRIEVANCE_WORKFLOW_ADMIN } from '../constants';
+import WorkflowTemplateFilter from '../components/grievance-workflow/WorkflowTemplateFilter';
 
 const MODULE_NAME = 'merankabandi';
+
+const CASE_TYPE_GROUPS = [
+  { key: 'remplacement', label: 'Remplacement' },
+  { key: 'suppression', label: 'Suppression' },
+  { key: 'reclamation:sensible', label: 'Réclamation — Cas sensible' },
+  { key: 'reclamation:speciale', label: 'Réclamation — Cas spécial' },
+  { key: 'reclamation:non_sensible', label: 'Réclamation — Cas non sensible' },
+];
+
+function getCaseTypeGroup(caseType) {
+  if (!caseType) return '';
+  for (const group of CASE_TYPE_GROUPS) {
+    if (caseType.startsWith(group.key)) return group.label;
+  }
+  return '';
+}
 
 const useStyles = makeStyles((theme) => ({
   page: theme.page,
@@ -31,7 +48,7 @@ function WorkflowTemplatesPage({
   const headers = () => [
     'workflow.template.name',
     'workflow.template.label',
-    'workflow.template.caseType',
+    'workflow.template.caseTypeGroup',
     'workflow.template.stepsCount',
     'workflow.template.isActive',
   ];
@@ -44,10 +61,21 @@ function WorkflowTemplatesPage({
     ['isActive', true],
   ];
 
+  const workflowTemplateFilter = ({ filters, onChangeFilters }) => (
+    <WorkflowTemplateFilter filters={filters} onChangeFilters={onChangeFilters} />
+  );
+
   const itemFormatters = () => [
     (t) => t.name,
     (t) => t.label,
-    (t) => t.caseType,
+    (t) => (
+      <Chip
+        label={getCaseTypeGroup(t.caseType)}
+        size="small"
+        variant="outlined"
+        color="primary"
+      />
+    ),
     (t) => t.steps?.edges?.length ?? 0,
     (t) => (
       <Chip
@@ -67,6 +95,7 @@ function WorkflowTemplatesPage({
       <Helmet title={formatMessage('workflow.templates.title')} />
       <Searcher
         module="merankabandi"
+        FilterPane={workflowTemplateFilter}
         fetch={fetchWorkflowTemplates}
         items={workflowTemplates}
         itemsPageInfo={workflowTemplatesPageInfo}

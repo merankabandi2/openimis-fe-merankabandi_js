@@ -69,6 +69,14 @@ export const ACTION_TYPE = {
   UPDATE_PMT_FORMULA: 'MERANKABANDI_UPDATE_PMT_FORMULA',
   DELETE_PMT_FORMULA: 'MERANKABANDI_DELETE_PMT_FORMULA',
 
+  // Payment Agencies
+  SEARCH_PAYMENT_AGENCIES: 'MERANKABANDI_SEARCH_PAYMENT_AGENCIES',
+  GET_PAYMENT_AGENCY: 'MERANKABANDI_GET_PAYMENT_AGENCY',
+  PAYMENT_AGENCY: 'MERANKABANDI_PAYMENT_AGENCY',
+  CREATE_PAYMENT_AGENCY: 'MERANKABANDI_CREATE_PAYMENT_AGENCY',
+  UPDATE_PAYMENT_AGENCY: 'MERANKABANDI_UPDATE_PAYMENT_AGENCY',
+  DELETE_PAYMENT_AGENCY: 'MERANKABANDI_DELETE_PAYMENT_AGENCY',
+
   // Mutation
   MUTATION: 'MERANKABANDI_MUTATION',
 
@@ -129,6 +137,11 @@ export const MUTATION_SERVICE = {
     CREATE: 'createPmtFormula',
     UPDATE: 'updatePmtFormula',
     DELETE: 'deletePmtFormula',
+  },
+  PAYMENT_AGENCY: {
+    CREATE: 'createPaymentAgency',
+    UPDATE: 'updatePaymentAgency',
+    DELETE: 'deletePaymentAgency',
   },
   GRIEVANCE_TASK: {
     COMPLETE: 'completeGrievanceTask',
@@ -676,6 +689,69 @@ export function deletePmtFormula(formula, clientMutationLabel) {
   );
 }
 
+// ─── Payment Agency actions ─────────────────────────────────────────────────
+
+const PAYMENT_AGENCY_PROJECTION = () => [
+  'id', 'code', 'name', 'paymentGateway', 'gatewayConfig', 'contactName', 'contactPhone', 'contactEmail', 'isActive',
+  'dateCreated', 'dateUpdated',
+];
+
+export function fetchPaymentAgencies(params) {
+  const payload = formatPageQueryWithCount('paymentAgency', params, PAYMENT_AGENCY_PROJECTION());
+  return graphql(payload, ACTION_TYPE.SEARCH_PAYMENT_AGENCIES);
+}
+
+export function fetchPaymentAgency(params) {
+  const payload = formatPageQuery('paymentAgency', params, PAYMENT_AGENCY_PROJECTION());
+  return graphql(payload, ACTION_TYPE.GET_PAYMENT_AGENCY);
+}
+
+export function clearPaymentAgency() {
+  return (dispatch) => {
+    dispatch({ type: CLEAR(ACTION_TYPE.PAYMENT_AGENCY) });
+  };
+}
+
+const formatPaymentAgencyGQL = (agency) => `
+  ${agency?.id ? `id: "${agency.id}"` : ''}
+  ${agency?.code ? `code: "${formatGQLString(agency.code)}"` : ''}
+  ${agency?.name ? `name: "${formatGQLString(agency.name)}"` : ''}
+  ${agency?.paymentGateway != null ? `paymentGateway: "${formatGQLString(agency.paymentGateway)}"` : ''}
+  ${agency?.gatewayConfig != null ? `gatewayConfig: ${JSON.stringify(JSON.stringify(agency.gatewayConfig))}` : ''}
+  ${agency?.contactName ? `contactName: "${formatGQLString(agency.contactName)}"` : ''}
+  ${agency?.contactPhone ? `contactPhone: "${formatGQLString(agency.contactPhone)}"` : ''}
+  ${agency?.contactEmail ? `contactEmail: "${formatGQLString(agency.contactEmail)}"` : ''}
+  ${agency?.isActive != null ? `isActive: ${agency.isActive}` : ''}
+`;
+
+export function createPaymentAgency(agency, clientMutationLabel) {
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PAYMENT_AGENCY.CREATE,
+    formatPaymentAgencyGQL(agency),
+    ACTION_TYPE.CREATE_PAYMENT_AGENCY,
+    clientMutationLabel,
+  );
+}
+
+export function updatePaymentAgency(agency, clientMutationLabel) {
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PAYMENT_AGENCY.UPDATE,
+    formatPaymentAgencyGQL(agency),
+    ACTION_TYPE.UPDATE_PAYMENT_AGENCY,
+    clientMutationLabel,
+  );
+}
+
+export function deletePaymentAgency(agency, clientMutationLabel) {
+  const ids = `ids: ["${agency?.id}"]`;
+  return PERFORM_MUTATION(
+    MUTATION_SERVICE.PAYMENT_AGENCY.DELETE,
+    ids,
+    ACTION_TYPE.DELETE_PAYMENT_AGENCY,
+    clientMutationLabel,
+  );
+}
+
 // Grievance configuration (dispatches into grievanceSocialProtection reducer)
 const GRIEVANCE_CONFIGURATION_PROJECTION = () => [
   'grievanceTypes',
@@ -684,8 +760,6 @@ const GRIEVANCE_CONFIGURATION_PROJECTION = () => [
   'grievanceDefaultResolutionsByCategory{category, resolutionTime}',
   'grievanceCategoriesHierarchical{name, fullName, priority, permissions, defaultFlags, children{name, fullName, priority, permissions, defaultFlags, children{name, fullName, priority, permissions, defaultFlags}}}',
   'grievanceFlagsDetailed{name, priority, permissions}',
-  'accessibleCategories',
-  'accessibleFlags',
 ];
 
 export function fetchGrievanceConfiguration(params) {

@@ -7,6 +7,7 @@ import { Chip, Fab } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { fetchRoleAssignments } from '../actions';
 import { ROUTE_GRIEVANCE_ROLE_ASSIGNMENT, RIGHT_GRIEVANCE_WORKFLOW_ADMIN } from '../constants';
+import RoleAssignmentFilter from '../components/grievance-workflow/RoleAssignmentFilter';
 
 const MODULE_NAME = 'merankabandi';
 
@@ -64,6 +65,9 @@ function RoleAssignmentsPage({
       <Helmet title={formatMessage('workflow.roles.title')} />
       <Searcher
         module="merankabandi"
+        FilterPane={({ filters, onChangeFilters }) => (
+          <RoleAssignmentFilter filters={filters} onChangeFilters={onChangeFilters} />
+        )}
         fetch={fetchRoleAssignments}
         items={roleAssignments}
         itemsPageInfo={roleAssignmentsPageInfo}

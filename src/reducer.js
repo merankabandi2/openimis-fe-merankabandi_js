@@ -147,6 +147,19 @@ const STORE_STATE = {
   pmtFormula: null,
   errorPmtFormula: null,
 
+  // Payment Agencies
+  fetchingPaymentAgencies: false,
+  fetchedPaymentAgencies: false,
+  paymentAgencies: [],
+  paymentAgenciesPageInfo: {},
+  paymentAgenciesTotalCount: 0,
+  errorPaymentAgencies: null,
+
+  fetchingPaymentAgency: false,
+  fetchedPaymentAgency: false,
+  paymentAgency: null,
+  errorPaymentAgency: null,
+
   // Result Framework
   fetchingResultFrameworkSnapshots: false,
   fetchedResultFrameworkSnapshots: false,
@@ -774,6 +787,80 @@ function reducer(state = STORE_STATE, action) {
       return dispatchMutationResp(state, MUTATION_SERVICE.PMT_FORMULA.UPDATE, action);
     case SUCCESS(ACTION_TYPE.DELETE_PMT_FORMULA):
       return dispatchMutationResp(state, MUTATION_SERVICE.PMT_FORMULA.DELETE, action);
+
+    // ─── Payment Agencies ──────────────────────────────────────────────────────
+    case REQUEST(ACTION_TYPE.SEARCH_PAYMENT_AGENCIES):
+      return {
+        ...state,
+        fetchingPaymentAgencies: true,
+        fetchedPaymentAgencies: false,
+        paymentAgencies: [],
+        paymentAgenciesPageInfo: {},
+        paymentAgenciesTotalCount: 0,
+      };
+    case SUCCESS(ACTION_TYPE.SEARCH_PAYMENT_AGENCIES):
+      return {
+        ...state,
+        fetchingPaymentAgencies: false,
+        fetchedPaymentAgencies: true,
+        paymentAgencies: parseData(action.payload.data.paymentAgency)?.map((a) => ({
+          ...a, id: decodeId(a.id),
+        })) ?? [],
+        paymentAgenciesPageInfo: pageInfo(action.payload.data.paymentAgency),
+        paymentAgenciesTotalCount: action.payload.data.paymentAgency?.totalCount ?? 0,
+      };
+    case ERROR(ACTION_TYPE.SEARCH_PAYMENT_AGENCIES):
+      return {
+        ...state,
+        fetchingPaymentAgencies: false,
+        errorPaymentAgencies: formatServerError(action.payload),
+      };
+    case REQUEST(ACTION_TYPE.GET_PAYMENT_AGENCY):
+      return {
+        ...state,
+        fetchingPaymentAgency: true,
+        fetchedPaymentAgency: false,
+        paymentAgency: null,
+      };
+    case SUCCESS(ACTION_TYPE.GET_PAYMENT_AGENCY): {
+      const agencies = parseData(action.payload.data.paymentAgency);
+      return {
+        ...state,
+        fetchingPaymentAgency: false,
+        fetchedPaymentAgency: true,
+        paymentAgency: agencies?.length > 0
+          ? { ...agencies[0], id: decodeId(agencies[0].id) }
+          : null,
+      };
+    }
+    case ERROR(ACTION_TYPE.GET_PAYMENT_AGENCY):
+      return {
+        ...state,
+        fetchingPaymentAgency: false,
+        errorPaymentAgency: formatServerError(action.payload),
+      };
+    case CLEAR(ACTION_TYPE.PAYMENT_AGENCY):
+      return {
+        ...state,
+        fetchingPaymentAgency: false,
+        fetchedPaymentAgency: false,
+        paymentAgency: null,
+        errorPaymentAgency: null,
+      };
+    case REQUEST(ACTION_TYPE.CREATE_PAYMENT_AGENCY):
+    case REQUEST(ACTION_TYPE.UPDATE_PAYMENT_AGENCY):
+    case REQUEST(ACTION_TYPE.DELETE_PAYMENT_AGENCY):
+      return dispatchMutationReq(state, action);
+    case ERROR(ACTION_TYPE.CREATE_PAYMENT_AGENCY):
+    case ERROR(ACTION_TYPE.UPDATE_PAYMENT_AGENCY):
+    case ERROR(ACTION_TYPE.DELETE_PAYMENT_AGENCY):
+      return dispatchMutationErr(state, action);
+    case SUCCESS(ACTION_TYPE.CREATE_PAYMENT_AGENCY):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PAYMENT_AGENCY.CREATE, action);
+    case SUCCESS(ACTION_TYPE.UPDATE_PAYMENT_AGENCY):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PAYMENT_AGENCY.UPDATE, action);
+    case SUCCESS(ACTION_TYPE.DELETE_PAYMENT_AGENCY):
+      return dispatchMutationResp(state, MUTATION_SERVICE.PAYMENT_AGENCY.DELETE, action);
 
     // ─── Workflows ─────────────────────────────────────────────────────────────
     case REQUEST(ACTION_TYPE.GET_WORKFLOWS):

@@ -118,10 +118,19 @@ import KoboETLAdminPage from './pages/KoboETLAdminPage';
 import BeneficiarySelectionWizardPage from './pages/BeneficiarySelectionWizardPage';
 import PmtFormulasPage from './pages/PmtFormulasPage';
 import PmtFormulaPage from './pages/PmtFormulaPage';
+import PaymentAgenciesPage from './pages/PaymentAgenciesPage';
+import PaymentAgencyPage from './pages/PaymentAgencyPage';
 import MerankabandiPayrollPage from './pages/MerankabandiPayrollPage';
 import ApprovedPayrollsPage from './pages/ApprovedPayrollsPage';
 import PendingPayrollsPage from './pages/PendingPayrollsPage';
 import ReconciledPayrollsPage from './pages/ReconciledPayrollsPage';
+
+// Grievance Pages (migrated from fork, imports fixed)
+import GrievanceDashboardOptimized from './components/grievance/dashboard/GrievanceDashboardOptimized';
+import AddTicketPageImproved from './pages/AddTicketPageImproved';
+import EditTicketPageUpdated from './pages/EditTicketPageUpdated';
+import GrievanceDetailPage from './pages/GrievanceDetailPage';
+import GrievanceTicketsPage from './pages/GrievanceTicketsPage';
 
 // Grievance Workflow Pages
 import MyTasksPage from './pages/MyTasksPage';
@@ -131,13 +140,17 @@ import RoleAssignmentsPage from './pages/RoleAssignmentsPage';
 import RoleAssignmentPage from './pages/RoleAssignmentPage';
 
 // Grievance Menu
-import GrievanceMainMenu from './menu/GrievanceMainMenu';
+// GrievanceMainMenu is provided by upstream fe-grievance_social_protection module
+// Merankabandi only contributes menu items via 'grievance.MainMenu' key
 
 // Geography Pages
 import ProvincesPage from './pages/ProvincesPage';
 import ProvinceDetailPage from './pages/ProvinceDetailPage';
 import CommuneDetailPage from './pages/CommuneDetailPage';
 import CollineDetailPage from './pages/CollineDetailPage';
+
+// Payment Schedule
+import PaymentSchedulePage from './pages/PaymentSchedulePage';
 
 // Payroll tab panel contributions
 import {
@@ -192,6 +205,8 @@ import {
   ROUTE_BENEFICIARY_SELECTION_WIZARD,
   ROUTE_PMT_FORMULAS,
   ROUTE_PMT_FORMULA,
+  ROUTE_PAYMENT_AGENCIES,
+  ROUTE_PAYMENT_AGENCY,
   ROUTE_PAYROLLS_APPROVED,
   ROUTE_PAYROLLS_PENDING,
   ROUTE_PAYROLLS_RECONCILED,
@@ -199,6 +214,12 @@ import {
   ROUTE_GEOGRAPHY_PROVINCE,
   ROUTE_GEOGRAPHY_COMMUNE,
   ROUTE_GEOGRAPHY_COLLINE,
+  ROUTE_PAYMENT_SCHEDULE,
+  ROUTE_GRIEVANCE_DASHBOARD,
+  ROUTE_GRIEVANCE_DETAIL,
+  ROUTE_GRIEVANCE_TICKETS,
+  ROUTE_GRIEVANCE_NEW_TICKET,
+  ROUTE_GRIEVANCE_EDIT_TICKET,
   ROUTE_GRIEVANCE_MY_TASKS,
   ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES,
   ROUTE_GRIEVANCE_WORKFLOW_TEMPLATE,
@@ -294,7 +315,6 @@ const DEFAULT_CONFIG = {
   'core.MainMenu': [
     { name: 'PaymentMainMenu', component: PaymentMainMenu },
     { name: 'MEMainMenu', component: MEMainMenu },
-    { name: 'GrievanceMainMenu', component: GrievanceMainMenu },
   ],
 
   // Routes
@@ -317,14 +337,28 @@ const DEFAULT_CONFIG = {
     { path: `${ROUTE_BENEFICIARY_SELECTION_WIZARD}/:benefit_plan_uuid?`, component: BeneficiarySelectionWizardPage },
     { path: ROUTE_PMT_FORMULAS, component: PmtFormulasPage },
     { path: `${ROUTE_PMT_FORMULA}/:formula_id?`, component: PmtFormulaPage },
+    { path: ROUTE_PAYMENT_AGENCIES, component: PaymentAgenciesPage },
+    { path: `${ROUTE_PAYMENT_AGENCY}/:payment_agency_id?`, component: PaymentAgencyPage },
     { path: `${ROUTE_PAYMENT_NEW_PAYMENT}/:payroll_uuid?`, component: MerankabandiPayrollPage },
     { path: ROUTE_PAYROLLS_APPROVED, component: ApprovedPayrollsPage },
     { path: ROUTE_PAYROLLS_PENDING, component: PendingPayrollsPage },
     { path: ROUTE_PAYROLLS_RECONCILED, component: ReconciledPayrollsPage },
+    { path: ROUTE_PAYMENT_SCHEDULE, component: PaymentSchedulePage },
     { path: ROUTE_GEOGRAPHY_PROVINCES, component: ProvincesPage },
     { path: `${ROUTE_GEOGRAPHY_PROVINCE}/:uuid`, component: ProvinceDetailPage },
     { path: `${ROUTE_GEOGRAPHY_COMMUNE}/:uuid`, component: CommuneDetailPage },
     { path: `${ROUTE_GEOGRAPHY_COLLINE}/:uuid`, component: CollineDetailPage },
+    // Grievance custom pages — all under grievance/* prefix
+    { path: ROUTE_GRIEVANCE_DASHBOARD, component: GrievanceDashboardOptimized },
+    { path: ROUTE_GRIEVANCE_DETAIL, component: AddTicketPageImproved },
+    { path: `${ROUTE_GRIEVANCE_DETAIL}/:ticket_uuid`, component: GrievanceDetailPage },
+    { path: ROUTE_GRIEVANCE_NEW_TICKET, component: AddTicketPageImproved },
+    { path: `${ROUTE_GRIEVANCE_EDIT_TICKET}/:ticket_uuid?/:version?`, component: EditTicketPageUpdated },
+    // Override upstream ticket/* routes (App.js deduplicates by path, last wins)
+    { path: 'ticket/tickets', component: GrievanceTicketsPage },
+    { path: ROUTE_GRIEVANCE_TICKETS, component: GrievanceTicketsPage },
+    { path: 'ticket/newTicket', component: AddTicketPageImproved },
+    { path: 'ticket/ticket/:ticket_uuid?/:version?', component: EditTicketPageUpdated },
     // Grievance workflow
     { path: ROUTE_GRIEVANCE_MY_TASKS, component: MyTasksPage },
     { path: ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES, component: WorkflowTemplatesPage },
@@ -370,6 +404,13 @@ const DEFAULT_CONFIG = {
       route: `/${ROUTE_PAYROLLS_RECONCILED}`,
       filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
       id: 'legalAndFinance.payrollsReconciled',
+    },
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.payment.schedule" />,
+      icon: <Assessment />,
+      route: `/${ROUTE_PAYMENT_SCHEDULE}`,
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'mainMenuPayment.paymentSchedule',
     },
   ],
 
@@ -429,6 +470,13 @@ const DEFAULT_CONFIG = {
   // Items contributed to social protection menu
   'socialProtection.MainMenu': [
     {
+      text: <FormattedMessage module="merankabandi" id="menu.paymentAgencies" />,
+      icon: <Assessment />,
+      route: `/${ROUTE_PAYMENT_AGENCIES}`,
+      filter: (rights) => rights.includes(RIGHT_BENEFIT_PLAN_SEARCH),
+      id: 'merankabandi.paymentAgencies',
+    },
+    {
       text: <FormattedMessage module="merankabandi" id="menu.socialProtection.pmtFormulas" />,
       icon: <Assessment />,
       route: `/${ROUTE_PMT_FORMULAS}`,
@@ -444,8 +492,16 @@ const DEFAULT_CONFIG = {
     },
   ],
 
-  // Grievance workflow menu items (dedicated menu group)
+  // Grievance menu items — contributed to grievance.MainMenu
+  // DB config (GrievanceMainMenu) controls which IDs are shown and their order
   'grievance.MainMenu': [
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.dashboard" />,
+      icon: <Dashboard />,
+      route: `/${ROUTE_GRIEVANCE_DASHBOARD}`,
+      filter: (rights) => rights.includes(190001),
+      id: 'grievance.dashboard',
+    },
     {
       text: <FormattedMessage module="merankabandi" id="menu.grievance.myTasks" />,
       icon: <ListAlt />,
@@ -470,6 +526,15 @@ const DEFAULT_CONFIG = {
   ],
 
   refs: [
+    // Override upstream grievance route refs — all grievance/* paths
+    // route.ticket is used by onDoubleClick (with UUID) → detail page
+    // onAdd (without UUID) uses a separate route below
+    { key: 'grievanceSocialProtection.route.ticket', ref: ROUTE_GRIEVANCE_DETAIL },
+    { key: 'grievanceSocialProtection.route.tickets', ref: ROUTE_GRIEVANCE_TICKETS },
+    { key: 'grievanceSocialProtection.route.dashboard', ref: ROUTE_GRIEVANCE_DASHBOARD },
+    // Custom ref for the detail page (used by task searcher, etc.)
+    { key: 'merankabandi.route.grievanceDetail', ref: ROUTE_GRIEVANCE_DETAIL },
+
     // Grievance picker overrides (same keys as upstream grievance module)
     { key: 'grievanceSocialProtection.DropDownCategoryPicker', ref: CategoryPicker },
     { key: 'grievanceSocialProtection.CategoryPicker', ref: CategoryPicker },

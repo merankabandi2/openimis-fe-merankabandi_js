@@ -172,7 +172,7 @@ function Dashboard() {
   const femaleBeneficiariesPercentage = genderData.femaleBeneficiariesPercentage || 0;
 
   const genderSubtitle = totalBeneficiaries > 0
-    ? `♀ ${formatNumber(femaleBeneficiaries)} (${Math.round(femaleBeneficiariesPercentage)}%)`
+    ? `${formatNumber(totalIndividuals)} individus · ♀ ${formatNumber(femaleBeneficiaries)} (${Math.round(femaleBeneficiariesPercentage)}%)`
     : '';
 
   // Twa minority group subtitle (separate from gender)
@@ -232,7 +232,7 @@ function Dashboard() {
             <Grid container spacing={2}>
               <Grid item xs={6} sm={3}>
                 <BoxCard
-                  label="Bénéficiaires"
+                  label="Ménages Bénéficiaires"
                   value={formatNumber(summaryData.totalBeneficiaries)}
                   subtitle={genderSubtitle}
                   className={classes.statsBox}
@@ -243,7 +243,7 @@ function Dashboard() {
               </Grid>
               <Grid item xs={6} sm={3}>
                 <BoxCard
-                  label="Ménages"
+                  label="Ménages Collectés"
                   value={formatNumber(totalHouseholds)}
                   subtitle={twaSubtitle}
                   className={classes.statsBox}
