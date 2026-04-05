@@ -172,7 +172,7 @@ function Dashboard() {
   const femaleBeneficiariesPercentage = genderData.femaleBeneficiariesPercentage || 0;
 
   const genderSubtitle = totalBeneficiaries > 0
-    ? `${formatNumber(totalIndividuals)} individus · ♀ ${formatNumber(femaleBeneficiaries)} (${Math.round(femaleBeneficiariesPercentage)}%)`
+    ? `${formatNumber(totalIndividuals)} ind. · ♀ ${Math.round(femaleBeneficiariesPercentage)}%`
     : '';
 
   // Twa minority group subtitle (separate from gender)

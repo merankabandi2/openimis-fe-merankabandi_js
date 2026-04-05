@@ -25,8 +25,8 @@ const useStyles = makeStyles((theme) => ({
   avatar: {
     backgroundColor: props => props.color ? `${props.color}20` : `${theme.palette.primary.main}20`,
     color: props => props.color || theme.palette.primary.main,
-    height: props => props.compact ? 48 : 56,
-    width: props => props.compact ? 48 : 56,
+    height: props => props.compact ? 40 : 44,
+    width: props => props.compact ? 40 : 44,
   },
   contentWrapper: {
     display: 'flex',
@@ -42,10 +42,13 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.primary,
   },
   label: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.3px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   loadingContainer: {
     display: 'flex',
@@ -80,7 +83,7 @@ function BoxCard({
                   {value}
                 </Typography>
                 {subtitle && subtitle.trim() !== '' && (
-                  <Typography variant="caption" style={{ color: 'rgba(0, 0, 0, 0.6)', marginTop: 4, display: 'block' }}>
+                  <Typography variant="caption" style={{ color: 'rgba(0, 0, 0, 0.6)', marginTop: 4, display: 'block', whiteSpace: 'nowrap', fontSize: '0.7rem' }}>
                     {subtitle}
                   </Typography>
                 )}

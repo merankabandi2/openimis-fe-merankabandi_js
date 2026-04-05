@@ -116,11 +116,13 @@ function TicketFilter({ filters, onChangeFilters }) {
         id="TicketFilter.category"
         field={(
           <Grid item xs={3} className={classes.item}>
-            <MultiCategoryPicker
-              value={filters?.category?.value ?? null}
+            <PublishedComponent
+              pubRef="grievanceSocialProtection.CategoryPicker"
+              value={filters?.category?.value ?? ''}
               onChange={(v) => debouncedOnChangeFilters([
                 { id: 'category', value: v, filter: v ? `category_Icontains: "${v}"` : null },
               ])}
+              label={formatMessage('TicketFilter.category')}
             />
           </Grid>
         )}
@@ -219,7 +221,12 @@ function TicketSearcherCustom({
         size="small"
       />
     ),
-    (ticket) => ticket.category || '-',
+    (ticket) => {
+      if (!ticket.category) return '-';
+      return ticket.category.split(' > ')
+        .map((p) => { const t = fm(`grievance.category.${p}`); return t !== `grievance.category.${p}` ? t : p.replace(/_/g, ' '); })
+        .join(' > ');
+    },
     (ticket) => (
       <Tooltip title={fm('ticket.action.view')}>
         <IconButton

@@ -154,7 +154,7 @@ export function createTicket(ticket, grievanceConfig, clientMutationLabel) {
   });
   // eslint-disable-next-line no-param-reassign
   ticket.resolution = resolutionTimeMap[ticket.category];
-  const mutation = formatMutation('createTicket', formatTicketGQL(ticket), clientMutationLabel);
+  const mutation = formatMutation('createTicketWithExt', formatTicketGQL(ticket), clientMutationLabel);
   const requestedDateTime = new Date();
   return graphql(mutation.payload, ['TICKET_MUTATION_REQ', 'TICKET_CREATE_TICKET_RESP', 'TICKET_MUTATION_ERR'], {
     clientMutationId: mutation.clientMutationId,
@@ -164,7 +164,7 @@ export function createTicket(ticket, grievanceConfig, clientMutationLabel) {
 }
 
 export function updateTicket(ticket, clientMutationLabel) {
-  const mutation = formatMutation('updateTicket', formatUpdateTicketGQL(ticket), clientMutationLabel);
+  const mutation = formatMutation('updateTicketWithExt', formatUpdateTicketGQL(ticket), clientMutationLabel);
   const requestedDateTime = new Date();
   return graphql(mutation.payload, ['TICKET_MUTATION_REQ', 'TICKET_UPDATE_TICKET_RESP', 'TICKET_MUTATION_ERR'], {
     clientMutationId: mutation.clientMutationId,

@@ -664,13 +664,12 @@ class EditTicketPageUpdated extends Component {
                   />
                 </Grid>
                 <Grid item xs={12} className={classes.item}>
-                  <CascadingCategoryPicker
-                    value={stateEdited.category ? [stateEdited.category] : []}
-                    onChange={(v) => this.updateAttribute('category', v.length > 0 ? v[0] : '')}
+                  <PublishedComponent
+                    pubRef="grievanceSocialProtection.CategoryPicker"
+                    value={stateEdited.category || ''}
+                    onChange={(v) => this.updateAttribute('category', v || '')}
                     required
                     readOnly={propsReadOnly}
-                    allowMultiple={false}
-                    showSelectedPath={true}
                   />
                 </Grid>
                 <Grid item xs={6} className={classes.item}>

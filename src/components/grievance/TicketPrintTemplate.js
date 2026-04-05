@@ -103,7 +103,7 @@ const TicketPrintTemplate = forwardRef(({ ticket, reporter }, ref) => {
         </div>
         <div className={classes.detailRow}>
           <p className={classes.detailName}>{formatMessage('ticket.template.category')}</p>
-          <p className={classes.detailValue}>{ticket.category}</p>
+          <p className={classes.detailValue}>{(ticket.category || '').split(' > ').map(p => p.replace(/_/g, ' ')).join(' > ')}</p>
         </div>
         <div className={classes.detailRow}>
           <p className={classes.detailName}>{formatMessage('ticket.template.flags')}</p>

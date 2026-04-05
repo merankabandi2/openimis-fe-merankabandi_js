@@ -195,24 +195,26 @@ class AddTicketPageImproved extends Component {
 
   buildJsonExt = (edited) => {
     const category = edited.category || '';
-    const flags = Array.isArray(edited.flags) ? edited.flags : (edited.flags || '').split(' ').filter(Boolean);
-    const isSensitive = flags.includes('SENSITIVE');
-    const isSpecial = flags.includes('SPECIAL');
+    // The main category (first part before >) determines sensitivity
+    const mainCategory = category.split(' > ')[0];
 
-    // Derive case_type from category
-    let caseType = 'cas_de_r_clamation';
-    if (category.startsWith('remplacement') || category.includes('remplacement')) {
-      caseType = 'cas_de_remplacement';
-    } else if (category.startsWith('suppression') || category.includes('suppression')) {
-      caseType = 'cas_de_suppression__retrait_du_programme';
-    }
+    // Auto-derive flags from category — matches module config sensitivity levels
+    const sensitiveCategories = ['violence_vbg', 'corruption', 'accident_negligence', 'discrimination_ethnie_religion', 'maladie_mentale'];
+    const specialCategories = ['erreur_exclusion', 'erreur_inclusion'];
+    const isSensitive = sensitiveCategories.includes(mainCategory);
+    const isSpecial = specialCategories.includes(mainCategory);
 
-    // Derive reclamation_type from flags
+    // Auto-set flags on the ticket
+    if (isSensitive && edited.flags !== 'SENSITIVE') edited.flags = 'SENSITIVE';
+    else if (isSpecial && edited.flags !== 'SPECIAL') edited.flags = 'SPECIAL';
+    else if (!isSensitive && !isSpecial) edited.flags = null;
+
+    const caseType = 'cas_de_r_clamation';
+
     let reclamationType = 'cas_non_sensibles';
     if (isSensitive) reclamationType = 'cas_sensibles';
     else if (isSpecial) reclamationType = 'cas_sp_ciaux';
 
-    // Build categorization from selected category
     const categories = category ? [category.split(' > ').pop()] : [];
 
     return {
@@ -555,13 +557,12 @@ class AddTicketPageImproved extends Component {
                 <Typography variant="subtitle2" gutterBottom>
                   <FormattedMessage module={MODULE_NAME} id="ticket.category" /> *
                 </Typography>
-                <CascadingCategoryPicker
-                  value={stateEdited.category ? [stateEdited.category] : []}
-                  onChange={(v) => this.updateAttribute('category', v.length > 0 ? v[0] : '')}
+                <PublishedComponent
+                  pubRef="grievanceSocialProtection.CategoryPicker"
+                  value={stateEdited.category || ''}
+                  onChange={(v) => this.updateAttribute('category', v || '')}
                   readOnly={isSaved}
                   required
-                  allowMultiple={false}
-                  showSelectedPath={true}
                 />
               </Grid>
 

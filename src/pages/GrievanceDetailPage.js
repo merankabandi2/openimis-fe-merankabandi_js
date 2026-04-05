@@ -368,7 +368,16 @@ function GrievanceDetailPage({
               />
             )}
             {ticket?.category && (
-              <Chip icon={<Category fontSize="small" />} label={ticket.category} size="small" variant="outlined" />
+              <Chip
+                icon={<Category fontSize="small" />}
+                label={ticket.category.split(' > ').map(p => {
+                  const key = `grievance.category.${p}`;
+                  const t = formatMessage(key);
+                  return t !== key ? t : p.replace(/_/g, ' ');
+                }).join(' > ')}
+                size="small"
+                variant="outlined"
+              />
             )}
             {ticket?.flags && ticket.flags.split(' ').filter(Boolean).map((flag) => (
               <Chip key={flag} icon={<Flag fontSize="small" />} label={flag} size="small" variant="outlined" color="secondary" />

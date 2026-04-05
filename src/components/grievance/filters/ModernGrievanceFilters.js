@@ -585,11 +585,10 @@ const ModernGrievanceFilters = ({
               )}
             </AccordionSummary>
             <AccordionDetails className={classes.accordionDetails}>
-              <CascadingCategoryPicker
-                value={Array.isArray(filters.categories) ? filters.categories : []}
-                onChange={(value) => handleFilterChange('categories', Array.isArray(value) ? value : [])}
-                allowMultiple={true}
-                maxSelections={10}
+              <PublishedComponent
+                pubRef="grievanceSocialProtection.CategoryPicker"
+                value={filters.categories || ''}
+                onChange={(value) => handleFilterChange('categories', value || '')}
               />
             </AccordionDetails>
           </Accordion>

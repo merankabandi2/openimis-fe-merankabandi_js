@@ -85,14 +85,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function CascadingCategoryPicker({
-  value = [],
+  value = '',
   onChange,
   readOnly = false,
   required = false,
   label,
   placeholder,
-  allowMultiple = true,
-  maxSelections = 5,
+  allowMultiple = false,
+  maxSelections = 1,
   showSelectedPath = true
 }) {
   const classes = useStyles();
@@ -183,14 +183,23 @@ function CascadingCategoryPicker({
     ? Object.keys(categoryHierarchy[currentSelection.level1].children[currentSelection.level2]?.children || {})
     : [];
 
-  const selectedCategories = useMemo(() => {
-    if (!value) return [];
-    if (Array.isArray(value)) return value;
+  // Parse incoming value — supports both new format ("violence_vbg > viol")
+  // and legacy formats (pipe-separated, JSON array, space-separated)
+  const selectedCategory = useMemo(() => {
+    if (!value) return '';
     if (typeof value === 'string') {
-      return value.split(' ').filter(v => v.trim());
+      // Strip JSON array brackets if present
+      let v = value.replace(/^\["|"\]$/g, '').replace(/^"|"$/g, '');
+      // Normalize pipe-separated to > separated
+      v = v.replace(/\|/g, ' > ');
+      return v;
     }
-    return [];
+    if (Array.isArray(value) && value.length > 0) return value[0];
+    return '';
   }, [value]);
+
+  // For backwards compat: selectedCategories as array
+  const selectedCategories = selectedCategory ? [selectedCategory] : [];
 
   const handleLevelChange = (level, selectedValue) => {
     const newSelection = { ...currentSelection };
@@ -207,6 +216,14 @@ function CascadingCategoryPicker({
     }
 
     setCurrentSelection(newSelection);
+
+    // Auto-emit value on each selection (single-select mode)
+    const parts = [];
+    if (level === 'level1') parts.push(selectedValue);
+    else if (level === 'level2') { parts.push(newSelection.level1); parts.push(selectedValue); }
+    else { parts.push(newSelection.level1); parts.push(newSelection.level2); parts.push(selectedValue); }
+    const categoryKey = parts.filter(Boolean).join(' > ');
+    if (categoryKey) onChange(categoryKey);
   };
 
   const buildCategoryPath = (selection = currentSelection) => {
@@ -214,47 +231,45 @@ function CascadingCategoryPicker({
     if (selection.level1) parts.push(selection.level1);
     if (selection.level2) parts.push(selection.level2);
     if (selection.level3) parts.push(selection.level3);
-    return parts.join('|');
+    return parts.join(' > ');
   };
 
   const handleAddCategory = () => {
     const categoryPath = buildCategoryPath();
-    if (!categoryPath || selectedCategories.includes(categoryPath)) return;
-
-    if (!allowMultiple) {
-      onChange([categoryPath]);
-    } else if (selectedCategories.length < maxSelections) {
-      onChange([...selectedCategories, categoryPath]);
-    }
-
+    if (!categoryPath) return;
+    onChange(categoryPath);
     setCurrentSelection({ level1: '', level2: '', level3: '' });
     setIsAddingCategory(false);
   };
 
-  const handleRemoveCategory = (categoryToRemove) => {
-    onChange(selectedCategories.filter(cat => cat !== categoryToRemove));
+  const handleRemoveCategory = () => {
+    onChange('');
   };
 
   const handleClearAll = () => {
-    onChange([]);
+    onChange('');
     setCurrentSelection({ level1: '', level2: '', level3: '' });
     setIsAddingCategory(false);
   };
 
   const translateCategory = (categoryPath) => {
-    const translated = formatMessage(`grievance.category.${categoryPath}`);
-    return translated !== `grievance.category.${categoryPath}` ? translated : categoryPath;
+    if (!categoryPath) return '';
+    // Try full path translation first, then translate each part individually
+    const key = categoryPath.replace(/ > /g, '|');
+    const translated = formatMessage(`grievance.category.${key}`);
+    if (translated !== `grievance.category.${key}`) return translated;
+    // Fallback: translate each part and join with " > "
+    return categoryPath.split(' > ').map(part => getPartLabel(part)).join(' > ');
   };
 
   const getPartLabel = (part) => {
     const translated = formatMessage(`grievance.category.${part}`);
-    return translated !== `grievance.category.${part}` ? translated : part;
+    return translated !== `grievance.category.${part}` ? translated : part.replace(/_/g, ' ');
   };
 
   const canAddCurrentSelection = () => {
     const path = buildCategoryPath();
-    return path && !selectedCategories.includes(path) &&
-           (allowMultiple ? selectedCategories.length < maxSelections : selectedCategories.length === 0);
+    return path && !selectedCategory;
   };
 
   if (isLoading) {
