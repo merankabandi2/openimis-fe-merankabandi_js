@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function BoxCard({
-  label, value, valueVariant = 'h4', className, icon = <ReceiptIcon fontSize="large" />, isLoading = false, color, compact = false, subtitle = null,
+  label, value, valueVariant = 'h4', className, icon = <ReceiptIcon fontSize="large" />, isLoading = false, color, compact = false, subtitle = null, planned = null,
 }) {
   const classes = useStyles({ color, compact });
 
@@ -79,8 +79,13 @@ function BoxCard({
                 {label}
               </Typography>
               <Box mt={compact ? 0.5 : 1}>
-                <Typography variant={compact ? 'h5' : valueVariant} className={classes.value}>
+                <Typography variant={compact ? 'h5' : valueVariant} className={classes.value} style={{ whiteSpace: 'nowrap' }}>
                   {value}
+                  {planned && (
+                    <span style={{ color: '#1a237e', fontWeight: 500, fontSize: '0.45em', opacity: 0.6, marginLeft: 4 }}>
+                      / {planned}
+                    </span>
+                  )}
                 </Typography>
                 {subtitle && subtitle.trim() !== '' && (
                   <Typography variant="caption" style={{ color: 'rgba(0, 0, 0, 0.6)', marginTop: 4, display: 'block', whiteSpace: 'nowrap', fontSize: '0.7rem' }}>

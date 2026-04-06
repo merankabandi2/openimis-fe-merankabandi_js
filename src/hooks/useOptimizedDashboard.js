@@ -22,6 +22,7 @@ const OPTIMIZED_DASHBOARD_SUMMARY = `
     optimizedDashboardSummary(filters: $filters) {
       summary {
         totalBeneficiaries
+        totalHouseholds
         totalTransfers
         totalAmountPaid
         avgAmountPerBeneficiary
@@ -147,6 +148,40 @@ const OPTIMIZED_TRANSFER_PERFORMANCE = `
         completionRate
       }
       lastUpdated
+    }
+  }
+`;
+
+const DASHBOARD_TARGETS = `
+  query DashboardTargets($filters: DashboardFiltersInput) {
+    dashboardTargets(filters: $filters) {
+      totalTargetHouseholds
+      totalTargetCollected
+      totalTargetAmount
+      programmes {
+        code
+        name
+        targetHouseholds
+        maxRounds
+        amountPerRound
+        totalAmount
+        programmeType
+        collectTarget
+      }
+    }
+  }
+`;
+
+const TRANSFER_PROGRESS = `
+  query TransferProgress($filters: DashboardFiltersInput) {
+    transferProgress(filters: $filters) {
+      vagues {
+        vagueNumber
+        provinceCount
+        provinceNames
+        completedRounds
+        maxRounds
+      }
     }
   }
 `;
@@ -361,6 +396,30 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
     { skip: options.disabled || !options.includeGrievances }
   );
 
+  // Dashboard targets query
+  const {
+    data: targetsData,
+    isLoading: targetsLoading,
+    error: targetsError,
+    refetch: refetchTargets,
+  } = useGraphqlQuery(
+    DASHBOARD_TARGETS,
+    { filters: memoizedFilters },
+    { skip: options.disabled }
+  );
+
+  // Transfer progress query
+  const {
+    data: progressData,
+    isLoading: progressLoading,
+    error: progressError,
+    refetch: refetchProgress,
+  } = useGraphqlQuery(
+    TRANSFER_PROGRESS,
+    { filters: memoizedFilters },
+    { skip: options.disabled }
+  );
+
   // State to trigger refetch
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
@@ -435,6 +494,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
       if (performanceData) promises.push(refetchPerformance());
       if (trendsData) promises.push(refetchTrends());
       if (grievanceData) promises.push(refetchGrievances());
+      if (targetsData) promises.push(refetchTargets());
+      if (progressData) promises.push(refetchProgress());
 
       await Promise.all(promises);
       setLastRefresh(new Date());
@@ -442,8 +503,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
       setRefreshing(false);
     }
   }, [
-    summaryData, breakdownData, performanceData, trendsData, grievanceData,
-    refetchSummary, refetchBreakdown, refetchPerformance, refetchTrends, refetchGrievances
+    summaryData, breakdownData, performanceData, trendsData, grievanceData, targetsData, progressData,
+    refetchSummary, refetchBreakdown, refetchPerformance, refetchTrends, refetchGrievances, refetchTargets, refetchProgress
   ]);
 
   // Effect to refetch when trigger changes (from mutations)
@@ -454,10 +515,10 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
   }, [refetchTrigger, refetchAll]);
 
   // Combined loading state
-  const isLoading = summaryLoading || breakdownLoading || performanceLoading || trendsLoading || grievanceLoading;
+  const isLoading = summaryLoading || breakdownLoading || performanceLoading || trendsLoading || grievanceLoading || targetsLoading || progressLoading;
 
   // Combined error state
-  const error = summaryError || breakdownError || performanceError || trendsError || grievanceError;
+  const error = summaryError || breakdownError || performanceError || trendsError || grievanceError || targetsError || progressError;
 
   // Check if any data is stale (not supported by core useGraphqlQuery)
   const isStale = false;
@@ -472,6 +533,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
     performance: performanceData?.optimizedTransferPerformance,
     trends: trendsData?.optimizedQuarterlyTrends,
     grievances: grievanceData?.optimizedGrievanceDashboard,
+    targets: targetsData?.dashboardTargets || null,
+    transferProgress: progressData?.transferProgress?.vagues || [],
 
     // Loading states
     isLoading,
@@ -484,6 +547,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
     performanceLoading,
     trendsLoading,
     grievanceLoading,
+    targetsLoading,
+    progressLoading,
 
     // Error states
     error,
@@ -492,6 +557,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
     performanceError,
     trendsError,
     grievanceError,
+    targetsError,
+    progressError,
 
     // Refresh functions
     refreshView,
@@ -506,6 +573,8 @@ export const useOptimizedDashboard = (filters = {}, options = {}) => {
     refetchPerformance,
     refetchTrends,
     refetchGrievances,
+    refetchTargets,
+    refetchProgress,
   };
 };
 

@@ -535,13 +535,8 @@ const DEFAULT_CONFIG = {
     // Custom ref for the detail page (used by task searcher, etc.)
     { key: 'merankabandi.route.grievanceDetail', ref: ROUTE_GRIEVANCE_DETAIL },
 
-    // Grievance picker overrides (same keys as upstream grievance module)
-    { key: 'grievanceSocialProtection.DropDownCategoryPicker', ref: CategoryPicker },
-    { key: 'grievanceSocialProtection.CategoryPicker', ref: CategoryPicker },
-    { key: 'grievanceSocialProtection.MultiCategoryPicker', ref: MultiCategoryPicker },
-    { key: 'grievanceSocialProtection.CascadingCategoryPicker', ref: CascadingCategoryPicker },
-    { key: 'grievanceSocialProtection.HierarchicalCategoryPicker', ref: HierarchicalCategoryPicker },
-    { key: 'grievanceSocialProtection.DynamicHierarchicalCategoryPicker', ref: DynamicHierarchicalCategoryPicker },
+    // Grievance picker overrides — CategoryPicker uses upstream rc-cascader version
+    // DO NOT override grievanceSocialProtection.CategoryPicker or DropDownCategoryPicker
     { key: 'grievanceSocialProtection.ChannelPicker', ref: ChannelPicker },
     { key: 'grievanceSocialProtection.MultiChannelPicker', ref: MultiChannelPicker },
     { key: 'grievanceSocialProtection.FlagPicker', ref: FlagPicker },

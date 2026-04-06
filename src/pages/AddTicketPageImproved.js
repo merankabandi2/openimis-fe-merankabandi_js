@@ -104,6 +104,7 @@ class AddTicketPageImproved extends Component {
     this.state = {
       activeStep: 0,
       stateEdited: {
+        caseType: 'cas_de_r_clamation',
         isBeneficiary: false,
         isAnonymous: false,
         isBatwa: false,
@@ -140,26 +141,42 @@ class AddTicketPageImproved extends Component {
   validateStep = (step) => {
     const { stateEdited } = this.state;
     const errors = {};
+    const req = (key) => <FormattedMessage module={MODULE_NAME} id={`ticket.validation.${key}Required`} />;
 
     switch (step) {
       case 0: // Reporter Information
-        if (!stateEdited.isAnonymous && !stateEdited.reporterName) {
-          errors.reporterName = <FormattedMessage module={MODULE_NAME} id="ticket.validation.reporterNameRequired" />;
+        if (!this.state.grievantType) errors.grievantType = req('grievantType');
+        if (!stateEdited.isAnonymous) {
+          if (!stateEdited.reporterName) errors.reporterName = req('reporterName');
+          if (!stateEdited.gender) errors.gender = req('gender');
+          if (!stateEdited.reporterPhone) errors.reporterPhone = req('reporterPhone');
+          if (!stateEdited.cniNumber) errors.cniNumber = req('cniNumber');
         }
         break;
+      case 1: // Location
+        if (!stateEdited.province) errors.province = req('province');
+        if (!stateEdited.commune) errors.commune = req('commune');
+        if (!stateEdited.colline) errors.colline = req('colline');
+        break;
       case 2: // Complaint Details
-        if (!stateEdited.title) {
-          errors.title = <FormattedMessage module={MODULE_NAME} id="ticket.validation.titleRequired" />;
+        if (stateEdited.caseType === 'cas_de_r_clamation' && !stateEdited.category) errors.category = req('category');
+        if (stateEdited.caseType === 'cas_de_remplacement') {
+          if (!stateEdited.replacementMotif) errors.replacementMotif = req('replacementMotif');
+          if (!stateEdited.replacedSocialId) errors.replacedSocialId = req('replacedSocialId');
+          if (!stateEdited.newNom) errors.newNom = req('newNom');
+          if (!stateEdited.newPrenom) errors.newPrenom = req('newPrenom');
         }
-        if (!stateEdited.category) {
-          errors.category = <FormattedMessage module={MODULE_NAME} id="ticket.validation.categoryRequired" />;
+        if (stateEdited.caseType === 'cas_de_suppression__retrait_du_programme') {
+          if (!stateEdited.suppressionMotif) errors.suppressionMotif = req('suppressionMotif');
         }
-        if (!stateEdited.channel) {
-          errors.channel = <FormattedMessage module={MODULE_NAME} id="ticket.validation.channelRequired" />;
-        }
-        if (!stateEdited.flags) {
-          errors.flags = <FormattedMessage module={MODULE_NAME} id="ticket.validation.flagRequired" />;
-        }
+        if (!stateEdited.description) errors.description = req('description');
+        if (!stateEdited.channel) errors.channel = req('channel');
+        if (!stateEdited.dateOfIncident) errors.dateOfIncident = req('dateOfIncident');
+        break;
+      case 3: // Receiver/Collector Information
+        if (!stateEdited.receiverName) errors.receiverName = req('receiverName');
+        if (!stateEdited.receiverFunction) errors.receiverFunction = req('receiverFunction');
+        if (!stateEdited.receiverPhone) errors.receiverPhone = req('receiverPhone');
         break;
       default:
         break;
@@ -209,7 +226,7 @@ class AddTicketPageImproved extends Component {
     else if (isSpecial && edited.flags !== 'SPECIAL') edited.flags = 'SPECIAL';
     else if (!isSensitive && !isSpecial) edited.flags = null;
 
-    const caseType = 'cas_de_r_clamation';
+    const caseType = edited.caseType || 'cas_de_r_clamation';
 
     let reclamationType = 'cas_non_sensibles';
     if (isSensitive) reclamationType = 'cas_sensibles';
@@ -217,7 +234,7 @@ class AddTicketPageImproved extends Component {
 
     const categories = category ? [category.split(' > ').pop()] : [];
 
-    return {
+    const ext = {
       form_version: 'ui_v1',
       case_type: caseType,
       reporter: {
@@ -242,17 +259,48 @@ class AddTicketPageImproved extends Component {
         colline_code: edited.colline?.code || '',
       },
     };
+
+    // Add replacement data if case type is replacement
+    if (caseType === 'cas_de_remplacement') {
+      ext.replacement = {
+        motif: edited.replacementMotif || '',
+        replaced_social_id: edited.replacedSocialId || '',
+        new_recipient: {
+          nom: edited.newNom || '',
+          prenom: edited.newPrenom || '',
+          sexe: edited.newSexe || '',
+        },
+      };
+      // Set category to uncategorized for replacements
+      edited.category = 'uncategorized';
+    }
+
+    // Add suppression data if case type is suppression
+    if (caseType === 'cas_de_suppression__retrait_du_programme') {
+      ext.suppression = {
+        motif: edited.suppressionMotif || '',
+      };
+      edited.category = 'uncategorized';
+    }
+
+    return ext;
   };
 
   save = () => {
     if (this.validateStep(this.state.activeStep)) {
       const edited = this.state.stateEdited;
-      // Set colline name on ticket for the title generation
+      // Auto-generate title: colline-date (matching KoBo pattern)
       const collineName = edited.colline?.name || '';
+      const dateStr = edited.dateOfIncident || new Date().toISOString().split('T')[0];
+      edited.title = `${collineName}-${dateStr}`;
+
+      // Build jsonExt (this also auto-sets flags from category)
+      const jsonExt = this.buildJsonExt(edited);
+
       const ticketData = {
         ...edited,
         colline: collineName,
-        jsonExt: JSON.stringify(this.buildJsonExt(edited)),
+        jsonExt: JSON.stringify(jsonExt),
       };
       this.props.createTicket(
         ticketData,
@@ -265,7 +313,7 @@ class AddTicketPageImproved extends Component {
 
   renderReporterSection = () => {
     const { classes } = this.props;
-    const { stateEdited, grievantType, benefitPlan, isSaved, expandedSections } = this.state;
+    const { stateEdited, grievantType, benefitPlan, isSaved, expandedSections, validationErrors } = this.state;
 
     return (
       <Card className={classes.section}>
@@ -292,7 +340,9 @@ class AddTicketPageImproved extends Component {
                   required
                   withNull
                   withLabel
+                  error={!!validationErrors.grievantType}
                 />
+                {validationErrors.grievantType && <Typography variant="caption" color="error">{validationErrors.grievantType}</Typography>}
               </Grid>
 
               {/* Anonymous Complaint */}
@@ -333,11 +383,13 @@ class AddTicketPageImproved extends Component {
                     onChange={(v) => this.updateAttribute('reporterName', v)}
                     readOnly={isSaved}
                     required
+                    error={!!validationErrors.reporterName}
                   />
                 </Grid>
               )}
 
               {/* Phone */}
+              {!stateEdited.isAnonymous && (
               <Grid item xs={12} md={6}>
                 <TextInput
                   module={MODULE_NAME}
@@ -345,12 +397,16 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.reporterPhone}
                   onChange={(v) => this.updateAttribute('reporterPhone', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.reporterPhone}
                 />
               </Grid>
+              )}
 
               {/* Gender */}
+              {!stateEdited.isAnonymous && (
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
+                <FormControl fullWidth required error={!!validationErrors.gender}>
                   <InputLabel>
                     <FormattedMessage module={MODULE_NAME} id="ticket.gender" />
                   </InputLabel>
@@ -365,14 +421,13 @@ class AddTicketPageImproved extends Component {
                     <MenuItem value="F">
                       <FormattedMessage module={MODULE_NAME} id="ticket.gender.female" />
                     </MenuItem>
-                    <MenuItem value="O">
-                      <FormattedMessage module={MODULE_NAME} id="ticket.gender.other" />
-                    </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
+              )}
 
               {/* CNI Number */}
+              {!stateEdited.isAnonymous && (
               <Grid item xs={12} md={4}>
                 <TextInput
                   module={MODULE_NAME}
@@ -380,8 +435,11 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.cniNumber}
                   onChange={(v) => this.updateAttribute('cniNumber', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.cniNumber}
                 />
               </Grid>
+              )}
 
               {/* Is Batwa */}
               <Grid item xs={12} md={4}>
@@ -452,7 +510,7 @@ class AddTicketPageImproved extends Component {
 
   renderLocationSection = () => {
     const { classes } = this.props;
-    const { stateEdited, isSaved, expandedSections } = this.state;
+    const { stateEdited, isSaved, expandedSections, validationErrors } = this.state;
 
     return (
       <Card className={classes.section}>
@@ -479,8 +537,10 @@ class AddTicketPageImproved extends Component {
                   onChange={(v) => this.onLocationChange('province', v)}
                   readOnly={isSaved}
                   withLabel
+                  required
                   label={formatMessage(this.props.intl, MODULE_NAME, 'ticket.province')}
                 />
+                {validationErrors.province && <Typography variant="caption" color="error">{validationErrors.province}</Typography>}
               </Grid>
 
               {/* Commune (type W) */}
@@ -493,8 +553,10 @@ class AddTicketPageImproved extends Component {
                   onChange={(v) => this.onLocationChange('commune', v)}
                   readOnly={isSaved || !stateEdited.province}
                   withLabel
+                  required
                   label={formatMessage(this.props.intl, MODULE_NAME, 'ticket.commune')}
                 />
+                {validationErrors.commune && <Typography variant="caption" color="error">{validationErrors.commune}</Typography>}
               </Grid>
 
               {/* Colline (type V) */}
@@ -507,8 +569,10 @@ class AddTicketPageImproved extends Component {
                   onChange={(v) => this.onLocationChange('colline', v)}
                   readOnly={isSaved || !stateEdited.commune}
                   withLabel
+                  required
                   label={formatMessage(this.props.intl, MODULE_NAME, 'ticket.colline')}
                 />
+                {validationErrors.colline && <Typography variant="caption" color="error">{validationErrors.colline}</Typography>}
               </Grid>
 
             </Grid>
@@ -538,33 +602,115 @@ class AddTicketPageImproved extends Component {
           
           <Collapse in={expandedSections.complaint}>
             <Grid container spacing={2}>
-              {/* Title */}
-              <Grid item xs={12}>
-                <TextInput
-                  module={MODULE_NAME}
-                  label="ticket.title"
-                  value={stateEdited.title}
-                  onChange={(v) => this.updateAttribute('title', v)}
-                  readOnly={isSaved}
-                  required
-                  error={!!validationErrors.title}
-                  helperText={validationErrors.title}
-                />
+              {/* Case Type — matches KoBo "Quel est le type de cas?" */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>
+                    <FormattedMessage module={MODULE_NAME} id="ticket.caseType" />
+                  </InputLabel>
+                  <Select
+                    value={stateEdited.caseType || 'cas_de_r_clamation'}
+                    onChange={(e) => {
+                      this.updateAttribute('caseType', e.target.value);
+                      // Reset category when switching case type
+                      if (e.target.value !== 'cas_de_r_clamation') {
+                        this.updateAttribute('category', 'uncategorized');
+                      }
+                    }}
+                    disabled={isSaved}
+                  >
+                    <MenuItem value="cas_de_r_clamation">
+                      <FormattedMessage module={MODULE_NAME} id="ticket.caseType.reclamation" />
+                    </MenuItem>
+                    <MenuItem value="cas_de_remplacement">
+                      <FormattedMessage module={MODULE_NAME} id="ticket.caseType.replacement" />
+                    </MenuItem>
+                    <MenuItem value="cas_de_suppression__retrait_du_programme">
+                      <FormattedMessage module={MODULE_NAME} id="ticket.caseType.suppression" />
+                    </MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
 
-              {/* Hierarchical Category Selection */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  <FormattedMessage module={MODULE_NAME} id="ticket.category" /> *
-                </Typography>
+              {/* Category — only for réclamation case type */}
+              {stateEdited.caseType === 'cas_de_r_clamation' && (
+              <Grid item xs={12} md={6}>
                 <PublishedComponent
                   pubRef="grievanceSocialProtection.CategoryPicker"
                   value={stateEdited.category || ''}
                   onChange={(v) => this.updateAttribute('category', v || '')}
                   readOnly={isSaved}
                   required
+                  label={formatMessage(this.props.intl, MODULE_NAME, 'ticket.category')}
                 />
+                {validationErrors.category && <Typography variant="caption" color="error">{validationErrors.category}</Typography>}
               </Grid>
+              )}
+
+              {/* Replacement motif — only for replacement case type */}
+              {stateEdited.caseType === 'cas_de_remplacement' && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth required error={!!validationErrors.replacementMotif}>
+                    <InputLabel><FormattedMessage module={MODULE_NAME} id="ticket.replacementMotif" /></InputLabel>
+                    <Select
+                      value={stateEdited.replacementMotif || ''}
+                      onChange={(e) => this.updateAttribute('replacementMotif', e.target.value)}
+                      disabled={isSaved}
+                    >
+                      <MenuItem value="d_c_s_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.replacementMotif.deces" /></MenuItem>
+                      <MenuItem value="d_m_nagement_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.replacementMotif.emigration" /></MenuItem>
+                      <MenuItem value="remariage_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.replacementMotif.remariage" /></MenuItem>
+                      <MenuItem value="perte_du_statut_de_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.replacementMotif.refus" /></MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextInput module={MODULE_NAME} label="ticket.replacedSocialId"
+                    value={stateEdited.replacedSocialId} required
+                    onChange={(v) => this.updateAttribute('replacedSocialId', v)}
+                    readOnly={isSaved} error={!!validationErrors.replacedSocialId} />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextInput module={MODULE_NAME} label="ticket.newRecipientNom"
+                    value={stateEdited.newNom} required
+                    onChange={(v) => this.updateAttribute('newNom', v)} readOnly={isSaved} />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextInput module={MODULE_NAME} label="ticket.newRecipientPrenom"
+                    value={stateEdited.newPrenom} required
+                    onChange={(v) => this.updateAttribute('newPrenom', v)} readOnly={isSaved} />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth required>
+                    <InputLabel><FormattedMessage module={MODULE_NAME} id="ticket.newRecipientSexe" /></InputLabel>
+                    <Select value={stateEdited.newSexe || ''} onChange={(e) => this.updateAttribute('newSexe', e.target.value)} disabled={isSaved}>
+                      <MenuItem value="M"><FormattedMessage module={MODULE_NAME} id="ticket.gender.male" /></MenuItem>
+                      <MenuItem value="F"><FormattedMessage module={MODULE_NAME} id="ticket.gender.female" /></MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </>
+              )}
+
+              {/* Suppression motif — only for suppression case type */}
+              {stateEdited.caseType === 'cas_de_suppression__retrait_du_programme' && (
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required error={!!validationErrors.suppressionMotif}>
+                  <InputLabel><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif" /></InputLabel>
+                  <Select
+                    value={stateEdited.suppressionMotif || ''}
+                    onChange={(e) => this.updateAttribute('suppressionMotif', e.target.value)}
+                    disabled={isSaved}
+                  >
+                    <MenuItem value="erreur_d_inclusion"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.inclusion" /></MenuItem>
+                    <MenuItem value="demande_volontaire_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.volontaire" /></MenuItem>
+                    <MenuItem value="double_inscription_d_tect_e"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.double" /></MenuItem>
+                    <MenuItem value="d_c_s_sans_demande_de_remplacement"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.deces" /></MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              )}
 
               {/* Channel */}
               <Grid item xs={12} md={6}>
@@ -602,28 +748,6 @@ class AddTicketPageImproved extends Component {
                 </FormControl>
               </Grid>
 
-              {/* Priority */}
-              <Grid item xs={12} md={6}>
-                <PublishedComponent
-                  pubRef="grievanceSocialProtection.TicketPriorityPicker"
-                  value={stateEdited.priority}
-                  onChange={(v) => this.updateAttribute('priority', v)}
-                  readOnly={isSaved}
-                  required
-                />
-              </Grid>
-
-              {/* Flags */}
-              <Grid item xs={12} md={6}>
-                <PublishedComponent
-                  pubRef="grievanceSocialProtection.FlagPicker"
-                  value={stateEdited.flags}
-                  onChange={(v) => this.updateAttribute('flags', v)}
-                  readOnly={isSaved}
-                  required
-                />
-              </Grid>
-
               {/* Date of Incident */}
               <Grid item xs={12} md={6}>
                 <PublishedComponent
@@ -633,20 +757,18 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.dateOfIncident}
                   onChange={(v) => this.updateAttribute('dateOfIncident', v)}
                   readOnly={isSaved}
+                  required
                 />
+                {validationErrors.dateOfIncident && <Typography variant="caption" color="error">{validationErrors.dateOfIncident}</Typography>}
               </Grid>
 
-              {/* Is Project Related */}
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={stateEdited.isProjectRelated}
-                      onChange={(e) => this.updateAttribute('isProjectRelated', e.target.checked)}
-                      disabled={isSaved}
-                    />
-                  }
-                  label={<FormattedMessage module={MODULE_NAME} id="ticket.isProjectRelated" />}
+              {/* Priority */}
+              <Grid item xs={12} md={6}>
+                <PublishedComponent
+                  pubRef="grievanceSocialProtection.TicketPriorityPicker"
+                  value={stateEdited.priority}
+                  onChange={(v) => this.updateAttribute('priority', v)}
+                  readOnly={isSaved}
                 />
               </Grid>
 
@@ -658,6 +780,8 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.description}
                   onChange={(v) => this.updateAttribute('description', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.description}
                   multiline
                   rows={4}
                 />
@@ -736,7 +860,7 @@ class AddTicketPageImproved extends Component {
 
   renderReceiverSection = () => {
     const { classes } = this.props;
-    const { stateEdited, isSaved, expandedSections } = this.state;
+    const { stateEdited, isSaved, expandedSections, validationErrors } = this.state;
 
     return (
       <Card className={classes.section}>
@@ -761,6 +885,8 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.receiverName}
                   onChange={(v) => this.updateAttribute('receiverName', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.receiverName}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -770,6 +896,8 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.receiverFunction}
                   onChange={(v) => this.updateAttribute('receiverFunction', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.receiverFunction}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -779,6 +907,8 @@ class AddTicketPageImproved extends Component {
                   value={stateEdited.receiverPhone}
                   onChange={(v) => this.updateAttribute('receiverPhone', v)}
                   readOnly={isSaved}
+                  required
+                  error={!!validationErrors.receiverPhone}
                 />
               </Grid>
             </Grid>
@@ -864,7 +994,7 @@ class AddTicketPageImproved extends Component {
       <div className={classes.page}>
         <Paper className={classes.paper}>
           <div className={classes.pageTitle}>
-            <Typography variant="h4">
+            <Typography variant="h4" style={{ color: 'inherit' }}>
               <FormattedMessage module={MODULE_NAME} id="ticket.newTicket" />
             </Typography>
           </div>
@@ -914,12 +1044,16 @@ class AddTicketPageImproved extends Component {
                     color="primary"
                     onClick={this.save}
                     disabled={
-                      isSaved || 
-                      !stateEdited.title || 
-                      !stateEdited.category || 
-                      !stateEdited.channel || 
-                      !stateEdited.flags ||
-                      ((!stateEdited.isAnonymous && !stateEdited.reporterName))
+                      isSaved ||
+                      !stateEdited.category ||
+                      !stateEdited.description ||
+                      !stateEdited.channel ||
+                      !stateEdited.dateOfIncident ||
+                      !stateEdited.province ||
+                      !stateEdited.commune ||
+                      !stateEdited.colline ||
+                      !stateEdited.receiverName ||
+                      (!stateEdited.isAnonymous && !stateEdited.reporterName)
                     }
                     startIcon={<Save />}
                     className={classes.submitButton}

@@ -658,7 +658,7 @@ class EditTicketPageUpdated extends Component {
                     pubRef="core.DatePicker"
                     label="ticket.dateOfIncident"
                     value={stateEdited.dateOfIncident}
-                    required={false}
+                    required
                     onChange={(v) => this.updateAttribute('dateOfIncident', v)}
                     readOnly={propsReadOnly}
                   />
@@ -682,18 +682,17 @@ class EditTicketPageUpdated extends Component {
                 </Grid>
                 <Grid item xs={6} className={classes.item}>
                   <PublishedComponent
-                    pubRef="grievanceSocialProtection.FlagPicker"
-                    value={stateEdited.flags}
-                    onChange={(v) => this.updateAttribute('flags', v)}
+                    pubRef="grievanceSocialProtection.TicketPriorityPicker"
+                    value={stateEdited.priority}
+                    onChange={(v) => this.updateAttribute('priority', v)}
                     readOnly={propsReadOnly}
                   />
                 </Grid>
                 <Grid item xs={6} className={classes.item}>
                   <PublishedComponent
-                    pubRef="grievanceSocialProtection.TicketPriorityPicker"
-                    value={stateEdited.priority}
-                    onChange={(v) => this.updateAttribute('priority', v)}
-                    required={false}
+                    pubRef="grievanceSocialProtection.TicketStatusPicker"
+                    value={stateEdited.status}
+                    onChange={(v) => this.updateAttribute('status', v)}
                     readOnly={propsReadOnly}
                   />
                 </Grid>
@@ -706,22 +705,15 @@ class EditTicketPageUpdated extends Component {
                     readOnly={propsReadOnly}
                   />
                 </Grid>
-                <Grid item xs={6} className={classes.item}>
-                  <PublishedComponent
-                    pubRef="grievanceSocialProtection.TicketStatusPicker"
-                    value={stateEdited.status}
-                    onChange={(v) => this.updateAttribute('status', v)}
-                    required={false}
-                    readOnly={propsReadOnly}
-                  />
-                </Grid>
                 <Grid item xs={12} className={classes.item}>
                   <TextInput
                     label="ticket.description"
                     value={stateEdited.description}
                     onChange={(v) => this.updateAttribute('description', v)}
-                    required={false}
+                    required
                     readOnly={propsReadOnly}
+                    multiline
+                    rows={3}
                   />
                 </Grid>
               </Grid>

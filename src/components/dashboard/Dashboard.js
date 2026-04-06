@@ -19,7 +19,6 @@ import HomeIcon from '@material-ui/icons/Home';
 import Person from '@material-ui/icons/Person';
 import PeopleAltIcon from '@material-ui/icons/PeopleAlt';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
-import ReceiptIcon from '@material-ui/icons/Receipt';
 import PlaceIcon from '@material-ui/icons/Place';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import BarChartIcon from '@material-ui/icons/BarChart';
@@ -29,6 +28,7 @@ import BoxCard from './BoxCard';
 import TicketsPieChart from './TicketsPieChart';
 import TransfersChart from './TransfersChart';
 import ActivitiesBarChart from './ActivitiesBarChart';
+import TransferProgressCard from './TransferProgressCard';
 import { useOptimizedDashboard } from '../../hooks/useOptimizedDashboard';
 import ModernDashboardFilters from '../filters/ModernDashboardFilters';
 import { useIntl } from 'react-intl';
@@ -55,7 +55,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: '100vh',
   },
   contentArea: {
-    padding: theme.spacing(2),
+    padding: theme.spacing(1, 0),
   },
   box: {
     backgroundColor: '#fff',
@@ -125,6 +125,8 @@ function Dashboard() {
     breakdown,
     performance,
     grievances,
+    targets,
+    transferProgress,
     isLoading,
     isRefreshing,
     error,
@@ -181,14 +183,15 @@ function Dashboard() {
     : '';
 
   // Get correct data from appropriate sources
-  const totalHouseholds = breakdown?.householdBreakdown?.totalHouseholds || 0; // household count
+  const totalHouseholds = summaryData.totalHouseholds || 0; // all collected households from master summary
   const totalTransfers = summaryData.totalTransfers || 0; // payment cycles count
   const totalAmountPaid = summaryData.totalAmountPaid || 0; // total benefit consumption amount
 
   // Helper function to format currency
   const formatCurrency = (amount) => {
     if (!amount || amount === 0) return '0 BIF';
-    return `${formatNumber(amount)} BIF`;
+    const millions = Math.round(amount / 1000000);
+    return `${millions.toLocaleString('fr-FR')} M BIF`;
   };
 
   // Use grievance data from the main dashboard hook (respects dashboard filters)
@@ -213,27 +216,24 @@ function Dashboard() {
               filterTypes={['location', 'benefitPlan', 'year']}
             />
 
-            {/* Refresh Button */}
-            <Paper className={classes.refreshContainer}>
-              <Box display="flex" justifyContent="flex-end" p={1}>
-                <Tooltip title={lastRefresh ? `Dernière mise à jour: ${new Date(lastRefresh).toLocaleString('fr-FR')}` : 'Actualiser les données'}>
-                  <IconButton
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    size="small"
-                    color="primary"
-                  >
-                    {isRefreshing ? <CircularProgress size={20} /> : <RefreshIcon />}
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Paper>
             {/* Key Metrics Row */}
-            <Grid container spacing={2}>
+            <div style={{ position: 'relative' }}>
+              <Tooltip title={lastRefresh ? `Mise à jour: ${new Date(lastRefresh).toLocaleString('fr-FR')}` : 'Actualiser'}>
+                <IconButton
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  size="small"
+                  style={{ position: 'absolute', right: 0, top: -12, zIndex: 1, padding: 2 }}
+                >
+                  {isRefreshing ? <CircularProgress size={14} /> : <RefreshIcon style={{ fontSize: 16, color: '#bbb' }} />}
+                </IconButton>
+              </Tooltip>
+            <Grid container spacing={2} alignItems="stretch">
               <Grid item xs={6} sm={3}>
                 <BoxCard
                   label="Ménages Bénéficiaires"
                   value={formatNumber(summaryData.totalBeneficiaries)}
+                  planned={targets ? formatNumber(targets.totalTargetHouseholds) : null}
                   subtitle={genderSubtitle}
                   className={classes.statsBox}
                   icon={<Person />}
@@ -245,6 +245,7 @@ function Dashboard() {
                 <BoxCard
                   label="Ménages Collectés"
                   value={formatNumber(totalHouseholds)}
+                  planned={targets ? formatNumber(targets.totalTargetCollected) : null}
                   subtitle={twaSubtitle}
                   className={classes.statsBox}
                   icon={<HomeIcon />}
@@ -253,19 +254,18 @@ function Dashboard() {
                 />
               </Grid>
               <Grid item xs={6} sm={3}>
-                <BoxCard
-                  label="Transferts"
-                  value={formatNumber(totalTransfers)}
-                  className={classes.statsBox}
-                  icon={<ReceiptIcon />}
+                <TransferProgressCard
+                  vagues={transferProgress}
                   isLoading={isLoading}
                   color="#00d0bd"
+                  className={classes.statsBox}
                 />
               </Grid>
               <Grid item xs={6} sm={3}>
                 <BoxCard
                   label="Montant Total"
                   value={formatCurrency(totalAmountPaid)}
+                  planned={targets ? formatCurrency(targets.totalTargetAmount) : null}
                   className={classes.statsBox}
                   valueVariant="h6"
                   icon={<AttachMoneyIcon />}
@@ -274,12 +274,10 @@ function Dashboard() {
                 />
               </Grid>
             </Grid>
+            </div>
 
             {/* Map and Stats Section */}
-            <Typography variant="h6" className={classes.sectionTitle}>
-              Vue d'ensemble
-            </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} style={{ marginTop: 8 }}>
               <Grid item xs={12} md={6}>
                 <Paper className={classes.box} style={{ padding: 0, overflow: 'hidden', height: 580 }}>
                   <MapComponent
@@ -305,10 +303,7 @@ function Dashboard() {
               </Grid>
             </Grid>
             {/* Analytics Row */}
-            <Typography variant="h6" className={classes.sectionTitle}>
-              Analyses et Tendances
-            </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} style={{ marginTop: 8 }}>
               <Grid item xs={12} sm={6} md={4}>
                 <Paper className={classes.box}>
                   <Typography variant="subtitle1" gutterBottom style={{ display: 'flex', alignItems: 'center', fontWeight: 600 }}>

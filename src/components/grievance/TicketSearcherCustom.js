@@ -122,7 +122,7 @@ function TicketFilter({ filters, onChangeFilters }) {
               onChange={(v) => debouncedOnChangeFilters([
                 { id: 'category', value: v, filter: v ? `category_Icontains: "${v}"` : null },
               ])}
-              label={formatMessage('TicketFilter.category')}
+              label={fm('TicketFilter.category')}
             />
           </Grid>
         )}
