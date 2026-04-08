@@ -354,11 +354,7 @@ const DEFAULT_CONFIG = {
     { path: `${ROUTE_GRIEVANCE_DETAIL}/:ticket_uuid`, component: GrievanceDetailPage },
     { path: ROUTE_GRIEVANCE_NEW_TICKET, component: AddTicketPageImproved },
     { path: `${ROUTE_GRIEVANCE_EDIT_TICKET}/:ticket_uuid?/:version?`, component: EditTicketPageUpdated },
-    // Override upstream ticket/* routes (App.js deduplicates by path, last wins)
-    { path: 'ticket/tickets', component: GrievanceTicketsPage },
     { path: ROUTE_GRIEVANCE_TICKETS, component: GrievanceTicketsPage },
-    { path: 'ticket/newTicket', component: AddTicketPageImproved },
-    { path: 'ticket/ticket/:ticket_uuid?/:version?', component: EditTicketPageUpdated },
     // Grievance workflow
     { path: ROUTE_GRIEVANCE_MY_TASKS, component: MyTasksPage },
     { path: ROUTE_GRIEVANCE_WORKFLOW_TEMPLATES, component: WorkflowTemplatesPage },
@@ -503,10 +499,24 @@ const DEFAULT_CONFIG = {
       id: 'grievance.dashboard',
     },
     {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.tickets" />,
+      icon: <ListAlt />,
+      route: `/${ROUTE_GRIEVANCE_TICKETS}`,
+      filter: (rights) => rights.includes(190001),
+      id: 'meragrievance.grievances',
+    },
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.grievance.newTicket" />,
+      icon: <AddCircleOutline />,
+      route: `/${ROUTE_GRIEVANCE_NEW_TICKET}`,
+      filter: (rights) => rights.includes(127001),
+      id: 'meragrievance.add',
+    },
+    {
       text: <FormattedMessage module="merankabandi" id="menu.grievance.myTasks" />,
       icon: <ListAlt />,
       route: `/${ROUTE_GRIEVANCE_MY_TASKS}`,
-      filter: (rights) => rights.includes(RIGHT_GRIEVANCE_TASK_VIEW),
+      filter: (rights) => rights.includes(127000),
       id: 'merankabandi.grievanceMyTasks',
     },
     {

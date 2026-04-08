@@ -5,548 +5,610 @@ import { injectIntl } from 'react-intl';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Paper, Typography, Grid, Chip, Divider, Box, IconButton, Tooltip,
-  Stepper, Step, StepLabel, StepContent, Avatar, Card, CardHeader, CardContent,
+  Stepper, Step, StepLabel, Avatar, Card, CardHeader, CardContent,
   TextField, Button, Select, MenuItem, InputLabel, FormControl,
+  LinearProgress, Table, TableBody, TableRow, TableCell, TableHead,
+  Tabs, Tab,
 } from '@material-ui/core';
 import {
-  Person, LocationOn, Category, Flag, Phone, Assignment, CheckCircle,
-  Cancel, HourglassEmpty, SkipNext, Lock, Edit, Print, ArrowBack,
-  Comment as CommentIcon, Timeline, Send,
+  Person, LocationOn, Category, Flag, Assignment, CheckCircle, Phone,
+  HourglassEmpty, SkipNext, Lock, Edit, ArrowBack,
+  Comment as CommentIcon, Timeline, Send, PlayArrow,
+  Add as AddIcon,
 } from '@material-ui/icons';
 import {
   Helmet, useModulesManager, useTranslations, useHistory, withHistory,
   withModulesManager, formatMessage, decodeId, journalize, useGraphqlQuery,
-  PublishedComponent,
 } from '@openimis/fe-core';
 import { fetchTicket, fetchTicketComments, createTicketComment } from '../grievance-actions';
-import { fetchGrievanceWorkflows, fetchReplacementRequests } from '../actions';
-import GrievanceTaskSearcher from '../components/grievance-workflow/GrievanceTaskSearcher';
+import { fetchGrievanceWorkflows, fetchReplacementRequests, completeGrievanceTask, skipGrievanceTask, fetchAvailableStepTemplates, addTaskToWorkflow } from '../actions';
+import AddStepDialog from '../components/grievance/AddStepDialog';
 
 const MODULE_NAME = 'merankabandi';
 const GRIEVANCE_MODULE = 'grievanceSocialProtection';
 
-const STATUS_CONFIG = {
-  RECEIVED: { color: '#9e9e9e', icon: <HourglassEmpty fontSize="small" /> },
-  OPEN: { color: '#2196f3', icon: <Assignment fontSize="small" /> },
-  IN_PROGRESS: { color: '#ff9800', icon: <HourglassEmpty fontSize="small" /> },
-  RESOLVED: { color: '#4caf50', icon: <CheckCircle fontSize="small" /> },
-  CLOSED: { color: '#4caf50', icon: <CheckCircle fontSize="small" /> },
+const STATUS_CFG = {
+  RECEIVED: { color: '#9e9e9e', label: 'Reçu' },
+  OPEN: { color: '#2196f3', label: 'Ouvert' },
+  IN_PROGRESS: { color: '#ff9800', label: 'En cours' },
+  RESOLVED: { color: '#4caf50', label: 'Résolu' },
+  CLOSED: { color: '#4caf50', label: 'Clôturé' },
 };
 
-const TASK_STATUS_CONFIG = {
-  PENDING: { color: '#ff9800', icon: <HourglassEmpty fontSize="small" /> },
-  IN_PROGRESS: { color: '#2196f3', icon: <Assignment fontSize="small" /> },
-  COMPLETED: { color: '#4caf50', icon: <CheckCircle fontSize="small" /> },
-  SKIPPED: { color: '#9e9e9e', icon: <SkipNext fontSize="small" /> },
-  BLOCKED: { color: '#f44336', icon: <Lock fontSize="small" /> },
+const TASK_CFG = {
+  PENDING: { color: '#ff9800', icon: <HourglassEmpty style={{ fontSize: 16 }} /> },
+  IN_PROGRESS: { color: '#2196f3', icon: <PlayArrow style={{ fontSize: 16 }} /> },
+  COMPLETED: { color: '#4caf50', icon: <CheckCircle style={{ fontSize: 16 }} /> },
+  SKIPPED: { color: '#9e9e9e', icon: <SkipNext style={{ fontSize: 16 }} /> },
+  BLOCKED: { color: '#bdbdbd', icon: <Lock style={{ fontSize: 16 }} /> },
 };
 
-const PRIORITY_COLORS = {
-  Low: '#4caf50',
-  Medium: '#ff9800',
-  High: '#f44336',
-  Critical: '#9c27b0',
-};
+const PRIORITY_COLORS = { Low: '#4caf50', MEDIUM: '#ff9800', Medium: '#ff9800', High: '#f44336', Critical: '#9c27b0' };
 
-const WORKFLOW_ROLES = [
-  'OT', 'RTM', 'RSI', 'RDO', 'RVBG', 'RIUIRCH', 'RNES', 'RMACH', 'RCOM', 'SEP', 'RPM',
-];
+const ROLES = ['OT', 'RTM', 'RSI', 'RDO', 'RVBG', 'RIUIRCH'];
 
 const useStyles = makeStyles((theme) => ({
-  page: { ...theme.page, maxWidth: 1200, margin: '0 auto' },
+  page: { ...theme.page },
   header: {
-    padding: theme.spacing(3),
+    padding: theme.spacing(2, 3),
     marginBottom: theme.spacing(2),
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  headerLeft: { flex: 1 },
-  headerActions: { display: 'flex', gap: theme.spacing(1) },
-  section: {
-    padding: theme.spacing(3),
-    marginBottom: theme.spacing(2),
+  chips: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 },
+  card: { padding: theme.spacing(2), marginBottom: theme.spacing(2) },
+  cardTitle: {
+    fontWeight: 600, fontSize: '0.9rem', marginBottom: theme.spacing(1),
+    display: 'flex', alignItems: 'center', gap: 6, color: theme.palette.primary.main,
   },
-  sectionTitle: {
-    fontWeight: 600,
-    marginBottom: theme.spacing(2),
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-  },
-  field: { marginBottom: theme.spacing(1) },
-  fieldLabel: { color: theme.palette.text.secondary, fontSize: '0.75rem', marginBottom: 2 },
-  fieldValue: { fontSize: '0.95rem' },
-  chipRow: { display: 'flex', gap: theme.spacing(1), flexWrap: 'wrap', marginBottom: theme.spacing(1) },
-  timeline: { padding: 0 },
-  commentCard: { marginBottom: theme.spacing(1) },
-  commentHeader: { padding: theme.spacing(1, 2) },
-  commentBody: { padding: theme.spacing(0, 2, 1, 2), '&:last-child': { paddingBottom: theme.spacing(1) } },
-  stepperRoot: { padding: theme.spacing(1) },
-  workflowTitle: {
-    display: 'flex', alignItems: 'center', gap: theme.spacing(1),
-    marginBottom: theme.spacing(1),
-  },
-  emptyState: {
-    textAlign: 'center', padding: theme.spacing(3),
-    color: theme.palette.text.secondary, fontStyle: 'italic',
-  },
-  commentInputContainer: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    gap: theme.spacing(1),
-    marginTop: theme.spacing(2),
-  },
-  commentInput: {
-    flex: 1,
-  },
-  commentFormRow: {
-    display: 'flex',
-    gap: theme.spacing(1),
-    marginTop: theme.spacing(1),
-  },
-  commentFormActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginTop: theme.spacing(1),
-  },
-  commentMeta: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: theme.spacing(0.5),
-    marginTop: theme.spacing(0.5),
-  },
-  metaChip: {
-    height: 22,
-    fontSize: '0.7rem',
-  },
+  fieldRow: { display: 'flex', gap: theme.spacing(3), flexWrap: 'wrap', marginBottom: 4 },
+  fld: {},
+  fldLabel: { color: theme.palette.text.secondary, fontSize: '0.7rem', marginBottom: 1 },
+  fldValue: { fontSize: '0.9rem' },
+  descText: { whiteSpace: 'pre-wrap', fontSize: '0.95rem', lineHeight: 1.6 },
+  stepDot: { width: 24, height: 24, fontSize: 12 },
+  stepperCompact: { padding: '4px 0' },
+  wfHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  eventCard: { marginBottom: 6, '&:last-child': { marginBottom: 0 } },
+  eventBody: { padding: '0 12px 8px 12px', '&:last-child': { paddingBottom: 8 } },
+  commentForm: { marginTop: theme.spacing(1.5), padding: theme.spacing(1.5), background: theme.palette.grey[50], borderRadius: 8 },
+  commentActions: { display: 'flex', gap: 8, marginTop: 8, alignItems: 'flex-end', justifyContent: 'flex-end' },
+  empty: { textAlign: 'center', padding: theme.spacing(2), color: theme.palette.text.secondary, fontStyle: 'italic', fontSize: '0.85rem' },
+  replCard: { padding: theme.spacing(1.5), marginBottom: 8, background: '#f5f5f5', borderRadius: 8 },
 }));
 
-function Field({ label, value, classes }) {
+function F({ label, value, classes }) {
   if (!value && value !== 0) return null;
   return (
-    <div className={classes.field}>
-      <Typography className={classes.fieldLabel}>{label}</Typography>
-      <Typography className={classes.fieldValue}>{value}</Typography>
+    <div className={classes.fld}>
+      <Typography className={classes.fldLabel}>{label}</Typography>
+      <Typography className={classes.fldValue}>{value}</Typography>
     </div>
   );
 }
 
+function translateCat(fm, cat) {
+  if (!cat) return '';
+  return cat.split(' > ').map(p => {
+    const t = fm(`grievance.category.${p}`);
+    return (t !== `merankabandi.grievance.category.${p}` && t !== `grievance.category.${p}`) ? t : p.replace(/_/g, ' ');
+  }).join(' > ');
+}
+
 function GrievanceDetailPage({
-  match, intl,
-  ticket, fetchingTicket,
-  comments,
-  grievanceWorkflows,
-  replacementRequests,
-  submittingMutation,
-  mutation,
-  fetchTicket: doFetchTicket,
-  fetchTicketComments: doFetchComments,
-  fetchGrievanceWorkflows: doFetchWorkflows,
-  fetchReplacementRequests: doFetchReplacements,
-  createTicketComment: doCreateComment,
-  journalize: doJournalize,
+  match, intl, ticket, fetchingTicket, comments, grievanceWorkflows, replacementRequests,
+  submittingMutation, mutation,
+  availableStepTemplates, fetchingAvailableStepTemplates,
+  fetchTicket: doFetchTicket, fetchTicketComments: doFetchComments,
+  fetchGrievanceWorkflows: doFetchWorkflows, fetchReplacementRequests: doFetchReplacements,
+  createTicketComment: doCreateComment, journalize: doJournalize,
+  completeGrievanceTask: doCompleteTask, skipGrievanceTask: doSkipTask,
+  fetchAvailableStepTemplates: doFetchStepTemplates, addTaskToWorkflow: doAddTaskToWorkflow,
 }) {
   const classes = useStyles();
-  const modulesManager = useModulesManager();
-  const { formatMessage: fm } = useTranslations(MODULE_NAME, modulesManager);
+  const mm = useModulesManager();
+  const { formatMessage: fm } = useTranslations(MODULE_NAME, mm);
   const history = useHistory();
   const ticketUuid = match?.params?.ticket_uuid;
 
-  useEffect(() => {
-    if (ticketUuid) {
-      doFetchTicket(modulesManager, [`id: "${ticketUuid}"`]);
-    }
-  }, [ticketUuid]);
-
+  useEffect(() => { if (ticketUuid) doFetchTicket(mm, [`id: "${ticketUuid}"`]); }, [ticketUuid]);
   useEffect(() => {
     if (ticket?.id) {
-      const decodedId = ticket.id;
-      doFetchComments({ id: decodedId });
-      doFetchWorkflows([`ticket_Id: "${decodedId}"`]);
-      doFetchReplacements([`ticket_Id: "${decodedId}"`]);
+      doFetchComments({ id: ticket.id });
+      doFetchWorkflows([`ticket_Id: "${ticket.id}"`]);
+      doFetchReplacements([`ticket_Id: "${ticket.id}"`]);
     }
   }, [ticket?.id]);
 
   const [commentText, setCommentText] = useState('');
-  const [taggedUser, setTaggedUser] = useState(null);
   const [taggedRole, setTaggedRole] = useState('');
   const [actionText, setActionText] = useState('');
-  const [actionAssignee, setActionAssignee] = useState(null);
-  const [prevSubmitting, setPrevSubmitting] = useState(false);
+  // Per-task form data: { [taskId]: { field1: value1, ... } }
+  const [taskFormData, setTaskFormData] = useState({});
+
+  const decodeRelayId = (id) => {
+    try { return atob(id).split(':').pop(); }
+    catch { return id; }
+  };
+
+  const updateTaskField = (taskId, field, value) => {
+    setTaskFormData(prev => ({
+      ...prev,
+      [taskId]: { ...(prev[taskId] || {}), [field]: value },
+    }));
+  };
+
+  const handleCompleteTask = (taskId) => {
+    const uuid = decodeRelayId(taskId);
+    const formData = taskFormData[taskId] || {};
+    // Merge all form fields into the result payload
+    const payload = {
+      ...formData,
+      confirmation: 'yes',
+      resolution_notes: formData.resolution_notes || formData.notes || 'Completed',
+    };
+    doCompleteTask(uuid, payload, 'Compléter la tâche');
+    setTaskFormData(prev => ({ ...prev, [taskId]: {} }));
+  };
+
+  const handleSkipTask = (taskId) => {
+    const uuid = decodeRelayId(taskId);
+    const reason = (taskFormData[taskId] || {}).notes || 'Passé';
+    doSkipTask(uuid, reason, 'Passer la tâche');
+  };
+
+  // Map action_type to the fields the UI should show for task completion
+  const TASK_FIELDS = {
+    verify_social_id: [{ key: 'social_id', label: 'Social ID ou CNI', required: true }],
+    verify_individual: [{ key: 'social_id', label: 'Social ID ou CNI', required: true }],
+    beneficiary_deactivate: [{ key: 'deactivation_reason', label: 'Motif de désactivation', required: true }],
+    location_update: [
+      { key: 'new_colline', label: 'Nouvelle colline (code ou nom)', required: true },
+    ],
+    payment_reissue: [
+      { key: 'amount', label: 'Montant (BIF)', required: true },
+      { key: 'payment_details', label: 'Détails du paiement' },
+    ],
+    account_suspend: [{ key: 'account_identifier', label: 'Identifiant du compte' }],
+    account_reactivate: [{ key: 'new_phone_number', label: 'Nouveau numéro de téléphone' }],
+    phone_number_swap: [
+      { key: 'old_phone', label: 'Ancien numéro', required: true },
+      { key: 'new_phone', label: 'Nouveau numéro', required: true },
+    ],
+    sim_attribution: [
+      { key: 'new_sim_number', label: 'Numéro de SIM' },
+      { key: 'operator', label: 'Opérateur (lumicash/ecocash)' },
+    ],
+    external_referral: [
+      { key: 'referral_type', label: 'Type de référencement' },
+      { key: 'referral_details', label: 'Détails' },
+    ],
+    provide_information: [{ key: 'information_provided', label: 'Information fournie', required: true }],
+  };
+  const [prevSub, setPrevSub] = useState(false);
 
   useEffect(() => {
-    if (prevSubmitting && !submittingMutation) {
+    if (prevSub && !submittingMutation) {
       doJournalize(mutation);
       if (ticket?.id) {
-        doFetchTicket(modulesManager, [`id: "${ticketUuid}"`]);
+        doFetchTicket(mm, [`id: "${ticketUuid}"`]);
         doFetchComments({ id: ticket.id });
         doFetchWorkflows([`ticket_Id: "${ticket.id}"`]);
       }
     }
-    setPrevSubmitting(submittingMutation);
+    setPrevSub(submittingMutation);
   }, [submittingMutation]);
 
-  const handleSendComment = () => {
-    const trimmed = commentText.trim();
-    if (!trimmed || !ticket?.id) return;
-    const extData = {
-      tagged_user_id: taggedUser?.id ? decodeId(taggedUser.id) : null,
-      tagged_role: taggedRole || null,
-      action: actionText || null,
-      action_assignee_id: actionAssignee?.id ? decodeId(actionAssignee.id) : null,
-      action_assignee_name: actionAssignee
-        ? `${actionAssignee.otherNames || ''} ${actionAssignee.lastName || ''}`.trim()
-        : null,
-    };
+  const handleSend = () => {
+    const text = commentText.trim();
+    if (!text || !ticket?.id) return;
     doCreateComment(
-      {
-        comment: trimmed,
-        jsonExt: JSON.stringify(extData),
-      },
-      { id: ticket.id },
-      'User',
-      fm('grievanceDetail.addComment'),
+      { comment: text, jsonExt: JSON.stringify({ tagged_role: taggedRole || null, action: actionText || null }) },
+      { id: ticket.id }, 'User', fm('grievanceDetail.addComment'),
     );
     setCommentText('');
-    setTaggedUser(null);
     setTaggedRole('');
     setActionText('');
-    setActionAssignee(null);
   };
 
-  const jsonExt = useMemo(() => {
+  const ext = useMemo(() => {
     if (!ticket?.jsonExt) return {};
-    try {
-      return typeof ticket.jsonExt === 'string' ? JSON.parse(ticket.jsonExt) : ticket.jsonExt;
-    } catch { return {}; }
+    try { return typeof ticket.jsonExt === 'string' ? JSON.parse(ticket.jsonExt) : ticket.jsonExt; }
+    catch { return {}; }
   }, [ticket?.jsonExt]);
 
-  const reporter = jsonExt?.reporter || {};
-  const location = jsonExt?.location || {};
-  const categorization = jsonExt?.categorization || {};
-  const replacement = jsonExt?.replacement || {};
-  const submission = jsonExt?.submission || {};
+  const reporter = ext.reporter || {};
+  const loc = ext.location || {};
+  const submission = ext.submission || {};
+  const replacement = ext.replacement || {};
+  const [bottomTab, setBottomTab] = useState('tasks');
+  const [addStepOpen, setAddStepOpen] = useState(false);
 
-  // Resolve location from colline_code via GQL to get full path with parent chain
-  const collineCode = location.colline_code || null;
-  const { data: locationData } = useGraphqlQuery(
-    `query LocationPath($code: String!) {
-      locations(code: $code, type: "V") {
-        edges {
-          node {
-            name code type
-            parent {
-              name code type
-              parent {
-                name code type
-              }
-            }
-          }
-        }
+  useEffect(() => {
+    if (addStepOpen && (!availableStepTemplates || availableStepTemplates.length === 0)) {
+      doFetchStepTemplates();
+    }
+  }, [addStepOpen]);
+
+  // Extract beneficiary identifiers from ticket data
+  // Priority: ticket.beneficiary (saved from task) → replacement → reporter
+  const beneficiary = ext.beneficiary || {};
+  const socialId = beneficiary.social_id || replacement?.replaced_social_id || reporter?.social_id || null;
+  const cniNumber = beneficiary.cni || replacement?.replaced_cni || replacement?.replaced_ci || reporter?.cni_number || null;
+
+  const isBeneficiary = reporter?.is_beneficiary === 'oui' || !!socialId || !!cniNumber;
+
+  // Path 1: social_id → Group (code=social_id) → GroupIndividual → Individual
+  const { data: groupData } = useGraphqlQuery(
+    `query GroupBySocialId($code: String!) {
+      groups(code: $code, first: 1) {
+        edges { node {
+          id code jsonExt
+          location { id name parent { name parent { name } } }
+          groupindividuals { edges { node {
+            individual { id firstName lastName dob jsonExt }
+            role recipientType
+          }}}
+        }}
       }
     }`,
-    { code: collineCode },
-    { skip: !collineCode },
+    { code: socialId },
+    { skip: !socialId },
   );
 
-  const locationPath = useMemo(() => {
-    // First try resolved GQL data
-    const node = locationData?.locations?.edges?.[0]?.node;
-    if (node) {
-      const parts = [];
-      // Build path: Province > Commune > Colline (deepest parent first)
-      if (node.parent?.parent?.name) parts.push(node.parent.parent.name);
-      if (node.parent?.name) parts.push(node.parent.name);
-      if (node.name) parts.push(node.name);
-      if (parts.length > 0) return parts.join(' > ');
+  // Path 2: CNI → Individual (json_ext contains CNI) → GroupIndividual → Group
+  const { data: individualByCniData } = useGraphqlQuery(
+    `query IndByCni($cni: String!) {
+      individuals(jsonExt_Icontains: $cni, first: 1) {
+        edges { node {
+          id firstName lastName dob jsonExt
+          groupindividuals(first: 1) { edges { node {
+            group { id code jsonExt
+              location { id name parent { name parent { name } } }
+              groupindividuals { edges { node {
+                individual { id firstName lastName dob jsonExt }
+                role recipientType
+              }}}
+            }
+          }}}
+        }}
+      }
+    }`,
+    { cni: cniNumber },
+    { skip: !cniNumber || !!socialId },
+  );
+
+  // Resolve group and primary individual from either path
+  const group = useMemo(() => {
+    if (socialId) return groupData?.groups?.edges?.[0]?.node || null;
+    if (cniNumber) return individualByCniData?.individuals?.edges?.[0]?.node?.groupindividuals?.edges?.[0]?.node?.group || null;
+    return null;
+  }, [groupData, individualByCniData, socialId, cniNumber]);
+
+  const householdMembers = useMemo(() => {
+    if (!group) return [];
+    return (group.groupindividuals?.edges || []).map(e => {
+      const gi = e.node;
+      const ind = gi.individual;
+      const indExt = typeof ind?.jsonExt === 'string' ? JSON.parse(ind.jsonExt) : (ind?.jsonExt || {});
+      return {
+        id: ind?.id,
+        firstName: ind?.firstName,
+        lastName: ind?.lastName,
+        dob: ind?.dob,
+        gender: indExt?.sexe || '-',
+        role: gi?.role || '-',
+        recipientType: gi?.recipientType || '-',
+      };
+    });
+  }, [group]);
+
+  // Find primary individual for payment lookup
+  const primaryMember = householdMembers.find(m => m.recipientType === 'PRIMARY');
+  const primaryIndividualId = primaryMember?.id ? decodeId(primaryMember.id) : null;
+
+  // Fetch benefit consumptions for the primary individual
+  const { data: paymentsData } = useGraphqlQuery(
+    `query BenefitPayments($individualId: ID!) {
+      benefitConsumption(individual_Id: $individualId, orderBy: ["-date_due"], first: 20) {
+        edges { node {
+          id code amount status dateDue receipt
+          payrollbenefitconsumptionSet { edges { node { payroll { name status } } } }
+        }}
+      }
+    }`,
+    { individualId: primaryIndividualId },
+    { skip: !primaryIndividualId },
+  );
+
+  const payments = useMemo(() => {
+    return (paymentsData?.benefitConsumption?.edges || []).map(e => e.node);
+  }, [paymentsData]);
+
+  // Fetch past tickets for same reporter (by name in json_ext)
+  const reporterName = reporter?.name || '';
+  const { data: pastTicketsData } = useGraphqlQuery(
+    `query PastTickets($name: String!) {
+      tickets(jsonExt_Icontains: $name, first: 20, orderBy: ["-dateCreated"]) {
+        edges { node {
+          id code title status category dateCreated priority
+        }}
+      }
+    }`,
+    { name: reporterName },
+    { skip: !reporterName || reporterName.length < 3 },
+  );
+
+  // Location path
+  const collineCode = loc.colline_code || null;
+  const { data: locData } = useGraphqlQuery(
+    `query LP($code: String!) { locations(code: $code, type: "V") { edges { node { name parent { name parent { name } } } } } }`,
+    { code: collineCode }, { skip: !collineCode },
+  );
+  const locPath = useMemo(() => {
+    const n = locData?.locations?.edges?.[0]?.node;
+    if (n) {
+      const p = [];
+      if (n.parent?.parent?.name) p.push(n.parent.parent.name);
+      if (n.parent?.name) p.push(n.parent.name);
+      if (n.name) p.push(n.name);
+      if (p.length) return p.join(' > ');
     }
-    // Fallback: try names directly from json_ext (legacy data)
-    const parts = [];
-    if (location.province) parts.push(location.province);
-    if (location.commune) parts.push(location.commune);
-    if (location.colline) parts.push(location.colline);
-    // Last resort: show the colline code
-    if (parts.length === 0 && location.colline_code) parts.push(`[${location.colline_code}]`);
-    return parts.join(' > ');
-  }, [locationData, location]);
+    const p = [loc.province, loc.commune, loc.colline].filter(Boolean);
+    return p.length ? p.join(' > ') : (loc.colline_code ? `[${loc.colline_code}]` : '');
+  }, [locData, loc]);
 
-  const statusCfg = STATUS_CONFIG[ticket?.status] || STATUS_CONFIG.OPEN;
+  const sCfg = STATUS_CFG[ticket?.status] || STATUS_CFG.OPEN;
 
-  // Build unified timeline from workflows + comments
-  const timelineEvents = useMemo(() => {
-    const events = [];
-
-    // Add workflow tasks
-    (grievanceWorkflows || []).forEach((wf) => {
-      const tasks = wf.tasks?.edges?.map((e) => e.node) || [];
-      tasks.forEach((task) => {
-        events.push({
-          type: 'task',
-          date: task.completedAt || task.startedAt || wf.startedAt,
-          title: task.stepLabel,
-          subtitle: `${wf.templateLabel} — ${task.assignedRole}${task.assignedUserName ? ` (${task.assignedUserName})` : ''}`,
-          status: task.status,
-          result: task.result,
+  // Flat task list for bottom table
+  const allTasks = useMemo(() => {
+    const tasks = [];
+    (grievanceWorkflows || []).forEach(wf => {
+      (wf.tasks?.edges?.map(e => e.node) || []).forEach((t, idx) => {
+        tasks.push({
+          ...t,
+          workflowLabel: wf.templateLabel,
+          stepNumber: idx + 1,
         });
       });
     });
+    return tasks;
+  }, [grievanceWorkflows]);
 
-    // Add comments
-    (comments || []).forEach((c) => {
-      let commentJsonExt = null;
-      if (c.jsonExt) {
-        try {
-          commentJsonExt = typeof c.jsonExt === 'string' ? JSON.parse(c.jsonExt) : c.jsonExt;
-        } catch { commentJsonExt = null; }
-      }
-      events.push({
-        type: 'comment',
-        date: c.dateCreated,
-        title: `${c.commenterFirstName || ''} ${c.commenterLastName || ''}`.trim() || 'Système',
-        subtitle: c.commenterTypeName || '',
-        body: c.comment,
-        isResolution: c.isResolution,
-        commentExt: commentJsonExt,
+  // Unified timeline
+  const timeline = useMemo(() => {
+    const ev = [];
+    (grievanceWorkflows || []).forEach(wf => {
+      (wf.tasks?.edges?.map(e => e.node) || []).forEach(t => {
+        if (t.status === 'COMPLETED' || t.status === 'SKIPPED') {
+          ev.push({
+            type: 'task', date: t.completedAt || t.startedAt,
+            title: t.stepLabel, sub: `${wf.templateLabel} — ${t.assignedRole}`,
+            status: t.status,
+          });
+        }
       });
     });
-
-    // Sort by date descending
-    events.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-    return events;
+    (comments || []).forEach(c => {
+      let cExt = null;
+      try { cExt = c.jsonExt ? (typeof c.jsonExt === 'string' ? JSON.parse(c.jsonExt) : c.jsonExt) : null; } catch {}
+      ev.push({
+        type: 'comment', date: c.dateCreated,
+        title: `${c.commenterFirstName || ''} ${c.commenterLastName || ''}`.trim() || 'Système',
+        body: c.comment, isRes: c.isResolution, ext: cExt,
+      });
+    });
+    ev.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    return ev;
   }, [grievanceWorkflows, comments]);
 
-  // Early return AFTER all hooks
   if (!ticket && !fetchingTicket) {
-    return (
-      <div className={classes.page}>
-        <Typography className={classes.emptyState}>{fm('grievanceDetail.notFound')}</Typography>
-      </div>
-    );
+    return <div className={classes.page}><Typography className={classes.empty}>{fm('grievanceDetail.notFound')}</Typography></div>;
   }
 
-  const formatDate = (d) => {
-    if (!d) return '-';
-    try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); }
-    catch { return d; }
-  };
-
-  const formatDateTime = (d) => {
-    if (!d) return '-';
-    try { return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-    catch { return d; }
-  };
+  const fmtDate = d => { if (!d) return '-'; try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); } catch { return d; } };
+  const fmtDT = d => { if (!d) return '-'; try { return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return d; } };
 
   return (
     <div className={classes.page}>
       <Helmet title={`Plainte ${ticket?.code || ''}`} />
 
-      {/* Header */}
+      {/* ── Header ── */}
       <Paper className={classes.header}>
-        <div className={classes.headerLeft}>
-          <Box display="flex" alignItems="center" mb={1}>
-            <IconButton size="small" onClick={() => history.goBack()} style={{ marginRight: 8 }}>
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h5">{ticket?.code}</Typography>
+        <div style={{ flex: 1 }}>
+          <Box display="flex" alignItems="center" mb={0.5}>
+            <IconButton size="small" onClick={() => history.goBack()} style={{ marginRight: 8 }}><ArrowBack /></IconButton>
+            <Typography variant="h5" style={{ fontWeight: 600 }}>{ticket?.code}</Typography>
+            <Typography variant="body2" color="textSecondary" style={{ marginLeft: 12 }}>{ticket?.title}</Typography>
           </Box>
-          <Typography variant="h6" color="textSecondary" gutterBottom>
-            {ticket?.title}
-          </Typography>
-          <div className={classes.chipRow}>
-            <Chip
-              icon={statusCfg.icon}
-              label={formatMessage(intl, GRIEVANCE_MODULE, `ticket.status.${ticket?.status}`) || ticket?.status}
-              style={{ backgroundColor: statusCfg.color, color: '#fff' }}
-              size="small"
-            />
-            {ticket?.priority && (
-              <Chip
-                label={ticket.priority}
-                style={{ backgroundColor: PRIORITY_COLORS[ticket.priority] || '#9e9e9e', color: '#fff' }}
-                size="small"
-              />
-            )}
-            {ticket?.category && (
-              <Chip
-                icon={<Category fontSize="small" />}
-                label={ticket.category.split(' > ').map(p => {
-                  const key = `grievance.category.${p}`;
-                  const t = formatMessage(key);
-                  return t !== key ? t : p.replace(/_/g, ' ');
-                }).join(' > ')}
-                size="small"
-                variant="outlined"
-              />
-            )}
-            {ticket?.flags && ticket.flags.split(' ').filter(Boolean).map((flag) => (
-              <Chip key={flag} icon={<Flag fontSize="small" />} label={flag} size="small" variant="outlined" color="secondary" />
-            ))}
+          <div className={classes.chips}>
+            <Chip label={sCfg.label} style={{ backgroundColor: sCfg.color, color: '#fff', fontWeight: 600 }} size="small" />
+            {ticket?.priority && <Chip label={ticket.priority} style={{ backgroundColor: PRIORITY_COLORS[ticket.priority] || '#9e9e9e', color: '#fff' }} size="small" />}
+            {ticket?.category && <Chip icon={<Category fontSize="small" />} label={translateCat(fm, ticket.category)} size="small" variant="outlined" />}
+            {ticket?.flags && ticket.flags.split(' ').filter(Boolean).map(f => <Chip key={f} icon={<Flag fontSize="small" />} label={f} size="small" variant="outlined" color="secondary" />)}
           </div>
-          <Typography variant="body2" color="textSecondary">
-            {fm('grievanceDetail.created')}: {formatDate(ticket?.dateCreated)}
-            {ticket?.dateOfIncident && ` | ${fm('grievanceDetail.incident')}: ${formatDate(ticket.dateOfIncident)}`}
-            {ticket?.dueDate && ` | ${fm('grievanceDetail.dueDate')}: ${formatDate(ticket.dueDate)}`}
+          <Typography variant="caption" color="textSecondary">
+            Créé le {fmtDate(ticket?.dateCreated)}{ticket?.dateOfIncident ? ` · Incident: ${fmtDate(ticket.dateOfIncident)}` : ''}
+            {locPath ? ` · ${locPath}` : ''}
           </Typography>
         </div>
-        <div className={classes.headerActions}>
-          <Tooltip title={fm('grievanceDetail.edit')}>
-            <IconButton onClick={() => history.push(`/ticket/ticket/${ticketUuid}`)}>
-              <Edit />
-            </IconButton>
-          </Tooltip>
-        </div>
+        <Tooltip title="Modifier"><IconButton onClick={() => history.push(`/ticket/ticket/${ticketUuid}`)}><Edit /></IconButton></Tooltip>
       </Paper>
 
       <Grid container spacing={2}>
-        {/* Left column: Case details */}
+        {/* ── Left: Information ── */}
         <Grid item xs={12} md={7}>
-          {/* Description */}
-          <Paper className={classes.section}>
-            <Typography className={classes.sectionTitle}>
-              <Assignment /> {fm('grievanceDetail.description')}
-            </Typography>
-            <Typography variant="body1" style={{ whiteSpace: 'pre-wrap' }}>
-              {ticket?.description || '-'}
-            </Typography>
-          </Paper>
+          {/* Description + Reporter + Collecte — merged */}
+          <Paper className={classes.card}>
+            <Typography className={classes.cardTitle}><Assignment fontSize="small" /> Description</Typography>
+            <Typography className={classes.descText}>{ticket?.description || '-'}</Typography>
 
-          {/* Reporter */}
-          <Paper className={classes.section}>
-            <Typography className={classes.sectionTitle}>
-              <Person /> {fm('grievanceDetail.reporter')}
-            </Typography>
-            <Grid container spacing={1}>
-              <Grid item xs={6}>
-                <Field label={fm('grievanceDetail.reporterName')} value={ticket?.reporterName || reporter.name} classes={classes} />
-              </Grid>
-              <Grid item xs={6}>
-                <Field label={fm('grievanceDetail.phone')} value={ticket?.reporterPhone || reporter.phone} classes={classes} />
-              </Grid>
-              <Grid item xs={4}>
-                <Field label={fm('grievanceDetail.gender')} value={ticket?.gender || reporter.gender} classes={classes} />
-              </Grid>
-              <Grid item xs={4}>
-                <Field label={fm('grievanceDetail.cni')} value={ticket?.cniNumber || reporter.cni_number} classes={classes} />
-              </Grid>
-              <Grid item xs={4}>
-                <Field label={fm('grievanceDetail.beneficiaryType')} value={ticket?.beneficiaryType || reporter.beneficiary_type} classes={classes} />
-              </Grid>
-              {ticket?.isAnonymous && (
-                <Grid item xs={12}>
-                  <Chip label={fm('grievanceDetail.anonymous')} size="small" />
-                </Grid>
-              )}
-              {(ticket?.isBatwa || reporter.is_batwa) && (
-                <Grid item xs={12}>
-                  <Chip label="Batwa" size="small" variant="outlined" />
-                </Grid>
-              )}
-            </Grid>
-          </Paper>
+            <Divider style={{ margin: '12px 0' }} />
 
-          {/* Location */}
-          <Paper className={classes.section}>
-            <Typography className={classes.sectionTitle}>
-              <LocationOn /> {fm('grievanceDetail.location')}
-            </Typography>
-            {locationPath && (
-              <Box mb={1}>
-                <Typography variant="body1" style={{ fontWeight: 500 }}>
-                  {locationPath}
-                </Typography>
-              </Box>
+            {/* Reporter compact */}
+            <Typography className={classes.cardTitle}><Person fontSize="small" /> Plaignant</Typography>
+            {(ticket?.isAnonymous || reporter.is_anonymous) ? (
+              <Chip label="Anonyme" size="small" style={{ marginBottom: 8 }} />
+            ) : (
+              <div className={classes.fieldRow}>
+                <F label="Nom" value={ticket?.reporterName || reporter.name} classes={classes} />
+                <F label="Téléphone" value={ticket?.reporterPhone || reporter.phone} classes={classes} />
+                <F label="Sexe" value={ticket?.gender || reporter.gender} classes={classes} />
+                <F label="CNI" value={ticket?.cniNumber || reporter.cni_number} classes={classes} />
+                {(ticket?.isBatwa || reporter.is_batwa) && <Chip label="Batwa" size="small" variant="outlined" />}
+              </div>
             )}
-            <Grid container spacing={1}>
-              {location.milieu_residence && (
-                <Grid item xs={4}><Field label={fm('grievanceDetail.milieu')} value={location.milieu_residence} classes={classes} /></Grid>
-              )}
-            </Grid>
+
+            {/* Collecte compact */}
+            {submission.collector_name && (
+              <>
+                <Divider style={{ margin: '12px 0' }} />
+                <Typography className={classes.cardTitle}><Phone fontSize="small" /> Collecte</Typography>
+                <div className={classes.fieldRow}>
+                  <F label="Collecteur" value={submission.collector_name} classes={classes} />
+                  <F label="Fonction" value={submission.collector_function} classes={classes} />
+                  <F label="Téléphone" value={submission.collector_phone} classes={classes} />
+                  <F label="Canal" value={ticket?.channel?.replace(/_/g, ' ')} classes={classes} />
+                </div>
+              </>
+            )}
           </Paper>
 
-          {/* Replacement details (if applicable) */}
+          {/* Replacement (conditional) */}
           {(replacementRequests?.length > 0 || replacement.motif) && (
-            <Paper className={classes.section}>
-              <Typography className={classes.sectionTitle}>
-                <Person /> {fm('grievanceDetail.replacement')}
-              </Typography>
-              {replacementRequests?.map((rr) => (
-                <Card key={rr.id} variant="outlined" style={{ marginBottom: 8 }}>
-                  <CardContent>
-                    <Grid container spacing={1}>
-                      <Grid item xs={4}><Field label={fm('grievanceDetail.replacedSocialId')} value={rr.replacedSocialId} classes={classes} /></Grid>
-                      <Grid item xs={4}><Field label={fm('grievanceDetail.motif')} value={rr.motif} classes={classes} /></Grid>
-                      <Grid item xs={4}><Field label={fm('grievanceDetail.replacementStatus')} value={rr.status} classes={classes} /></Grid>
-                      <Grid item xs={3}><Field label={fm('grievanceDetail.newNom')} value={rr.newNom} classes={classes} /></Grid>
-                      <Grid item xs={3}><Field label={fm('grievanceDetail.newPrenom')} value={rr.newPrenom} classes={classes} /></Grid>
-                      <Grid item xs={3}><Field label={fm('grievanceDetail.newPhone')} value={rr.newTelephone} classes={classes} /></Grid>
-                      <Grid item xs={3}><Field label={fm('grievanceDetail.newCni')} value={rr.newCni} classes={classes} /></Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+            <Paper className={classes.card}>
+              <Typography className={classes.cardTitle}><Person fontSize="small" /> Remplacement</Typography>
+              {replacementRequests?.map(rr => (
+                <div key={rr.id} className={classes.replCard}>
+                  <div className={classes.fieldRow}>
+                    <F label="Social ID remplacé" value={rr.replacedSocialId} classes={classes} />
+                    <F label="Motif" value={rr.motif?.replace(/_/g, ' ')} classes={classes} />
+                    <Chip label={rr.status} size="small" style={{ backgroundColor: rr.status === 'APPROVED' ? '#4caf50' : '#ff9800', color: '#fff' }} />
+                  </div>
+                  <div className={classes.fieldRow}>
+                    <F label="Nouveau nom" value={rr.newNom} classes={classes} />
+                    <F label="Prénom" value={rr.newPrenom} classes={classes} />
+                    <F label="Téléphone" value={rr.newTelephone} classes={classes} />
+                    <F label="CNI" value={rr.newCni} classes={classes} />
+                  </div>
+                </div>
               ))}
             </Paper>
           )}
 
-          {/* Resolution */}
-          {(ticket?.resolution || ticket?.isResolved) && (
-            <Paper className={classes.section}>
-              <Typography className={classes.sectionTitle}>
-                <CheckCircle /> {fm('grievanceDetail.resolution')}
-              </Typography>
-              <Field label={fm('grievanceDetail.resolutionText')} value={ticket?.resolution} classes={classes} />
-              <Field label={fm('grievanceDetail.resolutionDetails')} value={ticket?.resolutionDetails} classes={classes} />
-              <Field label={fm('grievanceDetail.resolvedBy')} value={ticket?.resolverName} classes={classes} />
+          {/* Resolution (conditional) */}
+          {(ticket?.resolution || ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED') && (
+            <Paper className={classes.card}>
+              <Typography className={classes.cardTitle}><CheckCircle fontSize="small" /> Résolution</Typography>
+              <F label="Résolution" value={ticket?.resolution} classes={classes} />
             </Paper>
           )}
         </Grid>
 
-        {/* Right column: Workflow + Timeline */}
+        {/* ── Right: Workflow + Activity ── */}
         <Grid item xs={12} md={5}>
-          {/* Workflow Progress */}
+          {/* Workflow stepper */}
           {grievanceWorkflows?.length > 0 && (
-            <Paper className={classes.section}>
-              <Typography className={classes.sectionTitle}>
-                <Timeline /> {fm('grievanceDetail.workflowProgress')}
-              </Typography>
-              {grievanceWorkflows.map((wf) => {
-                const tasks = wf.tasks?.edges?.map((e) => e.node) || [];
-                const completedCount = tasks.filter((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED').length;
+            <Paper className={classes.card}>
+              {grievanceWorkflows.map(wf => {
+                const tasks = wf.tasks?.edges?.map(e => e.node) || [];
+                const done = tasks.filter(t => t.status === 'COMPLETED' || t.status === 'SKIPPED').length;
+                const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
                 return (
-                  <div key={wf.id} style={{ marginBottom: 16 }}>
-                    <div className={classes.workflowTitle}>
-                      <Typography variant="subtitle2">{wf.templateLabel}</Typography>
-                      <Chip
-                        label={`${completedCount}/${tasks.length}`}
-                        size="small"
-                        color={completedCount === tasks.length ? 'primary' : 'default'}
-                      />
+                  <div key={wf.id}>
+                    <div className={classes.wfHeader}>
+                      <Typography variant="subtitle2" style={{ fontWeight: 600 }}>{wf.templateLabel}</Typography>
+                      <Box display="flex" alignItems="center">
+                        <Chip label={`${done}/${tasks.length}`} size="small" color={done === tasks.length ? 'primary' : 'default'} />
+                        {wf.tasks?.edges?.some(e => e.node.status === 'IN_PROGRESS') && (
+                          <Tooltip title="Ajouter une étape">
+                            <IconButton size="small" onClick={() => setAddStepOpen(true)} style={{ marginLeft: 4, padding: 2 }}>
+                              <AddIcon style={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     </div>
-                    <Stepper orientation="vertical" className={classes.stepperRoot} activeStep={-1}>
-                      {tasks.map((task) => {
-                        const taskCfg = TASK_STATUS_CONFIG[task.status] || TASK_STATUS_CONFIG.PENDING;
+                    <LinearProgress variant="determinate" value={pct} style={{ height: 6, borderRadius: 3, marginBottom: 8 }} />
+                    <Stepper orientation="vertical" className={classes.stepperCompact} activeStep={-1} connector={<div style={{ minHeight: 4 }} />}>
+                      {tasks.map(task => {
+                        const tc = TASK_CFG[task.status] || TASK_CFG.PENDING;
                         return (
                           <Step key={task.id} completed={task.status === 'COMPLETED'} active={task.status === 'IN_PROGRESS'}>
                             <StepLabel
-                              icon={
-                                <Avatar
-                                  style={{
-                                    width: 28, height: 28,
-                                    backgroundColor: taskCfg.color,
-                                  }}
-                                >
-                                  {taskCfg.icon}
-                                </Avatar>
-                              }
+                              icon={<Avatar className={classes.stepDot} style={{ backgroundColor: tc.color }}>{tc.icon}</Avatar>}
                             >
-                              <Typography variant="body2" style={{ fontWeight: task.status === 'IN_PROGRESS' ? 600 : 400 }}>
+                              <Typography variant="body2" style={{ fontWeight: task.status === 'IN_PROGRESS' ? 600 : 400, fontSize: '0.85rem' }}>
                                 {task.stepLabel}
                               </Typography>
-                              <Typography variant="caption" color="textSecondary">
+                              <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.7rem' }}>
                                 {task.assignedRole}
-                                {task.assignedUserName ? ` — ${task.assignedUserName}` : ''}
-                                {task.completedAt ? ` · ${formatDateTime(task.completedAt)}` : ''}
+                                {task.completedAt ? ` · ${fmtDT(task.completedAt)}` : ''}
                               </Typography>
+                              {task.status === 'IN_PROGRESS' && task.result?.error && (
+                                <Typography variant="caption" style={{ color: '#f44336', display: 'block', marginTop: 4, fontWeight: 600 }}>
+                                  ⚠ {task.result.error}
+                                </Typography>
+                              )}
+                              {task.status === 'IN_PROGRESS' && (() => {
+                                const fields = TASK_FIELDS[task.actionType] || [];
+                                const formData = taskFormData[task.id] || {};
+                                const hasRequired = fields.filter(f => f.required).every(f => formData[f.key]);
+                                return (
+                                <Box mt={0.5}>
+                                  {/* Render action-specific fields */}
+                                  {fields.map(field => (
+                                    <TextField
+                                      key={field.key}
+                                      size="small" variant="outlined" fullWidth
+                                      label={field.label}
+                                      required={field.required}
+                                      value={formData[field.key] || ''}
+                                      onChange={e => updateTaskField(task.id, field.key, e.target.value)}
+                                      style={{ marginBottom: 4 }}
+                                      inputProps={{ style: { fontSize: '0.8rem', padding: '6px 8px' } }}
+                                      InputLabelProps={{ style: { fontSize: '0.8rem' } }}
+                                      error={field.required && task.result?.error && !formData[field.key]}
+                                    />
+                                  ))}
+                                  {/* Always show a notes field for manual resolution handlers */}
+                                  {fields.length === 0 && (
+                                    <TextField
+                                      size="small" variant="outlined" fullWidth
+                                      label="Notes"
+                                      value={formData.notes || ''}
+                                      onChange={e => updateTaskField(task.id, 'notes', e.target.value)}
+                                      style={{ marginBottom: 4 }}
+                                      inputProps={{ style: { fontSize: '0.8rem', padding: '6px 8px' } }}
+                                      InputLabelProps={{ style: { fontSize: '0.8rem' } }}
+                                    />
+                                  )}
+                                  <Box display="flex" gap={1}>
+                                    <Button
+                                      size="small" variant="contained" color="primary"
+                                      startIcon={<CheckCircle style={{ fontSize: 14 }} />}
+                                      onClick={() => handleCompleteTask(task.id)}
+                                      disabled={submittingMutation || (fields.some(f => f.required) && !hasRequired)}
+                                      style={{ fontSize: '0.75rem', padding: '2px 8px' }}
+                                    >
+                                      Compléter
+                                    </Button>
+                                    {!task.isRequired && (
+                                      <Button
+                                        size="small" variant="outlined"
+                                        startIcon={<SkipNext style={{ fontSize: 14 }} />}
+                                        onClick={() => handleSkipTask(task.id)}
+                                        disabled={submittingMutation}
+                                        style={{ fontSize: '0.75rem', padding: '2px 8px' }}
+                                      >
+                                        Passer
+                                      </Button>
+                                    )}
+                                  </Box>
+                                </Box>
+                                );
+                              })()}
                             </StepLabel>
                           </Step>
                         );
@@ -558,177 +620,281 @@ function GrievanceDetailPage({
             </Paper>
           )}
 
-          {/* Activity Feed: comments + task completions */}
-          <Paper className={classes.section}>
-            <Typography className={classes.sectionTitle}>
-              <CommentIcon /> {fm('grievanceDetail.activityFeed')}
-            </Typography>
-            {timelineEvents.length === 0 && (
-              <Typography className={classes.emptyState}>{fm('grievanceDetail.noActivity')}</Typography>
-            )}
-            {timelineEvents.map((event, idx) => (
-              <Card key={idx} className={classes.commentCard} variant="outlined">
+          {/* Activity feed + comment form */}
+          <Paper className={classes.card}>
+            <Typography className={classes.cardTitle}><CommentIcon fontSize="small" /> Activité</Typography>
+
+            {timeline.length === 0 && <Typography className={classes.empty}>Aucune activité</Typography>}
+
+            {timeline.map((ev, i) => (
+              <Card key={i} className={classes.eventCard} variant="outlined">
                 <CardHeader
-                  className={classes.commentHeader}
+                  style={{ padding: '6px 12px' }}
                   avatar={
                     <Avatar style={{
-                      width: 32, height: 32,
-                      backgroundColor: event.type === 'comment'
-                        ? (event.isResolution ? '#4caf50' : '#2196f3')
-                        : (TASK_STATUS_CONFIG[event.status]?.color || '#9e9e9e'),
+                      width: 28, height: 28,
+                      backgroundColor: ev.type === 'comment'
+                        ? (ev.isRes ? '#4caf50' : '#2196f3')
+                        : (TASK_CFG[ev.status]?.color || '#9e9e9e'),
                     }}>
-                      {event.type === 'comment'
-                        ? (event.isResolution ? <CheckCircle fontSize="small" /> : <CommentIcon fontSize="small" />)
-                        : (TASK_STATUS_CONFIG[event.status]?.icon || <Assignment fontSize="small" />)}
+                      {ev.type === 'comment'
+                        ? (ev.isRes ? <CheckCircle style={{ fontSize: 14 }} /> : <CommentIcon style={{ fontSize: 14 }} />)
+                        : (TASK_CFG[ev.status]?.icon || <Assignment style={{ fontSize: 14 }} />)}
                     </Avatar>
                   }
-                  title={
-                    <Typography variant="body2" style={{ fontWeight: 500 }}>
-                      {event.title}
-                    </Typography>
-                  }
-                  subheader={
-                    <Typography variant="caption" color="textSecondary">
-                      {event.subtitle} · {formatDateTime(event.date)}
-                    </Typography>
-                  }
+                  title={<Typography variant="body2" style={{ fontWeight: 500, fontSize: '0.85rem' }}>{ev.title}</Typography>}
+                  subheader={<Typography variant="caption" color="textSecondary" style={{ fontSize: '0.7rem' }}>{ev.sub || ''} · {fmtDT(ev.date)}</Typography>}
                 />
-                {(event.body || event.commentExt) && (
-                  <CardContent className={classes.commentBody}>
-                    {event.body && (
-                      <Typography variant="body2" style={{ whiteSpace: 'pre-wrap' }}>
-                        {event.body}
-                      </Typography>
-                    )}
-                    {event.commentExt && (
-                      <div className={classes.commentMeta}>
-                        {event.commentExt.tagged_role && (
-                          <Chip
-                            className={classes.metaChip}
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            label={`${fm('grievanceDetail.tagged')}: ${event.commentExt.tagged_role}`}
-                          />
-                        )}
-                        {event.commentExt.action && (
-                          <Chip
-                            className={classes.metaChip}
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                            label={`${fm('grievanceDetail.actionRequired')}: ${event.commentExt.action}`}
-                          />
-                        )}
-                        {event.commentExt.action_assignee_name && (
-                          <Chip
-                            className={classes.metaChip}
-                            size="small"
-                            variant="outlined"
-                            label={`${fm('grievanceDetail.assignedTo')}: ${event.commentExt.action_assignee_name}`}
-                          />
-                        )}
-                      </div>
-                    )}
+                {(ev.body || ev.ext) && (
+                  <CardContent className={classes.eventBody}>
+                    {ev.body && <Typography variant="body2" style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{ev.body}</Typography>}
+                    {ev.ext?.tagged_role && <Chip size="small" variant="outlined" color="primary" label={`@ ${ev.ext.tagged_role}`} style={{ height: 20, fontSize: '0.7rem', marginTop: 4 }} />}
+                    {ev.ext?.action && <Chip size="small" variant="outlined" color="secondary" label={ev.ext.action} style={{ height: 20, fontSize: '0.7rem', marginTop: 4, marginLeft: 4 }} />}
                   </CardContent>
                 )}
               </Card>
             ))}
-            <Divider style={{ margin: '8px 0' }} />
-            <TextField
-              fullWidth
-              variant="outlined"
-              size="small"
-              multiline
-              rows={3}
-              placeholder={fm('grievanceDetail.commentPlaceholder')}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              style={{ marginTop: 8 }}
-            />
-            <Grid container spacing={1} style={{ marginTop: 4 }}>
-              <Grid item xs={3}>
-                <PublishedComponent
-                  pubRef="admin.UserPicker"
-                  value={taggedUser}
-                  onChange={(user) => setTaggedUser(user)}
-                  withLabel
-                  label={fm('grievanceDetail.tagUser')}
-                />
-              </Grid>
-              <Grid item xs={3}>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <InputLabel>{fm('grievanceDetail.tagRole')}</InputLabel>
-                  <Select
-                    value={taggedRole}
-                    onChange={(e) => setTaggedRole(e.target.value)}
-                    label={fm('grievanceDetail.tagRole')}
-                  >
+
+            {/* Comment form — role mention only, no user picker */}
+            <div className={classes.commentForm}>
+              <TextField
+                fullWidth variant="outlined" size="small" multiline rows={2}
+                placeholder="Écrire un commentaire..."
+                value={commentText} onChange={e => setCommentText(e.target.value)}
+              />
+              <div className={classes.commentActions}>
+                <FormControl variant="outlined" size="small" style={{ minWidth: 120 }}>
+                  <InputLabel>Rôle</InputLabel>
+                  <Select value={taggedRole} onChange={e => setTaggedRole(e.target.value)} label="Rôle">
                     <MenuItem value=""><em>-</em></MenuItem>
-                    {WORKFLOW_ROLES.map((role) => (
-                      <MenuItem key={role} value={role}>{role}</MenuItem>
-                    ))}
+                    {ROLES.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={3}>
                 <TextField
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  label={fm('grievanceDetail.action')}
-                  value={actionText}
-                  onChange={(e) => setActionText(e.target.value)}
+                  variant="outlined" size="small" style={{ minWidth: 140 }}
+                  label="Action requise" value={actionText} onChange={e => setActionText(e.target.value)}
                 />
-              </Grid>
-              <Grid item xs={3}>
-                <PublishedComponent
-                  pubRef="admin.UserPicker"
-                  value={actionAssignee}
-                  onChange={(user) => setActionAssignee(user)}
-                  withLabel
-                  label={fm('grievanceDetail.actionAssignee')}
-                />
-              </Grid>
-            </Grid>
-            <div className={classes.commentFormActions}>
-              <Button
-                variant="contained"
-                color="primary"
-                endIcon={<Send />}
-                disabled={!commentText.trim() || submittingMutation}
-                onClick={handleSendComment}
-              >
-                {fm('grievanceDetail.send')}
-              </Button>
+                <Button
+                  variant="contained" color="primary" size="small" endIcon={<Send />}
+                  disabled={!commentText.trim() || submittingMutation}
+                  onClick={handleSend}
+                >
+                  Envoyer
+                </Button>
+              </div>
             </div>
           </Paper>
-
-          {/* Submission info */}
-          {submission.collector_name && (
-            <Paper className={classes.section}>
-              <Typography className={classes.sectionTitle}>
-                <Person /> {fm('grievanceDetail.collection')}
-              </Typography>
-              <Field label={fm('grievanceDetail.collectorName')} value={submission.collector_name} classes={classes} />
-              <Field label={fm('grievanceDetail.collectorFunction')} value={submission.collector_function} classes={classes} />
-              <Field label={fm('grievanceDetail.collectorPhone')} value={submission.collector_phone} classes={classes} />
-              <Field label={fm('grievanceDetail.channel')} value={ticket?.channel} classes={classes} />
-              <Field label={fm('grievanceDetail.collectionDate')} value={formatDate(submission.collection_date)} classes={classes} />
-            </Paper>
-          )}
         </Grid>
       </Grid>
 
-      {/* Task Actions (full width) */}
-      {ticket?.id && (
-        <Paper className={classes.section}>
-          <Typography className={classes.sectionTitle}>
-            <Assignment /> {fm('grievanceDetail.taskActions')}
-          </Typography>
-          <GrievanceTaskSearcher ticketId={ticket.id} />
-        </Paper>
-      )}
+      {/* ── Bottom Tabbed Data Tables ── */}
+      <Paper style={{ marginTop: 16 }}>
+        <Tabs
+          value={bottomTab}
+          onChange={(_, v) => setBottomTab(v)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          style={{ borderBottom: '1px solid #e0e0e0', minHeight: 36 }}
+        >
+          <Tab value="tasks" label={`Tâches (${allTasks.length})`} style={{ minHeight: 36, fontSize: '0.8rem', textTransform: 'none' }} />
+          {isBeneficiary && <Tab value="household" label={`Membres du ménage (${householdMembers.length})`} style={{ minHeight: 36, fontSize: '0.8rem', textTransform: 'none' }} />}
+          {isBeneficiary && <Tab value="payments" label={`Paiements (${payments.length})`} style={{ minHeight: 36, fontSize: '0.8rem', textTransform: 'none' }} />}
+          <Tab value="pastTickets" label="Plaintes précédentes" style={{ minHeight: 36, fontSize: '0.8rem', textTransform: 'none' }} />
+        </Tabs>
+
+        {/* Tasks Table */}
+        {bottomTab === 'tasks' && (
+          <Table size="small">
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>#</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Étape</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Workflow</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Rôle</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Statut</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Date</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Notes</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {allTasks.length === 0 ? (
+                <TableRow><TableCell colSpan={7} align="center" style={{ color: '#999', padding: 16 }}>Aucune tâche</TableCell></TableRow>
+              ) : allTasks.map((task, i) => {
+                const tCfg = TASK_CFG[task.status] || TASK_CFG.PENDING;
+                return (
+                  <TableRow key={task.id || i} style={{ backgroundColor: task.status === 'IN_PROGRESS' ? '#e3f2fd' : undefined }}>
+                    <TableCell style={{ fontSize: '0.8rem' }}>{task.stepNumber}</TableCell>
+                    <TableCell style={{ fontSize: '0.8rem', fontWeight: task.status === 'IN_PROGRESS' ? 600 : 400 }}>
+                      {task.stepLabel}
+                      {(() => {
+                        try {
+                          const ext = task.jsonExt
+                            ? (typeof task.jsonExt === 'string' ? JSON.parse(task.jsonExt) : task.jsonExt)
+                            : {};
+                          return ext?.is_additional ? (
+                            <Chip size="small" label="ajouté" variant="outlined" color="primary"
+                              style={{ fontSize: '0.6rem', height: 16, marginLeft: 4 }} />
+                          ) : null;
+                        } catch { return null; }
+                      })()}
+                    </TableCell>
+                    <TableCell style={{ fontSize: '0.8rem' }}>{task.workflowLabel}</TableCell>
+                    <TableCell style={{ fontSize: '0.8rem' }}>{task.assignedRole}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        icon={tCfg.icon}
+                        label={task.status === 'COMPLETED' ? 'Terminé' : task.status === 'IN_PROGRESS' ? 'En cours' : task.status === 'SKIPPED' ? 'Passé' : task.status === 'BLOCKED' ? 'Bloqué' : 'En attente'}
+                        style={{ backgroundColor: `${tCfg.color}20`, color: tCfg.color, fontWeight: 500, fontSize: '0.7rem', height: 22 }}
+                      />
+                    </TableCell>
+                    <TableCell style={{ fontSize: '0.75rem', color: '#666' }}>
+                      {task.completedAt ? fmtDT(task.completedAt) : task.startedAt ? fmtDT(task.startedAt) : '-'}
+                    </TableCell>
+                    <TableCell style={{ fontSize: '0.75rem', color: '#666', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {task.result?.notes || task.result?.error || '-'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+
+        {/* Household Members */}
+        {bottomTab === 'household' && (
+          <Table size="small">
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Nom</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Prénom</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Sexe</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Date de naissance</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Rôle</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Type</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {householdMembers.length === 0 ? (
+                <TableRow><TableCell colSpan={6} align="center" style={{ color: '#999', padding: 16 }}>
+                  {socialId ? 'Aucun membre trouvé pour ce social_id' : 'Aucun bénéficiaire identifié'}
+                </TableCell></TableRow>
+              ) : householdMembers.map((m, i) => (
+                <TableRow key={m.id || i} hover style={{ cursor: 'pointer' }} onClick={() => m.id && history.push(`/individual/individual/${decodeId(m.id)}`)}>
+                  <TableCell style={{ fontSize: '0.8rem' }}>{m.lastName}</TableCell>
+                  <TableCell style={{ fontSize: '0.8rem' }}>{m.firstName}</TableCell>
+                  <TableCell style={{ fontSize: '0.8rem' }}>{m.gender === 'M' ? 'Homme' : m.gender === 'F' ? 'Femme' : m.gender}</TableCell>
+                  <TableCell style={{ fontSize: '0.8rem' }}>{m.dob ? fmtDate(m.dob) : '-'}</TableCell>
+                  <TableCell style={{ fontSize: '0.8rem' }}>{m.role}</TableCell>
+                  <TableCell style={{ fontSize: '0.8rem' }}>
+                    {m.recipientType === 'PRIMARY' ? <Chip size="small" label="Chef" color="primary" style={{ height: 20, fontSize: '0.7rem' }} /> : m.recipientType}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+
+        {/* Payments */}
+        {bottomTab === 'payments' && (
+          <Table size="small">
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Code</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Date</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Montant (BIF)</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Statut</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Reçu</TableCell>
+                <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Payroll</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {payments.length === 0 ? (
+                <TableRow><TableCell colSpan={6} align="center" style={{ color: '#999', padding: 16 }}>Aucun paiement</TableCell></TableRow>
+              ) : payments.map((p, i) => {
+                const payroll = p.payrollbenefitconsumptionSet?.edges?.[0]?.node?.payroll;
+                const statusColor = p.status === 'RECONCILED' ? '#4caf50' : p.status === 'APPROVE_FOR_PAYMENT' ? '#2196f3' : p.status === 'REJECTED' ? '#f44336' : '#ff9800';
+                return (
+                  <TableRow key={p.id || i}>
+                    <TableCell style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{p.code}</TableCell>
+                    <TableCell style={{ fontSize: '0.8rem' }}>{p.dateDue ? fmtDate(p.dateDue) : '-'}</TableCell>
+                    <TableCell style={{ fontSize: '0.8rem', fontWeight: 600 }}>{p.amount ? Number(p.amount).toLocaleString('fr-FR') : '-'}</TableCell>
+                    <TableCell>
+                      <Chip size="small" label={p.status === 'RECONCILED' ? 'Payé' : p.status === 'APPROVE_FOR_PAYMENT' ? 'En cours' : p.status === 'REJECTED' ? 'Rejeté' : p.status}
+                        style={{ backgroundColor: `${statusColor}20`, color: statusColor, fontWeight: 500, fontSize: '0.7rem', height: 22 }} />
+                    </TableCell>
+                    <TableCell style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>{p.receipt || '-'}</TableCell>
+                    <TableCell style={{ fontSize: '0.75rem', color: '#666' }}>{payroll?.name?.substring(0, 40) || '-'}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+
+        {/* Past Tickets */}
+        {bottomTab === 'pastTickets' && (
+          <Box p={1}>
+            <Typography variant="caption" color="textSecondary" style={{ padding: 8, display: 'block' }}>
+              Recherche par nom du plaignant : « {reporterName} »
+            </Typography>
+            <Table size="small">
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Code</TableCell>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Titre</TableCell>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Catégorie</TableCell>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Statut</TableCell>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Priorité</TableCell>
+                  <TableCell style={{ fontWeight: 600, fontSize: '0.8rem' }}>Date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!pastTicketsData?.tickets?.edges?.length ? (
+                  <TableRow><TableCell colSpan={6} align="center" style={{ color: '#999', padding: 16 }}>
+                    {reporterName ? 'Aucune plainte précédente trouvée' : 'Nom du plaignant non renseigné'}
+                  </TableCell></TableRow>
+                ) : pastTicketsData.tickets.edges.filter(e => e.node.id !== ticket?.id).map((e, i) => {
+                  const t = e.node;
+                  const tsCfg = STATUS_CFG[t.status] || STATUS_CFG.OPEN;
+                  return (
+                    <TableRow key={t.id || i} hover style={{ cursor: 'pointer' }} onClick={() => history.push(`/grievance/detail/${decodeId(t.id)}`)}>
+                      <TableCell style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{t.code}</TableCell>
+                      <TableCell style={{ fontSize: '0.8rem' }}>{t.title || '-'}</TableCell>
+                      <TableCell style={{ fontSize: '0.8rem' }}>{t.category ? translateCat(fm, t.category) : '-'}</TableCell>
+                      <TableCell><Chip size="small" label={tsCfg.label} style={{ backgroundColor: tsCfg.color, color: '#fff', fontSize: '0.7rem', height: 22 }} /></TableCell>
+                      <TableCell style={{ fontSize: '0.8rem' }}>{t.priority || '-'}</TableCell>
+                      <TableCell style={{ fontSize: '0.8rem' }}>{fmtDate(t.dateCreated)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Box>
+        )}
+      </Paper>
+
+      <AddStepDialog
+        open={addStepOpen}
+        onClose={() => setAddStepOpen(false)}
+        stepTemplates={availableStepTemplates}
+        loading={fetchingAvailableStepTemplates}
+        onAdd={(step) => {
+          const activeWorkflow = (grievanceWorkflows || []).find(wf =>
+            wf.tasks?.edges?.some(e => e.node.status === 'IN_PROGRESS')
+          );
+          if (activeWorkflow) {
+            doAddTaskToWorkflow(
+              decodeId(activeWorkflow.id),
+              step.id,
+              "Ajout d'une étape au workflow",
+            );
+            setAddStepOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }
@@ -741,15 +907,15 @@ const mapStateToProps = (state) => ({
   mutation: state.grievanceSocialProtection?.mutation,
   grievanceWorkflows: state.merankabandi.grievanceWorkflows,
   replacementRequests: state.merankabandi.replacementRequests,
+  availableStepTemplates: state.merankabandi.availableStepTemplates || [],
+  fetchingAvailableStepTemplates: state.merankabandi.fetchingAvailableStepTemplates,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  fetchTicket,
-  fetchTicketComments,
-  createTicketComment,
-  fetchGrievanceWorkflows,
-  fetchReplacementRequests,
-  journalize,
+  fetchTicket, fetchTicketComments, createTicketComment,
+  fetchGrievanceWorkflows, fetchReplacementRequests, journalize,
+  completeGrievanceTask, skipGrievanceTask,
+  fetchAvailableStepTemplates, addTaskToWorkflow,
 }, dispatch);
 
 export default withHistory(

@@ -168,6 +168,7 @@ class AddTicketPageImproved extends Component {
         }
         if (stateEdited.caseType === 'cas_de_suppression__retrait_du_programme') {
           if (!stateEdited.suppressionMotif) errors.suppressionMotif = req('suppressionMotif');
+          if (!stateEdited.suppressionSocialId) errors.suppressionSocialId = req('suppressionSocialId');
         }
         if (!stateEdited.description) errors.description = req('description');
         if (!stateEdited.channel) errors.channel = req('channel');
@@ -271,7 +272,8 @@ class AddTicketPageImproved extends Component {
           sexe: edited.newSexe || '',
         },
       };
-      // Set category to uncategorized for replacements
+      // Also store in reporter for verify_social_id handler
+      ext.reporter.social_id = edited.replacedSocialId || '';
       edited.category = 'uncategorized';
     }
 
@@ -279,7 +281,10 @@ class AddTicketPageImproved extends Component {
     if (caseType === 'cas_de_suppression__retrait_du_programme') {
       ext.suppression = {
         motif: edited.suppressionMotif || '',
+        social_id: edited.suppressionSocialId || '',
       };
+      // Also store social_id in reporter for verify_social_id handler
+      ext.reporter.social_id = edited.suppressionSocialId || '';
       edited.category = 'uncategorized';
     }
 
@@ -693,23 +698,31 @@ class AddTicketPageImproved extends Component {
               </>
               )}
 
-              {/* Suppression motif — only for suppression case type */}
+              {/* Suppression motif + social_id — for suppression case type */}
               {stateEdited.caseType === 'cas_de_suppression__retrait_du_programme' && (
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth required error={!!validationErrors.suppressionMotif}>
-                  <InputLabel><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif" /></InputLabel>
-                  <Select
-                    value={stateEdited.suppressionMotif || ''}
-                    onChange={(e) => this.updateAttribute('suppressionMotif', e.target.value)}
-                    disabled={isSaved}
-                  >
-                    <MenuItem value="erreur_d_inclusion"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.inclusion" /></MenuItem>
-                    <MenuItem value="demande_volontaire_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.volontaire" /></MenuItem>
-                    <MenuItem value="double_inscription_d_tect_e"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.double" /></MenuItem>
-                    <MenuItem value="d_c_s_sans_demande_de_remplacement"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.deces" /></MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+              <>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth required error={!!validationErrors.suppressionMotif}>
+                    <InputLabel><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif" /></InputLabel>
+                    <Select
+                      value={stateEdited.suppressionMotif || ''}
+                      onChange={(e) => this.updateAttribute('suppressionMotif', e.target.value)}
+                      disabled={isSaved}
+                    >
+                      <MenuItem value="erreur_d_inclusion"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.inclusion" /></MenuItem>
+                      <MenuItem value="demande_volontaire_du_b_n_ficiaire"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.volontaire" /></MenuItem>
+                      <MenuItem value="double_inscription_d_tect_e"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.double" /></MenuItem>
+                      <MenuItem value="d_c_s_sans_demande_de_remplacement"><FormattedMessage module={MODULE_NAME} id="ticket.suppressionMotif.deces" /></MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextInput module={MODULE_NAME} label="ticket.suppressionSocialId"
+                    value={stateEdited.suppressionSocialId} required
+                    onChange={(v) => this.updateAttribute('suppressionSocialId', v)}
+                    readOnly={isSaved} error={!!validationErrors.suppressionSocialId} />
+                </Grid>
+              </>
               )}
 
               {/* Channel */}

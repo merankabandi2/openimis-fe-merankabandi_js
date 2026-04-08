@@ -102,6 +102,7 @@ export const ACTION_TYPE = {
   CREATE_ROLE_ASSIGNMENT: 'MERANKABANDI_CREATE_ROLE_ASSIGNMENT',
   UPDATE_ROLE_ASSIGNMENT: 'MERANKABANDI_UPDATE_ROLE_ASSIGNMENT',
   DELETE_ROLE_ASSIGNMENT: 'MERANKABANDI_DELETE_ROLE_ASSIGNMENT',
+  FETCH_AVAILABLE_STEP_TEMPLATES: 'MERANKABANDI_FETCH_AVAILABLE_STEP_TEMPLATES',
 };
 
 export const MUTATION_SERVICE = {
@@ -771,7 +772,7 @@ export function fetchGrievanceConfiguration(params) {
 
 const GRIEVANCE_WORKFLOW_PROJECTION = () => [
   'id', 'status', 'startedAt', 'completedAt', 'templateName', 'templateLabel',
-  'tasks{edges{node{id,stepName,stepLabel,actionType,status,assignedRole,assignedUserName,startedAt,completedAt,dueDate,result,isAutomated,requiredFields,blockedById}}}',
+  'tasks{edges{node{id,stepName,stepLabel,actionType,status,assignedRole,assignedUserName,startedAt,completedAt,dueDate,result,isAutomated,requiredFields,blockedById,jsonExt}}}',
 ];
 
 const GRIEVANCE_TASK_PROJECTION = () => [
@@ -836,10 +837,31 @@ export function fetchReplacementRequests(params) {
   return graphql(payload, ACTION_TYPE.SEARCH_REPLACEMENT_REQUESTS);
 }
 
+export function fetchAvailableStepTemplates() {
+  const payload = formatPageQueryWithCount(
+    'workflowStepTemplates',
+    [],
+    ['id', 'name', 'label', 'order', 'role', 'actionType', 'workflowTemplate{id,name,label}'],
+  );
+  return graphql(payload, ACTION_TYPE.FETCH_AVAILABLE_STEP_TEMPLATES);
+}
+
+export function addTaskToWorkflow(workflowId, stepTemplateId, clientMutationLabel) {
+  const mutation = formatMutation(
+    'addTaskToWorkflow',
+    `workflowId: "${workflowId}", stepTemplateId: "${stepTemplateId}"`,
+    clientMutationLabel,
+  );
+  return graphql(mutation.payload, ACTION_TYPE.MUTATION, {
+    clientMutationId: mutation.clientMutationId,
+    clientMutationLabel,
+  });
+}
+
 export function completeGrievanceTask(taskId, result, clientMutationLabel) {
   const gql = `
     taskId: "${taskId}"
-    ${result ? `result: ${JSON.stringify(JSON.stringify(result))}` : ''}
+    ${result ? `result: ${JSON.stringify(typeof result === 'string' ? result : JSON.stringify(result))}` : ''}
   `;
   return PERFORM_MUTATION(
     MUTATION_SERVICE.GRIEVANCE_TASK.COMPLETE, gql,

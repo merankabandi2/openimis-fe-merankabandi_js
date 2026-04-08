@@ -206,6 +206,10 @@ const STORE_STATE = {
   replacementRequestsPageInfo: {},
   replacementRequestsTotalCount: 0,
   errorReplacementRequests: null,
+
+  // Workflow step templates (for AddStepDialog)
+  availableStepTemplates: [],
+  fetchingAvailableStepTemplates: false,
 };
 
 function reducer(state = STORE_STATE, action) {
@@ -1045,6 +1049,24 @@ function reducer(state = STORE_STATE, action) {
       return dispatchMutationResp(state, MUTATION_SERVICE.ROLE_ASSIGNMENT.UPDATE, action);
     case SUCCESS(ACTION_TYPE.DELETE_ROLE_ASSIGNMENT):
       return dispatchMutationResp(state, MUTATION_SERVICE.ROLE_ASSIGNMENT.DELETE, action);
+
+    // Workflow engine - Available Step Templates
+    case REQUEST(ACTION_TYPE.FETCH_AVAILABLE_STEP_TEMPLATES):
+      return { ...state, fetchingAvailableStepTemplates: true, availableStepTemplates: [] };
+    case SUCCESS(ACTION_TYPE.FETCH_AVAILABLE_STEP_TEMPLATES): {
+      const data = parseData(action.payload.data.workflowStepTemplates) || [];
+      return {
+        ...state,
+        fetchingAvailableStepTemplates: false,
+        availableStepTemplates: data.map(s => ({
+          ...s,
+          workflowTemplateName: s.workflowTemplate?.name,
+          workflowTemplateLabel: s.workflowTemplate?.label || s.workflowTemplate?.name,
+        })),
+      };
+    }
+    case ERROR(ACTION_TYPE.FETCH_AVAILABLE_STEP_TEMPLATES):
+      return { ...state, fetchingAvailableStepTemplates: false };
 
     // ─── Generic Mutations ─────────────────────────────────────────────────────
     case REQUEST(ACTION_TYPE.MUTATION):
