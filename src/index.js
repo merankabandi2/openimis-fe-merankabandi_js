@@ -4,8 +4,7 @@ import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutl
 import { FormattedMessage } from '@openimis/fe-core';
 
 // Payment Cycle workspace tab
-import CycleWorkspaceTabLabel from './components/payroll/CycleWorkspaceTabLabel';
-import CycleWorkspacePanel from './components/payroll/CycleWorkspacePanel';
+import { CycleWorkspaceTabLabel, CycleWorkspaceTabPanel } from './components/payroll/CycleWorkspaceTab';
 
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
 import CascadingCategoryPicker from './components/grievance/CascadingCategoryPicker';
@@ -267,7 +266,7 @@ const DEFAULT_CONFIG = {
 
   // Payment Cycle workspace tab (commune config + batch payroll generation)
   'paymentCycle.TabPanel.label': [CycleWorkspaceTabLabel],
-  'paymentCycle.TabPanel.panel': [CycleWorkspacePanel],
+  'paymentCycle.TabPanel.panel': [CycleWorkspaceTabPanel],
 
   // Payment Request tab panels (Merankabandi verification/approval workflow)
   'paymentRequest.TabPanel.label': [

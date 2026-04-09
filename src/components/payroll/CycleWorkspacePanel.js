@@ -127,29 +127,124 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
     );
   }, []);
 
-  const applyBulkDate = useCallback(() => {
-    if (!bulkDate) return;
+  const applyBulkDate = useCallback(async () => {
+    if (!bulkDate || !cycleId) return;
+    setLoading(true);
+
+    // Update locally for immediate feedback
     setCommunes((prev) => prev.map((c) => ({
       ...c,
       dateValidFrom: c.selected && c.status === 'PLANNING' ? bulkDate : c.dateValidFrom,
     })));
-  }, [bulkDate]);
+
+    // Persist via mutation
+    const communeIds = communes
+      .filter((c) => c.selected && c.status === 'PLANNING' && selectedProvinces.includes(c.province))
+      .map((c) => c.communeId)
+      .filter(Boolean);
+
+    if (communeIds.length > 0) {
+      await gqlFetch(
+        `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
+          updateCommuneDatesBulk(input: $input) { clientMutationId }
+        }`,
+        {
+          input: {
+            paymentCycleId: cycleId,
+            communeIds,
+            dateValidFrom: bulkDate,
+            clientMutationId: `dates-${Date.now()}`,
+          },
+        },
+      );
+      setTimeout(() => { refetch(); setLoading(false); }, 1500);
+    } else {
+      setLoading(false);
+    }
+  }, [bulkDate, cycleId, communes, selectedProvinces, gqlFetch, refetch]);
+
+  const gqlFetch = useCallback(async (query, variables) => {
+    const resp = await fetch('/api/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    });
+    return resp.json();
+  }, []);
 
   const initializeCommunes = useCallback(async () => {
-    if (!cycleId) return;
+    if (!cycleId || selectedProvinces.length === 0) return;
     setLoading(true);
-    // TODO: call initialize_cycle_communes GQL mutation
-    // For now just refetch
-    await refetch();
-    setLoading(false);
-  }, [cycleId, refetch]);
+
+    // Resolve province UUIDs from names
+    const provResult = await gqlFetch(
+      `query($names: [String]!) {
+        location(name_In: $names, type: "D", first: 20) {
+          edges { node { uuid name } }
+        }
+      }`,
+      { names: selectedProvinces },
+    );
+    const provIds = (provResult?.data?.location?.edges || []).map((e) => e.node.uuid);
+
+    // Find benefit plan 1.2
+    const bpResult = await gqlFetch(
+      `query { benefitPlan(code: "1.2", isDeleted: false, first: 1) { edges { node { uuid } } } }`,
+      {},
+    );
+    const bpId = bpResult?.data?.benefitPlan?.edges?.[0]?.node?.uuid;
+
+    if (!bpId || provIds.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    await gqlFetch(
+      `mutation($input: InitializeCycleCommunesMutationInput!) {
+        initializeCycleCommunes(input: $input) { clientMutationId }
+      }`,
+      {
+        input: {
+          paymentCycleId: cycleId,
+          benefitPlanId: bpId,
+          provinceIds: provIds,
+          topupActive: topupActive,
+          topupAmount: topupActive ? topupAmount : 0,
+          clientMutationId: `init-${Date.now()}`,
+        },
+      },
+    );
+
+    // Wait for async mutation then refetch
+    setTimeout(() => { refetch(); setLoading(false); }, 2000);
+  }, [cycleId, selectedProvinces, topupActive, topupAmount, gqlFetch, refetch]);
 
   const generatePayrolls = useCallback(async () => {
     if (!cycleId) return;
     setLoading(true);
-    // TODO: call batch_generate_payrolls GQL mutation
-    setLoading(false);
-  }, [cycleId]);
+
+    // Find payment plan for 1.2
+    const ppResult = await gqlFetch(
+      `query { paymentPlan(benefitPlan_Code: "1.2", isDeleted: false, first: 1) { edges { node { id } } } }`,
+      {},
+    );
+    const ppId = ppResult?.data?.paymentPlan?.edges?.[0]?.node?.id;
+
+    await gqlFetch(
+      `mutation($input: BatchGeneratePayrollsMutationInput!) {
+        batchGeneratePayrolls(input: $input) { clientMutationId }
+      }`,
+      {
+        input: {
+          paymentCycleId: cycleId,
+          paymentPlanId: ppId || cycleId, // fallback
+          clientMutationId: `gen-${Date.now()}`,
+        },
+      },
+    );
+
+    setTimeout(() => { refetch(); setLoading(false); }, 3000);
+  }, [cycleId, gqlFetch, refetch]);
 
   // Filter communes by selected province
   const filteredCommunes = communes.filter((c) =>

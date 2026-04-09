@@ -1,4 +1,5 @@
 export const MODULE_NAME = 'merankabandi';
+export const CYCLE_WORKSPACE_TAB_VALUE = 'communeWorkspaceTab';
 
 // Burundi location hierarchy
 export const BURUNDI_LOC_TYPE_PROVINCE = 'D';
