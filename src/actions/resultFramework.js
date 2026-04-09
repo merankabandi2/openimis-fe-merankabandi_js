@@ -84,6 +84,7 @@ export function calculateIndicatorValue(indicatorId, dateFrom, dateTo, locationI
         error
         date
         genderBreakdown
+        breakdowns { key label value }
       }
     }
   `;

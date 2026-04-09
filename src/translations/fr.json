@@ -699,6 +699,7 @@
   "indicator.manualValue": "Valeur d'entrée manuelle",
   "indicator.lastUpdated": "Dernière mise à jour",
   "indicator.genderBreakdown": "Répartition par sexe",
+  "merankabandi.indicator.demographicBreakdowns": "Ventilation démographique",
   "indicator.dateFrom": "Date de début",
   "indicator.dateTo": "Date de fin",
   "monetaryTransfer.form.basicInfo": "Informations de base",

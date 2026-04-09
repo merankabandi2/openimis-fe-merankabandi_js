@@ -277,6 +277,27 @@ function IndicatorCalculationDisplay({
                     </TableRow>
                   </>
                 )}
+                {calculationResult.breakdowns?.length > 0 && (
+                  <>
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Typography variant="subtitle2" style={{ marginTop: 8 }}>
+                          {formatMessage(intl, 'merankabandi', 'indicator.demographicBreakdowns')}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                    {calculationResult.breakdowns
+                      .filter((b) => b.value > 0)
+                      .map((b) => (
+                        <TableRow key={b.key}>
+                          <TableCell>{b.label}</TableCell>
+                          <TableCell align="right">
+                            {(b.value || 0).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </>
+                )}
                 {calculationResult.date && (
                   <TableRow>
                     <TableCell>{formatMessage(intl, 'merankabandi', 'indicator.lastUpdated')}</TableCell>
