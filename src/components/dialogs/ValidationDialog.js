@@ -71,18 +71,27 @@ function ValidationDialog({
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
 
-    // Try to get translation first - handle both lowercase and uppercase keys
     const normalizedKey = categoryKey.toLowerCase();
-    const translationKey = `sensitizationTraining.category.${normalizedKey}`;
-    const translated = intl.formatMessage({ id: translationKey });
+    // Try with module prefix (openIMIS auto-prefixes translations)
+    const withPrefix = `merankabandi.sensitizationTraining.category.${normalizedKey}`;
+    const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
+    if (translated) return translated;
 
-    // If translation exists (not same as key), return it
-    if (translated !== translationKey) {
-      return translated;
-    }
+    // Fallback: humanize the key
+    return categoryKey.replace(/__/g, ' — ').replace(/_/g, ' ');
+  };
 
-    // Otherwise return the original value
-    return categoryKey;
+  // Helper function to get human-readable modules/topics labels
+  const getModulesLabel = (modules) => {
+    if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
+
+    return modules.map((m) => {
+      const key = m.toLowerCase();
+      const withPrefix = `merankabandi.sensitizationTraining.category.${key}`;
+      const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
+      if (translated) return translated;
+      return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+    }).join(', ');
   };
 
   const handleValidation = (status) => {
@@ -179,6 +188,15 @@ function ValidationDialog({
               </span>
               {getCategoryLabel(data.category)}
             </Box>
+            {data.modules && data.modules.length > 0 && (
+              <Box className={classes.dataRow}>
+                <span className={classes.label}>
+                  {formatMessage(intl, 'merankabandi', 'validation.topics')}
+                  :
+                </span>
+                {getModulesLabel(data.modules)}
+              </Box>
+            )}
             <Box className={classes.dataRow}>
               <span className={classes.label}>
                 {formatMessage(intl, 'merankabandi', 'validation.facilitator')}

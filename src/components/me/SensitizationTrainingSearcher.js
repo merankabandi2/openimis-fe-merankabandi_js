@@ -62,18 +62,33 @@ function SensitizationTrainingSearcher({
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
 
-    // Try to get translation first - handle both lowercase and uppercase keys
     const normalizedKey = categoryKey.toLowerCase();
-    const translationKey = `sensitizationTraining.category.${normalizedKey}`;
-    const translated = intl.formatMessage({ id: translationKey });
+    // Try with module prefix (openIMIS auto-prefixes translations)
+    const withPrefix = `merankabandi.sensitizationTraining.category.${normalizedKey}`;
+    const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
+    if (translated) return translated;
 
-    // If translation exists (not same as key), return it
-    if (translated !== translationKey) {
-      return translated;
-    }
+    // Fallback: try without prefix
+    const withoutPrefix = `sensitizationTraining.category.${normalizedKey}`;
+    const translated2 = intl.formatMessage({ id: withoutPrefix, defaultMessage: '' });
+    if (translated2) return translated2;
 
-    // Otherwise return the original value
-    return categoryKey;
+    // Last resort: humanize the key
+    return categoryKey.replace(/__/g, ' — ').replace(/_/g, ' ');
+  };
+
+  // Helper function to get human-readable modules/topics labels
+  const getModulesLabel = (modules) => {
+    if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
+
+    return modules.map((m) => {
+      const key = m.toLowerCase();
+      const withPrefix = `merankabandi.sensitizationTraining.category.${key}`;
+      const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
+      if (translated) return translated;
+      // Humanize: la_nutrition → La nutrition
+      return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+    }).join(', ');
   };
 
   useEffect(() => {
@@ -130,6 +145,7 @@ function SensitizationTrainingSearcher({
     'location.locationType.1',
     'location.locationType.2',
     'category.label',
+    'sensitizationTraining.topics',
     'participants.label',
     'validation.status',
   ];
@@ -175,10 +191,11 @@ function SensitizationTrainingSearcher({
 
   const itemFormatters = () => [
     (sensitizationTraining) => sensitizationTraining.sensitizationDate,
-    (sensitizationTraining) => sensitizationTraining.location.parent.parent.name,
-    (sensitizationTraining) => sensitizationTraining.location.parent.name,
-    (sensitizationTraining) => sensitizationTraining.location.name,
+    (sensitizationTraining) => sensitizationTraining.location?.parent?.parent?.name || '',
+    (sensitizationTraining) => sensitizationTraining.location?.parent?.name || '',
+    (sensitizationTraining) => sensitizationTraining.location?.name || '',
     (sensitizationTraining) => getCategoryLabel(sensitizationTraining.category),
+    (sensitizationTraining) => getModulesLabel(sensitizationTraining.modules),
     (sensitizationTraining) => renderParticipants(sensitizationTraining),
     (sensitizationTraining) => renderValidationStatus(sensitizationTraining),
   ];
