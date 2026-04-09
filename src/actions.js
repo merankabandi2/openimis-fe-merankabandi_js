@@ -261,6 +261,7 @@ const INDICATOR_ACHIEVEMENT_FULL_PROJECTION = () => [
   'achieved',
   'date',
   'comment',
+  'breakdowns { key label value }',
 ];
 
 const WORKFLOWS_FULL_PROJECTION = () => [

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { injectIntl } from 'react-intl';
 import {
-  Grid, Paper, Typography, Divider, Button, IconButton, Tooltip
+  Grid, Paper, Typography, Divider, Button, IconButton, Tooltip, Box
 } from '@material-ui/core';
 import { withTheme, withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
@@ -128,7 +128,22 @@ class IndicatorAchievementsPanel extends React.Component {
 
   itemFormatters = () => [
     (achievement) => achievement.date,
-    (achievement) => achievement.achieved,
+    (achievement) => (
+      <Box>
+        <Typography variant="body2">{achievement.achieved}</Typography>
+        {achievement.breakdowns?.length > 0 && (
+          <Box ml={2} mt={1}>
+            {achievement.breakdowns
+              .filter((b) => b.value > 0)
+              .map((b) => (
+                <Typography key={b.key} variant="caption" display="block" color="textSecondary">
+                  {b.label}: {(b.value || 0).toLocaleString()}
+                </Typography>
+              ))}
+          </Box>
+        )}
+      </Box>
+    ),
     (achievement) => achievement.comment,
     (achievement) => (
       <div style={{ display: 'flex', flexDirection: 'row' }}>
