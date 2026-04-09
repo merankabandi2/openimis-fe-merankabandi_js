@@ -21,6 +21,7 @@ import {
 } from '../actions';
 import { MODULE_NAME, ROUTE_PAYMENT_AGENCIES } from '../constants';
 import PaymentAgencyForm from '../components/payment-agency/PaymentAgencyForm';
+import AgencyFeeConfigPanel from '../components/payment-agency/AgencyFeeConfigPanel';
 
 const styles = (theme) => ({
   page: theme.page,
@@ -87,6 +88,7 @@ function PaymentAgencyPage({
         save={save}
         back={() => history.push(`/${ROUTE_PAYMENT_AGENCIES}`)}
         HeadPanel={PaymentAgencyForm}
+        Panels={isNew ? [] : [AgencyFeeConfigPanel]}
         mandatoryFieldsEmpty={() => false}
         saveTooltip={formatMessage(intl, MODULE_NAME, 'tooltip.save')}
       />

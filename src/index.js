@@ -3,6 +3,10 @@ import React from 'react';
 import { Dashboard, Event, AttachMoney, Assessment, Sync, ListAlt, AddCircleOutline, MonetizationOn, Map as MapIcon, Person } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 
+// Payment Cycle workspace tab
+import CycleWorkspaceTabLabel from './components/payroll/CycleWorkspaceTabLabel';
+import CycleWorkspacePanel from './components/payroll/CycleWorkspacePanel';
+
 // Grievance pickers (override upstream defaults with Burundi-specific implementations)
 import CascadingCategoryPicker from './components/grievance/CascadingCategoryPicker';
 import HierarchicalCategoryPicker from './components/grievance/HierarchicalCategoryPicker';
@@ -261,6 +265,10 @@ const DEFAULT_CONFIG = {
   'benefitPlan.TabPanel.label': [BenefitPlanProvincesTabLabel],
   'benefitPlan.TabPanel.panel': [BenefitPlanProvincesTabPanel],
 
+  // Payment Cycle workspace tab (commune config + batch payroll generation)
+  'paymentCycle.TabPanel.label': [CycleWorkspaceTabLabel],
+  'paymentCycle.TabPanel.panel': [CycleWorkspacePanel],
+
   // Payment Request tab panels (Merankabandi verification/approval workflow)
   'paymentRequest.TabPanel.label': [
     PaymentRequestAllTabLabel,
@@ -366,6 +374,13 @@ const DEFAULT_CONFIG = {
   // Payment menu items (contributed to PaymentMainMenu via 'payment.MainMenu' key
   // so they appear in getMenuEntries() for DB menu config matching)
   'payment.MainMenu': [
+    {
+      text: <FormattedMessage module="merankabandi" id="menu.payment.cycles" />,
+      icon: <Sync />,
+      route: '/paymentCycles',
+      filter: (rights) => rights.includes(RIGHT_PAYROLL_SEARCH),
+      id: 'mainMenuPayment.paymentCycles',
+    },
     {
       text: <FormattedMessage module="payroll" id="menu.payment.payments" />,
       icon: <ListAlt />,

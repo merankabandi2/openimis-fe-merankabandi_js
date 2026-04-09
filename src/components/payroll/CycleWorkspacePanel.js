@@ -1,0 +1,354 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { injectIntl } from 'react-intl';
+import { withStyles } from '@material-ui/core/styles';
+import {
+  Grid, Typography, Paper, Table, TableHead, TableBody, TableRow, TableCell,
+  TextField, Button, Checkbox, Chip, MenuItem, IconButton,
+  FormControl, InputLabel, Select, FormControlLabel, Switch,
+} from '@material-ui/core';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import SaveIcon from '@material-ui/icons/Save';
+import DateRangeIcon from '@material-ui/icons/DateRange';
+import {
+  withModulesManager, formatMessage, useGraphqlQuery,
+} from '@openimis/fe-core';
+import { MODULE_NAME } from '../../constants';
+
+const VAGUE_PROVINCES = {
+  1: ['Kirundo', 'Gitega', 'Karuzi', 'Ruyigi'],
+  2: ['Ngozi', 'Muyinga', 'Muramvya', 'Mwaro'],
+  3: ['Bujumbura Mairie', 'Bubanza', 'Cibitoke', 'Rumonge'],
+  4: ['Kayanza', 'Bujumbura Rural', 'Makamba', 'Cankuzo', 'Bururi', 'Rutana'],
+};
+
+const styles = (theme) => ({
+  paper: { padding: theme.spacing(2), marginTop: theme.spacing(1) },
+  title: { fontWeight: 'bold', color: theme.palette.primary.main, marginBottom: theme.spacing(1) },
+  configSection: { marginBottom: theme.spacing(2), padding: theme.spacing(2), backgroundColor: '#f5f5f5', borderRadius: 4 },
+  headerCell: { fontWeight: 'bold', backgroundColor: theme.palette.primary.main, color: '#fff', padding: '8px 12px' },
+  cell: { padding: '6px 12px' },
+  vagueChip: { margin: theme.spacing(0.5), cursor: 'pointer' },
+  vagueChipSelected: { margin: theme.spacing(0.5), cursor: 'pointer', backgroundColor: theme.palette.primary.main, color: '#fff' },
+  provinceChip: { margin: theme.spacing(0.25), fontSize: '0.75rem' },
+  provinceChipSelected: { margin: theme.spacing(0.25), fontSize: '0.75rem', backgroundColor: theme.palette.primary.light, color: '#fff' },
+  summaryBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: theme.spacing(1), marginTop: theme.spacing(1) },
+  blocked: { color: theme.palette.error.main, fontWeight: 'bold' },
+  dateInput: { width: 150 },
+  topupInput: { width: 120 },
+  actionButtons: { display: 'flex', gap: theme.spacing(1) },
+});
+
+function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
+  const cycleId = paymentCycle?.id || paymentCycle?.uuid;
+  const [selectedVagues, setSelectedVagues] = useState([]);
+  const [selectedProvinces, setSelectedProvinces] = useState([]);
+  const [topupActive, setTopupActive] = useState(false);
+  const [topupAmount, setTopupAmount] = useState(0);
+  const [communes, setCommunes] = useState([]);
+  const [bulkDate, setBulkDate] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Load commune schedules linked to this cycle
+  const scheduleQuery = `
+    query($cycleId: ID!) {
+      communePaymentSchedule(paymentCycle_Id: $cycleId, first: 200) {
+        edges {
+          node {
+            id uuid roundNumber status dateValidFrom
+            topupAmount totalBeneficiaries amountPerBeneficiary
+            commune { id uuid name parent { id uuid name } }
+            payroll { id uuid name status }
+          }
+        }
+      }
+    }
+  `;
+  const { data: scheduleData, refetch } = useGraphqlQuery(
+    scheduleQuery,
+    { cycleId: cycleId || '' },
+    { skip: !cycleId },
+  );
+
+  useEffect(() => {
+    if (scheduleData?.communePaymentSchedule?.edges) {
+      setCommunes(scheduleData.communePaymentSchedule.edges.map((e) => {
+        const n = e.node;
+        return {
+          id: n.uuid,
+          commune: n.commune?.name || '',
+          communeId: n.commune?.uuid,
+          province: n.commune?.parent?.name || '',
+          roundNumber: n.roundNumber,
+          status: n.status,
+          dateValidFrom: n.dateValidFrom || '',
+          topupAmount: parseFloat(n.topupAmount) || 0,
+          beneficiaries: n.totalBeneficiaries || 0,
+          payrollStatus: n.payroll?.status,
+          selected: true,
+        };
+      }));
+    }
+  }, [scheduleData]);
+
+  // Load cycle json_ext config
+  useEffect(() => {
+    if (paymentCycle?.jsonExt) {
+      try {
+        const ext = typeof paymentCycle.jsonExt === 'string'
+          ? JSON.parse(paymentCycle.jsonExt)
+          : paymentCycle.jsonExt;
+        setTopupActive(ext.topup_active || false);
+        setTopupAmount(ext.topup_amount || 0);
+        if (ext.vagues) setSelectedVagues(ext.vagues);
+      } catch { /* ignore */ }
+    }
+  }, [paymentCycle]);
+
+  // Derive provinces from selected vagues
+  useEffect(() => {
+    const provinces = [];
+    selectedVagues.forEach((v) => {
+      (VAGUE_PROVINCES[v] || []).forEach((p) => {
+        if (!provinces.includes(p)) provinces.push(p);
+      });
+    });
+    setSelectedProvinces(provinces);
+  }, [selectedVagues]);
+
+  const toggleVague = useCallback((v) => {
+    setSelectedVagues((prev) =>
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
+    );
+  }, []);
+
+  const toggleProvince = useCallback((p) => {
+    setSelectedProvinces((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  }, []);
+
+  const applyBulkDate = useCallback(() => {
+    if (!bulkDate) return;
+    setCommunes((prev) => prev.map((c) => ({
+      ...c,
+      dateValidFrom: c.selected && c.status === 'PLANNING' ? bulkDate : c.dateValidFrom,
+    })));
+  }, [bulkDate]);
+
+  const initializeCommunes = useCallback(async () => {
+    if (!cycleId) return;
+    setLoading(true);
+    // TODO: call initialize_cycle_communes GQL mutation
+    // For now just refetch
+    await refetch();
+    setLoading(false);
+  }, [cycleId, refetch]);
+
+  const generatePayrolls = useCallback(async () => {
+    if (!cycleId) return;
+    setLoading(true);
+    // TODO: call batch_generate_payrolls GQL mutation
+    setLoading(false);
+  }, [cycleId]);
+
+  // Filter communes by selected province
+  const filteredCommunes = communes.filter((c) =>
+    selectedProvinces.length === 0 || selectedProvinces.includes(c.province)
+  );
+
+  const eligibleCount = filteredCommunes.filter((c) => c.status === 'PLANNING' && c.dateValidFrom).length;
+  const blockedCount = filteredCommunes.filter((c) => c.status !== 'PLANNING' && c.status !== 'RECONCILED').length;
+
+  if (!cycleId) return null;
+
+  return (
+    <Paper className={classes.paper}>
+      <Typography variant="h6" className={classes.title}>
+        {formatMessage(intl, MODULE_NAME, 'cycleWorkspace.title')}
+      </Typography>
+
+      {/* Config section */}
+      <div className={classes.configSection}>
+        <Grid container spacing={2} alignItems="center">
+          {/* Vague selector */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2">Vagues</Typography>
+            {[1, 2, 3, 4].map((v) => (
+              <Chip
+                key={v}
+                label={`V${v}`}
+                onClick={() => toggleVague(v)}
+                className={selectedVagues.includes(v) ? classes.vagueChipSelected : classes.vagueChip}
+                color={selectedVagues.includes(v) ? 'primary' : 'default'}
+              />
+            ))}
+          </Grid>
+
+          {/* Province chips */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2">Provinces</Typography>
+            {Object.values(VAGUE_PROVINCES).flat().map((p) => (
+              <Chip
+                key={p}
+                label={p}
+                size="small"
+                onClick={() => toggleProvince(p)}
+                className={selectedProvinces.includes(p) ? classes.provinceChipSelected : classes.provinceChip}
+                variant={selectedProvinces.includes(p) ? 'default' : 'outlined'}
+              />
+            ))}
+          </Grid>
+
+          {/* Top-up config */}
+          <Grid item xs={3}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={topupActive}
+                  onChange={(e) => setTopupActive(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Top-up actif"
+            />
+          </Grid>
+          {topupActive && (
+            <Grid item xs={3}>
+              <TextField
+                label="Montant top-up (BIF)"
+                type="number"
+                value={topupAmount}
+                onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
+                size="small"
+                className={classes.topupInput}
+              />
+            </Grid>
+          )}
+
+          {/* Bulk date + Initialize button */}
+          <Grid item xs={3}>
+            <TextField
+              label="Date début"
+              type="date"
+              value={bulkDate}
+              onChange={(e) => setBulkDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              size="small"
+              className={classes.dateInput}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <div className={classes.actionButtons}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DateRangeIcon />}
+                onClick={applyBulkDate}
+                disabled={!bulkDate}
+              >
+                Appliquer
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                startIcon={<SaveIcon />}
+                onClick={initializeCommunes}
+                disabled={loading || selectedProvinces.length === 0}
+              >
+                Initialiser
+              </Button>
+            </div>
+          </Grid>
+        </Grid>
+      </div>
+
+      {/* Commune table */}
+      {communes.length > 0 ? (
+        <>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell className={classes.headerCell} padding="checkbox">
+                  <Checkbox size="small" style={{ color: '#fff' }} />
+                </TableCell>
+                <TableCell className={classes.headerCell}>Province</TableCell>
+                <TableCell className={classes.headerCell}>Commune</TableCell>
+                <TableCell className={classes.headerCell}>Agence</TableCell>
+                <TableCell className={classes.headerCell}>Date début</TableCell>
+                <TableCell className={classes.headerCell}>Bénéf.</TableCell>
+                <TableCell className={classes.headerCell}>Statut</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredCommunes.map((c) => (
+                <TableRow key={c.id} hover>
+                  <TableCell className={classes.cell} padding="checkbox">
+                    <Checkbox
+                      size="small"
+                      checked={c.selected}
+                      onChange={() => setCommunes((prev) =>
+                        prev.map((x) => x.id === c.id ? { ...x, selected: !x.selected } : x)
+                      )}
+                      disabled={c.status !== 'PLANNING'}
+                    />
+                  </TableCell>
+                  <TableCell className={classes.cell}>{c.province}</TableCell>
+                  <TableCell className={classes.cell}>{c.commune}</TableCell>
+                  <TableCell className={classes.cell}>—</TableCell>
+                  <TableCell className={classes.cell}>
+                    {c.status === 'PLANNING' ? (
+                      <TextField
+                        type="date"
+                        size="small"
+                        value={c.dateValidFrom}
+                        onChange={(e) => setCommunes((prev) =>
+                          prev.map((x) => x.id === c.id ? { ...x, dateValidFrom: e.target.value } : x)
+                        )}
+                        InputLabelProps={{ shrink: true }}
+                        className={classes.dateInput}
+                      />
+                    ) : (
+                      c.dateValidFrom || <span className={classes.blocked}>⚠ en attente</span>
+                    )}
+                  </TableCell>
+                  <TableCell className={classes.cell}>{c.beneficiaries}</TableCell>
+                  <TableCell className={classes.cell}>
+                    <Chip
+                      label={c.status}
+                      size="small"
+                      color={c.status === 'PLANNING' ? 'default' : c.status === 'RECONCILED' ? 'primary' : 'secondary'}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* Summary bar */}
+          <div className={classes.summaryBar}>
+            <Typography variant="body2">
+              {eligibleCount}/{filteredCommunes.length} éligibles
+              {blockedCount > 0 && <span className={classes.blocked}> · {blockedCount} bloquées</span>}
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<PlayArrowIcon />}
+              onClick={generatePayrolls}
+              disabled={loading || eligibleCount === 0}
+            >
+              Générer les payrolls ({eligibleCount})
+            </Button>
+          </div>
+        </>
+      ) : (
+        <Typography color="textSecondary" align="center" style={{ padding: 24 }}>
+          Sélectionnez des vagues/provinces et cliquez "Initialiser" pour configurer les communes.
+        </Typography>
+      )}
+    </Paper>
+  );
+}
+
+export default withModulesManager(injectIntl(withStyles(styles)(CycleWorkspacePanel)));
