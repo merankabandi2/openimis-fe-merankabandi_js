@@ -62,9 +62,11 @@ function SensitizationTrainingSearcher({
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
     const normalizedKey = categoryKey.toLowerCase();
-    const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${normalizedKey}`);
-    // formatMessage returns the full key path if not found — detect that and humanize
-    if (translated && !translated.includes('.')) return translated;
+    const key = `sensitizationTraining.category.${normalizedKey}`;
+    // Check if translation exists in intl messages (keys are unprefixed in fr.json)
+    if (intl.messages[key]) {
+      return intl.formatMessage({ id: key });
+    }
     return categoryKey.replace(/__/g, ' — ').replace(/_/g, ' ');
   };
 
@@ -72,10 +74,11 @@ function SensitizationTrainingSearcher({
   const getModulesLabel = (modules) => {
     if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
     return modules.map((m) => {
-      const key = m.toLowerCase();
-      const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${key}`);
-      if (translated && !translated.includes('.')) return translated;
-      return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+      const key = `sensitizationTraining.category.${m.toLowerCase()}`;
+      if (intl.messages[key]) {
+        return intl.formatMessage({ id: key });
+      }
+      return m.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
     }).join(', ');
   };
 
