@@ -218,32 +218,16 @@ function BehaviorChangePromotionSearcher({
     twa_participants: formatMessage('me.twa_participants'),
   };
 
-  const [promotionsExport, setPromotionsExport] = useState();
-  useEffect(() => {
-    if (promotionsExport) {
-      downloadExport(promotionsExport, `${formatMessage('behaviorChangePromotion.page.title')}.csv`)();
-      setPromotionsExport(null);
-    }
-  }, [promotionsExport]);
-
-  const downloadBehaviorChangePromotions = async (params) => {
-    const response = await fetch(`${baseApiUrl}/graphql`, {
-      method: 'post',
-      headers: apiHeaders(),
-      body: JSON.stringify({
-        query: `
-          {
-            behaviorChangePromotionExport${!!params && params.length ? `(${params.join(',')})` : ''}
-          }`,
-      }),
-    });
-
-    if (!response.ok) {
-      throw response;
-    } else {
-      const { data } = await response.json();
-      setPromotionsExport(data.behaviorChangePromotionExport);
-    }
+  const downloadBehaviorChangePromotions = async () => {
+    const url = `${baseApiUrl}/merankabandi/export/behavior-change/`;
+    const response = await fetch(url, { headers: apiHeaders() });
+    if (!response.ok) throw response;
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'promotions_comportement.xlsx';
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   return (
@@ -269,8 +253,6 @@ function BehaviorChangePromotionSearcher({
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadBehaviorChangePromotions}
-        exportFields={exportFields}
-        exportFieldsColumns={exportFieldsColumns}
         exportFieldLabel={formatMessage('export.label')}
       />
       {selectedPromotion && (

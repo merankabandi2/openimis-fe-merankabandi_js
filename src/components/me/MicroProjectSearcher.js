@@ -223,32 +223,16 @@ function MicroProjectSearcher({
     (microProject) => renderValidationStatus(microProject),
   ];
 
-  const [indicatorsExport, setIndicatorsExport] = useState();
-  useEffect(() => {
-    if (indicatorsExport) {
-      downloadExport(indicatorsExport, `${formatMessage('microProject.page.title')}.csv`)();
-      setIndicatorsExport(null);
-    }
-  }, [indicatorsExport]);
-
-  const downloadIndicators = async (params) => {
-    const response = await fetch(`${baseApiUrl}/graphql`, {
-      method: 'post',
-      headers: apiHeaders(),
-      body: JSON.stringify({
-        query: `
-          {
-            microProjectExport${!!params && params.length ? `(${params.join(',')})` : ''}
-          }`,
-      }),
-    });
-
-    if (!response.ok) {
-      throw response;
-    } else {
-      const { data } = await response.json();
-      setIndicatorsExport(data.microProjectExport);
-    }
+  const downloadIndicators = async () => {
+    const url = `${baseApiUrl}/merankabandi/export/micro-projects/`;
+    const response = await fetch(url, { headers: apiHeaders() });
+    if (!response.ok) throw response;
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'micro_projets.xlsx';
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   const onDoubleClick = (microProject) => openMicroProject(microProject);
@@ -338,8 +322,6 @@ function MicroProjectSearcher({
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadIndicators}
-        exportFields={exportFields}
-        exportFieldsColumns={exportFieldsColumns}
         exportFieldLabel={formatMessage('export.label')}
         key={refreshKey}
       />

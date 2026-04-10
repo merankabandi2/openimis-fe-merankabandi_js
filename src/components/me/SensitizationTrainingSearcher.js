@@ -236,50 +236,16 @@ function SensitizationTrainingSearcher({
     </Paper>
   );
 
-  const exportFields = [
-    'sensitization_date',
-    'location',
-    'category',
-    'male_participants',
-    'female_participants',
-    'twa_participants',
-  ];
-
-  const exportFieldsColumns = {
-    sensitization_date: 'sensitization_date',
-    location: formatMessage('location'),
-    category: formatMessage('category'),
-    male_participants: formatMessage('me.male_participants'),
-    female_participants: formatMessage('me.female_participants'),
-    twa_participants: formatMessage('me.twa_participants'),
-  };
-
-  const [sensitizationsExport, setSensitizationsExport] = useState();
-  useEffect(() => {
-    if (sensitizationsExport) {
-      downloadExport(sensitizationsExport, `${formatMessage('sensitizationTraining.page.title')}.csv`)();
-      setSensitizationsExport(null);
-    }
-  }, [sensitizationsExport]);
-
-  const downloadSensitizationTrainings = async (params) => {
-    const response = await fetch(`${baseApiUrl}/graphql`, {
-      method: 'post',
-      headers: apiHeaders(),
-      body: JSON.stringify({
-        query: `
-          {
-            sensitizationTrainingExport${!!params && params.length ? `(${params.join(',')})` : ''}
-          }`,
-      }),
-    });
-
-    if (!response.ok) {
-      throw response;
-    } else {
-      const { data } = await response.json();
-      setSensitizationsExport(data.sensitizationTrainingExport);
-    }
+  const downloadSensitizationTrainings = async () => {
+    const url = `${baseApiUrl}/merankabandi/export/sensitization-trainings/`;
+    const response = await fetch(url, { headers: apiHeaders() });
+    if (!response.ok) throw response;
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sensibilisations.xlsx';
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   return (
@@ -305,8 +271,6 @@ function SensitizationTrainingSearcher({
         defaultFilters={defaultFilters()}
         exportable
         exportFetch={downloadSensitizationTrainings}
-        exportFields={exportFields}
-        exportFieldsColumns={exportFieldsColumns}
         exportFieldLabel={formatMessage('export.label')}
       />
       {selectedTraining && (
