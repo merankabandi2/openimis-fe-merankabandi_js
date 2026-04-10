@@ -168,7 +168,11 @@ function BehaviorChangePromotionSearcher({
     return locId && latestPerColline[locId] === bcp.reportDate;
   };
 
-  const formatDate = (d) => d ? d.substring(5) : '';
+  const formatDate = (d) => {
+    if (!d) return '';
+    const date = new Date(d + 'T00:00:00');
+    return date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+  };
 
   const formatLocation = (loc) => {
     if (!loc) return '';
