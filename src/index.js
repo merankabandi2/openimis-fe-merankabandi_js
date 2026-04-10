@@ -347,6 +347,7 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_PAYMENT_AGENCIES, component: PaymentAgenciesPage },
     { path: `${ROUTE_PAYMENT_AGENCY}/:payment_agency_id?`, component: PaymentAgencyPage },
     { path: `${ROUTE_PAYMENT_NEW_PAYMENT}/:payroll_uuid?`, component: MerankabandiPayrollPage },
+    { path: 'payrolls/payroll/:payroll_uuid?', component: MerankabandiPayrollPage },
     { path: ROUTE_PAYROLLS_APPROVED, component: ApprovedPayrollsPage },
     { path: ROUTE_PAYROLLS_PENDING, component: PendingPayrollsPage },
     { path: ROUTE_PAYROLLS_RECONCILED, component: ReconciledPayrollsPage },

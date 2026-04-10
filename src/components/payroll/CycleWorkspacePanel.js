@@ -3,12 +3,11 @@ import { injectIntl } from 'react-intl';
 import { withStyles } from '@material-ui/core/styles';
 import {
   Grid, Typography, Paper, Table, TableHead, TableBody, TableRow, TableCell,
-  TextField, Button, Checkbox, Chip, MenuItem, IconButton,
-  FormControl, InputLabel, Select, FormControlLabel, Switch,
+  Button, Checkbox, Chip, TextField,
+  FormControlLabel, Switch, CircularProgress,
 } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import SaveIcon from '@material-ui/icons/Save';
-import DateRangeIcon from '@material-ui/icons/DateRange';
 import {
   withModulesManager, formatMessage, useGraphqlQuery,
 } from '@openimis/fe-core';
@@ -33,9 +32,9 @@ const styles = (theme) => ({
   provinceChipSelected: { margin: theme.spacing(0.25), fontSize: '0.75rem', backgroundColor: theme.palette.primary.light, color: '#fff' },
   summaryBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: theme.spacing(1), marginTop: theme.spacing(1) },
   blocked: { color: theme.palette.error.main, fontWeight: 'bold' },
-  dateInput: { width: 150 },
   topupInput: { width: 120 },
-  actionButtons: { display: 'flex', gap: theme.spacing(1) },
+  actionButtons: { display: 'flex', gap: theme.spacing(1), alignItems: 'center' },
+  emptyTable: { padding: theme.spacing(3), textAlign: 'center', color: theme.palette.text.secondary },
 });
 
 function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
@@ -45,7 +44,6 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
   const [topupActive, setTopupActive] = useState(false);
   const [topupAmount, setTopupAmount] = useState(0);
   const [communes, setCommunes] = useState([]);
-  const [bulkDate, setBulkDate] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Load commune schedules linked to this cycle
@@ -127,42 +125,6 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
     );
   }, []);
 
-  const applyBulkDate = useCallback(async () => {
-    if (!bulkDate || !cycleId) return;
-    setLoading(true);
-
-    // Update locally for immediate feedback
-    setCommunes((prev) => prev.map((c) => ({
-      ...c,
-      dateValidFrom: c.selected && c.status === 'PLANNING' ? bulkDate : c.dateValidFrom,
-    })));
-
-    // Persist via mutation
-    const communeIds = communes
-      .filter((c) => c.selected && c.status === 'PLANNING' && selectedProvinces.includes(c.province))
-      .map((c) => c.communeId)
-      .filter(Boolean);
-
-    if (communeIds.length > 0) {
-      await gqlFetch(
-        `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
-          updateCommuneDatesBulk(input: $input) { clientMutationId }
-        }`,
-        {
-          input: {
-            paymentCycleId: cycleId,
-            communeIds,
-            dateValidFrom: bulkDate,
-            clientMutationId: `dates-${Date.now()}`,
-          },
-        },
-      );
-      setTimeout(() => { refetch(); setLoading(false); }, 1500);
-    } else {
-      setLoading(false);
-    }
-  }, [bulkDate, cycleId, communes, selectedProvinces, gqlFetch, refetch]);
-
   const gqlFetch = useCallback(async (query, variables) => {
     const resp = await fetch('/api/graphql', {
       method: 'POST',
@@ -237,7 +199,7 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
       {
         input: {
           paymentCycleId: cycleId,
-          paymentPlanId: ppId || cycleId, // fallback
+          paymentPlanId: ppId || cycleId,
           clientMutationId: `gen-${Date.now()}`,
         },
       },
@@ -251,8 +213,16 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
     selectedProvinces.length === 0 || selectedProvinces.includes(c.province)
   );
 
-  const eligibleCount = filteredCommunes.filter((c) => c.status === 'PLANNING' && c.dateValidFrom).length;
-  const blockedCount = filteredCommunes.filter((c) => c.status !== 'PLANNING' && c.status !== 'RECONCILED').length;
+  // Build preview table from selected provinces (before Initialize)
+  const previewCommunes = selectedProvinces.length > 0 && communes.length === 0;
+
+  const eligibleCount = filteredCommunes.filter((c) => c.status === 'PLANNING').length;
+  const blockedCount = filteredCommunes.filter((c) =>
+    c.status !== 'PLANNING' && c.status !== 'RECONCILED'
+  ).length;
+
+  // Cycle date for display
+  const cycleStartDate = paymentCycle?.startDate || paymentCycle?.start_date || '';
 
   if (!cycleId) return null;
 
@@ -294,7 +264,7 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
             ))}
           </Grid>
 
-          {/* Top-up config */}
+          {/* Top-up config + Initialize button */}
           <Grid item xs={3}>
             <FormControlLabel
               control={
@@ -319,47 +289,26 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
               />
             </Grid>
           )}
-
-          {/* Bulk date + Initialize button */}
-          <Grid item xs={3}>
-            <TextField
-              label="Date début"
-              type="date"
-              value={bulkDate}
-              onChange={(e) => setBulkDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              size="small"
-              className={classes.dateInput}
-            />
-          </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={topupActive ? 6 : 9}>
             <div className={classes.actionButtons}>
+              {loading && <CircularProgress size={20} />}
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DateRangeIcon />}
-                onClick={applyBulkDate}
-                disabled={!bulkDate}
-              >
-                Appliquer
-              </Button>
-              <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 size="small"
                 startIcon={<SaveIcon />}
                 onClick={initializeCommunes}
                 disabled={loading || selectedProvinces.length === 0}
               >
-                Initialiser
+                Initialiser les communes
               </Button>
             </div>
           </Grid>
         </Grid>
       </div>
 
-      {/* Commune table */}
-      {communes.length > 0 ? (
+      {/* Commune table — show when we have data OR when provinces are selected */}
+      {(communes.length > 0 || previewCommunes) ? (
         <>
           <Table size="small">
             <TableHead>
@@ -369,77 +318,76 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
                 </TableCell>
                 <TableCell className={classes.headerCell}>Province</TableCell>
                 <TableCell className={classes.headerCell}>Commune</TableCell>
-                <TableCell className={classes.headerCell}>Agence</TableCell>
-                <TableCell className={classes.headerCell}>Date début</TableCell>
+                <TableCell className={classes.headerCell}>Tranche</TableCell>
                 <TableCell className={classes.headerCell}>Bénéf.</TableCell>
                 <TableCell className={classes.headerCell}>Statut</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredCommunes.map((c) => (
-                <TableRow key={c.id} hover>
-                  <TableCell className={classes.cell} padding="checkbox">
-                    <Checkbox
-                      size="small"
-                      checked={c.selected}
-                      onChange={() => setCommunes((prev) =>
-                        prev.map((x) => x.id === c.id ? { ...x, selected: !x.selected } : x)
-                      )}
-                      disabled={c.status !== 'PLANNING'}
-                    />
-                  </TableCell>
-                  <TableCell className={classes.cell}>{c.province}</TableCell>
-                  <TableCell className={classes.cell}>{c.commune}</TableCell>
-                  <TableCell className={classes.cell}>—</TableCell>
-                  <TableCell className={classes.cell}>
-                    {c.status === 'PLANNING' ? (
-                      <TextField
-                        type="date"
+              {communes.length > 0 ? (
+                filteredCommunes.map((c) => (
+                  <TableRow key={c.id} hover>
+                    <TableCell className={classes.cell} padding="checkbox">
+                      <Checkbox
                         size="small"
-                        value={c.dateValidFrom}
-                        onChange={(e) => setCommunes((prev) =>
-                          prev.map((x) => x.id === c.id ? { ...x, dateValidFrom: e.target.value } : x)
+                        checked={c.selected}
+                        onChange={() => setCommunes((prev) =>
+                          prev.map((x) => x.id === c.id ? { ...x, selected: !x.selected } : x)
                         )}
-                        InputLabelProps={{ shrink: true }}
-                        className={classes.dateInput}
+                        disabled={c.status !== 'PLANNING'}
                       />
-                    ) : (
-                      c.dateValidFrom || <span className={classes.blocked}>⚠ en attente</span>
-                    )}
-                  </TableCell>
-                  <TableCell className={classes.cell}>{c.beneficiaries}</TableCell>
-                  <TableCell className={classes.cell}>
-                    <Chip
-                      label={c.status}
-                      size="small"
-                      color={c.status === 'PLANNING' ? 'default' : c.status === 'RECONCILED' ? 'primary' : 'secondary'}
-                    />
+                    </TableCell>
+                    <TableCell className={classes.cell}>{c.province}</TableCell>
+                    <TableCell className={classes.cell}>{c.commune}</TableCell>
+                    <TableCell className={classes.cell}>T{c.roundNumber}</TableCell>
+                    <TableCell className={classes.cell}>{c.beneficiaries}</TableCell>
+                    <TableCell className={classes.cell}>
+                      <Chip
+                        label={c.status}
+                        size="small"
+                        color={
+                          c.status === 'RECONCILED' ? 'primary'
+                            : c.status === 'PLANNING' ? 'default'
+                              : 'secondary'
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className={classes.emptyTable}>
+                    {selectedProvinces.length} province(s) sélectionnée(s).
+                    Cliquez "Initialiser les communes" pour créer les entrées de planification.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
 
           {/* Summary bar */}
-          <div className={classes.summaryBar}>
-            <Typography variant="body2">
-              {eligibleCount}/{filteredCommunes.length} éligibles
-              {blockedCount > 0 && <span className={classes.blocked}> · {blockedCount} bloquées</span>}
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<PlayArrowIcon />}
-              onClick={generatePayrolls}
-              disabled={loading || eligibleCount === 0}
-            >
-              Générer les payrolls ({eligibleCount})
-            </Button>
-          </div>
+          {communes.length > 0 && (
+            <div className={classes.summaryBar}>
+              <Typography variant="body2">
+                {eligibleCount}/{filteredCommunes.length} éligibles
+                {blockedCount > 0 && <span className={classes.blocked}> · {blockedCount} bloquées</span>}
+                {cycleStartDate && ` · Date début cycle: ${cycleStartDate}`}
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<PlayArrowIcon />}
+                onClick={generatePayrolls}
+                disabled={loading || eligibleCount === 0}
+              >
+                Générer les payrolls ({eligibleCount})
+              </Button>
+            </div>
+          )}
         </>
       ) : (
         <Typography color="textSecondary" align="center" style={{ padding: 24 }}>
-          Sélectionnez des vagues/provinces et cliquez "Initialiser" pour configurer les communes.
+          Sélectionnez des vagues/provinces et cliquez "Initialiser les communes".
         </Typography>
       )}
     </Paper>
