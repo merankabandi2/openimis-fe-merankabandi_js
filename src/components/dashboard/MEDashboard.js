@@ -246,22 +246,22 @@ function MEDashboard({ rights, locations }) {
 
   // Prepare chart data
   const getGenderChartData = () => {
-    if (!dashboardData?.beneficiaryBreakdown?.gender_summary) return [];
+    const gender = dashboardData?.beneficiaryBreakdown?.gender_breakdown;
+    if (!gender) return [];
 
-    const { planned } = dashboardData.beneficiaryBreakdown.gender_summary;
-    // Only show gender breakdown (men vs women)
+    // Only show gender breakdown (men vs women) using beneficiary counts
     return [
-      { name: formatMessage('dashboard.me.chart.men'), value: planned.men || 0 },
-      { name: formatMessage('dashboard.me.chart.women'), value: planned.women || 0 },
+      { name: formatMessage('dashboard.me.chart.men'), value: gender.male_beneficiaries || gender.male || 0 },
+      { name: formatMessage('dashboard.me.chart.women'), value: gender.female_beneficiaries || gender.female || 0 },
     ].filter(item => item.value > 0);
   };
 
   const getMinorityGroupData = () => {
-    if (!dashboardData?.beneficiaryBreakdown?.gender_summary) return [];
+    const gender = dashboardData?.beneficiaryBreakdown?.gender_breakdown;
+    if (!gender) return [];
 
-    const { planned } = dashboardData.beneficiaryBreakdown.gender_summary;
-    const totalNonTwa = (planned.men || 0) + (planned.women || 0);
-    const twaValue = planned.twa || 0;
+    const totalNonTwa = (gender.male_beneficiaries || gender.male || 0) + (gender.female_beneficiaries || gender.female || 0);
+    const twaValue = gender.twa_beneficiaries || gender.twa || 0;
 
     return [
       { name: formatMessage('dashboard.me.chart.twa'), value: twaValue },
