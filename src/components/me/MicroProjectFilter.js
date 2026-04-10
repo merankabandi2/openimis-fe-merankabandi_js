@@ -24,19 +24,13 @@ function MicroProjectFilter({
 
   return (
     <Grid container className={classes.form}>
-      <Grid item xs={3} className={classes.item}>
+      <Grid item xs={12}>
         <PublishedComponent
-          pubRef="location.LocationPicker"
-          value={filterValue('location')}
-          onChange={(value) => onChangeFilters([
-            {
-              id: 'location',
-              value,
-              filter: value ? `location_Parent_Parent_Id: "${value.id}"` : null,
-            },
-          ])}
-          label={formatMessage(intl, 'socialProtection', 'MicroProjectFilter.location')}
-          restrictedOptions={hasRestrictedProvinces}
+          pubRef="location.DetailedLocationFilter"
+          withNull
+          filters={filters}
+          onChangeFilters={onChangeFilters}
+          anchor="parentLocation"
         />
       </Grid>
       <Grid item xs={2} className={classes.item}>
