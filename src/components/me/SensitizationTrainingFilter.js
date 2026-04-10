@@ -151,7 +151,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'category',
                   value: value || null,
-                  filter: value ? `category_Icontains: "${value}"` : null,
+                  filter: value ? `categoryFilter: "${value}"` : null,
                 },
                 {
                   id: 'theme',
@@ -182,7 +182,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'theme',
                   value: value || null,
-                  filter: value ? `modules_Contains: "${value}"` : null,
+                  filter: value ? `modulesContains: "${value}"` : null,
                 },
               ]);
             }}
