@@ -61,32 +61,20 @@ function SensitizationTrainingSearcher({
   // Helper function to get category display label
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
-
     const normalizedKey = categoryKey.toLowerCase();
-    // Try with module prefix (openIMIS auto-prefixes translations)
-    const withPrefix = `merankabandi.sensitizationTraining.category.${normalizedKey}`;
-    const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
-    if (translated) return translated;
-
-    // Fallback: try without prefix
-    const withoutPrefix = `sensitizationTraining.category.${normalizedKey}`;
-    const translated2 = intl.formatMessage({ id: withoutPrefix, defaultMessage: '' });
-    if (translated2) return translated2;
-
-    // Last resort: humanize the key
+    const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${normalizedKey}`);
+    // formatMessage returns the full key path if not found — detect that and humanize
+    if (translated && !translated.includes('.')) return translated;
     return categoryKey.replace(/__/g, ' — ').replace(/_/g, ' ');
   };
 
   // Helper function to get human-readable modules/topics labels
   const getModulesLabel = (modules) => {
     if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
-
     return modules.map((m) => {
       const key = m.toLowerCase();
-      const withPrefix = `merankabandi.sensitizationTraining.category.${key}`;
-      const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
-      if (translated) return translated;
-      // Humanize: la_nutrition → La nutrition
+      const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${key}`);
+      if (translated && !translated.includes('.')) return translated;
       return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
     }).join(', ');
   };

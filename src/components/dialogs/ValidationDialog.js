@@ -70,26 +70,19 @@ function ValidationDialog({
   // Helper function to get category display label
   const getCategoryLabel = (categoryKey) => {
     if (!categoryKey) return '';
-
     const normalizedKey = categoryKey.toLowerCase();
-    // Try with module prefix (openIMIS auto-prefixes translations)
-    const withPrefix = `merankabandi.sensitizationTraining.category.${normalizedKey}`;
-    const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
-    if (translated) return translated;
-
-    // Fallback: humanize the key
+    const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${normalizedKey}`);
+    if (translated && !translated.includes('.')) return translated;
     return categoryKey.replace(/__/g, ' — ').replace(/_/g, ' ');
   };
 
   // Helper function to get human-readable modules/topics labels
   const getModulesLabel = (modules) => {
     if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
-
     return modules.map((m) => {
       const key = m.toLowerCase();
-      const withPrefix = `merankabandi.sensitizationTraining.category.${key}`;
-      const translated = intl.formatMessage({ id: withPrefix, defaultMessage: '' });
-      if (translated) return translated;
+      const translated = formatMessage(intl, 'merankabandi', `sensitizationTraining.category.${key}`);
+      if (translated && !translated.includes('.')) return translated;
       return key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
     }).join(', ');
   };
