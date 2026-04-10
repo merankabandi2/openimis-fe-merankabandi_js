@@ -105,11 +105,12 @@ function BehaviorChangePromotionSearcher({
   };
 
   const headers = () => [
-    'behaviorChangePromotion.report_date',
+    'snapshot.reportDate',
     'location.locationType.0',
     'location.locationType.1',
     'location.locationType.2',
-    'participants.label',
+    'snapshot.householdsReached',
+    'snapshot.latest',
     'validation.status',
   ];
 
@@ -154,13 +155,38 @@ function BehaviorChangePromotionSearcher({
     </Box>
   );
 
+  // Identify latest snapshot per colline
+  const latestPerColline = React.useMemo(() => {
+    const latest = {};
+    behaviorChangePromotions.forEach((bcp) => {
+      const locId = bcp.location?.id;
+      if (!locId) return;
+      if (!latest[locId] || bcp.reportDate > latest[locId]) {
+        latest[locId] = bcp.reportDate;
+      }
+    });
+    return latest;
+  }, [behaviorChangePromotions]);
+
+  const isLatest = (bcp) => {
+    const locId = bcp.location?.id;
+    return locId && latestPerColline[locId] === bcp.reportDate;
+  };
+
+  const wrap = (bcp, val) => isLatest(bcp)
+    ? <strong>{val}</strong>
+    : <span style={{ color: '#999' }}>{val}</span>;
+
   const itemFormatters = () => [
-    (behaviorChangePromotion) => behaviorChangePromotion.reportDate,
-    (behaviorChangePromotion) => behaviorChangePromotion.location.parent.parent.name,
-    (behaviorChangePromotion) => behaviorChangePromotion.location.parent.name,
-    (behaviorChangePromotion) => behaviorChangePromotion.location.name,
-    (behaviorChangePromotion) => renderParticipants(behaviorChangePromotion),
-    (behaviorChangePromotion) => renderValidationStatus(behaviorChangePromotion),
+    (bcp) => wrap(bcp, bcp.reportDate),
+    (bcp) => wrap(bcp, bcp.location?.parent?.parent?.name || ''),
+    (bcp) => wrap(bcp, bcp.location?.parent?.name || ''),
+    (bcp) => wrap(bcp, bcp.location?.name || ''),
+    (bcp) => renderParticipants(bcp),
+    (bcp) => isLatest(bcp)
+      ? <Chip label={formatMessage('snapshot.latest')} size="small" color="primary" />
+      : null,
+    (bcp) => renderValidationStatus(bcp),
   ];
 
   const onDoubleClick = (behaviorChangePromotion) => openBehaviorChangePromotion(behaviorChangePromotion);

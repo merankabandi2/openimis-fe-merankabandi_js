@@ -116,12 +116,13 @@ function MicroProjectSearcher({
   };
 
   const headers = () => [
-    'microProject.report_date',
+    'snapshot.reportDate',
     'location.locationType.0',
     'location.locationType.1',
     'location.locationType.2',
     'participants.label',
     'projectTypes.label',
+    'snapshot.latest',
     'validation.status',
   ];
 
@@ -213,14 +214,39 @@ function MicroProjectSearcher({
     </Box>
   );
 
+  // Identify latest snapshot per colline
+  const latestPerColline = React.useMemo(() => {
+    const latest = {};
+    microProjects.forEach((mp) => {
+      const locId = mp.location?.id;
+      if (!locId) return;
+      if (!latest[locId] || mp.reportDate > latest[locId]) {
+        latest[locId] = mp.reportDate;
+      }
+    });
+    return latest;
+  }, [microProjects]);
+
+  const isLatest = (mp) => {
+    const locId = mp.location?.id;
+    return locId && latestPerColline[locId] === mp.reportDate;
+  };
+
+  const wrap = (mp, val) => isLatest(mp)
+    ? <strong>{val}</strong>
+    : <span style={{ color: '#999' }}>{val}</span>;
+
   const itemFormatters = () => [
-    (microProject) => microProject.reportDate,
-    (microProject) => microProject.location.parent.parent.name,
-    (microProject) => microProject.location.parent.name,
-    (microProject) => microProject.location.name,
-    (microProject) => renderParticipants(microProject),
-    (microProject) => renderProjectTypes(microProject),
-    (microProject) => renderValidationStatus(microProject),
+    (mp) => wrap(mp, mp.reportDate),
+    (mp) => wrap(mp, mp.location?.parent?.parent?.name || ''),
+    (mp) => wrap(mp, mp.location?.parent?.name || ''),
+    (mp) => wrap(mp, mp.location?.name || ''),
+    (mp) => renderParticipants(mp),
+    (mp) => renderProjectTypes(mp),
+    (mp) => isLatest(mp)
+      ? <Chip label={formatMessage('snapshot.latest')} size="small" color="primary" />
+      : null,
+    (mp) => renderValidationStatus(mp),
   ];
 
   const downloadIndicators = async () => {
