@@ -146,7 +146,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'category',
                   value: value || null,
-                  filter: value ? `category: "${value}"` : null,
+                  filter: value ? `category: ${value.toUpperCase()}` : null,
                 },
                 {
                   id: 'theme',
