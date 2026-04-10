@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { injectIntl } from 'react-intl';
 import { useSelector } from 'react-redux';
-import { PublishedComponent, formatMessage, graphql } from '@openimis/fe-core';
+import { PublishedComponent, formatMessage } from '@openimis/fe-core';
 import { Grid, FormControl, InputLabel, Select, MenuItem } from '@material-ui/core';
 import { withTheme, withStyles } from '@material-ui/core/styles';
-import { useDispatch } from 'react-redux';
 
 const styles = (theme) => ({
   form: {
@@ -36,16 +35,9 @@ const THEMES_BY_CATEGORY = {
 
 const ALL_CATEGORIES = Object.keys(THEMES_BY_CATEGORY);
 
-const FACILITATORS_REQ = 'MERANKABANDI_FACILITATORS_REQ';
-const FACILITATORS_RESP = 'MERANKABANDI_FACILITATORS_RESP';
-const FACILITATORS_ERR = 'MERANKABANDI_FACILITATORS_ERR';
-
 function SensitizationTrainingFilter({
   intl, classes, filters, onChangeFilters,
 }) {
-  const dispatch = useDispatch();
-  const [facilitators, setFacilitators] = useState([]);
-
   const filterValue = (filterName) => filters?.[filterName]?.value;
 
   const selectedCategory = filterValue('category');
@@ -53,41 +45,18 @@ function SensitizationTrainingFilter({
     ? (THEMES_BY_CATEGORY[selectedCategory] || [])
     : Object.values(THEMES_BY_CATEGORY).flat();
 
-  // Extract unique facilitators from the already-loaded sensitization data in Redux
+  // Extract unique facilitators from already-loaded sensitization data in Redux
   const sensitizationTrainings = useSelector(
     (state) => state.merankabandi?.sensitizationTrainings || [],
   );
 
-  useEffect(() => {
-    // Build facilitator list from loaded data
-    const unique = [...new Set(
+  const facilitators = React.useMemo(() => {
+    return [...new Set(
       sensitizationTrainings
         .map((st) => (st.facilitator || '').trim())
         .filter(Boolean),
     )].sort();
-    if (unique.length > 0) {
-      setFacilitators(unique);
-    }
   }, [sensitizationTrainings]);
-
-  // On first mount, if no data loaded yet, fetch facilitators via GQL
-  useEffect(() => {
-    if (facilitators.length > 0) return;
-    const query = `{
-      sensitizationTraining(first: 1000, orderBy: ["facilitator"]) {
-        edges { node { facilitator } }
-      }
-    }`;
-    dispatch(graphql(query, FACILITATORS_REQ, FACILITATORS_RESP, FACILITATORS_ERR))
-      .then((resp) => {
-        const edges = resp?.payload?.data?.sensitizationTraining?.edges || [];
-        const unique = [...new Set(
-          edges.map((e) => (e.node.facilitator || '').trim()).filter(Boolean),
-        )].sort();
-        setFacilitators(unique);
-      })
-      .catch(() => {});
-  }, []);
 
   const getLabel = (key) => {
     const translationKey = `sensitizationTraining.category.${key.toLowerCase()}`;
