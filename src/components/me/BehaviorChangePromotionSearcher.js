@@ -106,9 +106,7 @@ function BehaviorChangePromotionSearcher({
 
   const headers = () => [
     'snapshot.reportDate',
-    'location.locationType.0',
-    'location.locationType.1',
-    'location.locationType.2',
+    'location',
     'snapshot.householdsReached',
     'snapshot.latest',
     'validation.status',
@@ -117,9 +115,6 @@ function BehaviorChangePromotionSearcher({
   const sorts = () => [
     ['report_date', true],
     ['location', true],
-    ['male_participants', true],
-    ['female_participants', true],
-    ['twa_participants', true],
   ];
 
   const fetchData = (params) => fetchBehaviorChangePromotions(modulesManager, params);
@@ -173,15 +168,21 @@ function BehaviorChangePromotionSearcher({
     return locId && latestPerColline[locId] === bcp.reportDate;
   };
 
+  const formatDate = (d) => d ? d.substring(5) : '';
+
+  const formatLocation = (loc) => {
+    if (!loc) return '';
+    const parts = [loc.parent?.parent?.name, loc.parent?.name, loc.name].filter(Boolean);
+    return parts.join(' › ');
+  };
+
   const wrap = (bcp, val) => isLatest(bcp)
     ? <strong>{val}</strong>
     : <span style={{ color: '#999' }}>{val}</span>;
 
   const itemFormatters = () => [
-    (bcp) => wrap(bcp, bcp.reportDate),
-    (bcp) => wrap(bcp, bcp.location?.parent?.parent?.name || ''),
-    (bcp) => wrap(bcp, bcp.location?.parent?.name || ''),
-    (bcp) => wrap(bcp, bcp.location?.name || ''),
+    (bcp) => wrap(bcp, formatDate(bcp.reportDate)),
+    (bcp) => wrap(bcp, formatLocation(bcp.location)),
     (bcp) => renderParticipants(bcp),
     (bcp) => isLatest(bcp)
       ? <Chip label={formatMessage('snapshot.latest')} size="small" color="primary" />

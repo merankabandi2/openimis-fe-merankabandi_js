@@ -117,9 +117,7 @@ function MicroProjectSearcher({
 
   const headers = () => [
     'snapshot.reportDate',
-    'location.locationType.0',
-    'location.locationType.1',
-    'location.locationType.2',
+    'location',
     'participants.label',
     'projectTypes.label',
     'snapshot.latest',
@@ -232,15 +230,21 @@ function MicroProjectSearcher({
     return locId && latestPerColline[locId] === mp.reportDate;
   };
 
+  const formatDate = (d) => d ? d.substring(5) : '';
+
+  const formatLocation = (loc) => {
+    if (!loc) return '';
+    const parts = [loc.parent?.parent?.name, loc.parent?.name, loc.name].filter(Boolean);
+    return parts.join(' › ');
+  };
+
   const wrap = (mp, val) => isLatest(mp)
     ? <strong>{val}</strong>
     : <span style={{ color: '#999' }}>{val}</span>;
 
   const itemFormatters = () => [
-    (mp) => wrap(mp, mp.reportDate),
-    (mp) => wrap(mp, mp.location?.parent?.parent?.name || ''),
-    (mp) => wrap(mp, mp.location?.parent?.name || ''),
-    (mp) => wrap(mp, mp.location?.name || ''),
+    (mp) => wrap(mp, formatDate(mp.reportDate)),
+    (mp) => wrap(mp, formatLocation(mp.location)),
     (mp) => renderParticipants(mp),
     (mp) => renderProjectTypes(mp),
     (mp) => isLatest(mp)

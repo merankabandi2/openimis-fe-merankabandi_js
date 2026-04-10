@@ -138,10 +138,8 @@ function SensitizationTrainingSearcher({
 
   const headers = () => [
     'sensitizationTraining.sensitization_date',
-    'location.locationType.0',
-    'location.locationType.1',
-    'location.locationType.2',
-    'category.label',
+    'location',
+    'sensitizationTraining.category',
     'sensitizationTraining.topics',
     'participants.label',
     'validation.status',
@@ -160,6 +158,18 @@ function SensitizationTrainingSearcher({
   const openSensitizationTraining = (sensitizationTraining) => rights.includes(RIGHT_SENSITIZATION_TRAINING_SEARCH) && history.push(
     `/${modulesManager.getRef(SENSITIZATION_TRAINING_ROUTE)}/${sensitizationTraining?.id}`,
   );
+
+  const formatDate = (d) => d ? d.substring(5) : '';
+
+  const formatLocation = (loc) => {
+    if (!loc) return '';
+    const parts = [
+      loc.parent?.parent?.name,
+      loc.parent?.name,
+      loc.name,
+    ].filter(Boolean);
+    return parts.join(' › ');
+  };
 
   const renderParticipants = (training) => (
     <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
@@ -187,14 +197,12 @@ function SensitizationTrainingSearcher({
   );
 
   const itemFormatters = () => [
-    (sensitizationTraining) => sensitizationTraining.sensitizationDate,
-    (sensitizationTraining) => sensitizationTraining.location?.parent?.parent?.name || '',
-    (sensitizationTraining) => sensitizationTraining.location?.parent?.name || '',
-    (sensitizationTraining) => sensitizationTraining.location?.name || '',
-    (sensitizationTraining) => getCategoryLabel(sensitizationTraining.category),
-    (sensitizationTraining) => getModulesLabel(sensitizationTraining.modules),
-    (sensitizationTraining) => renderParticipants(sensitizationTraining),
-    (sensitizationTraining) => renderValidationStatus(sensitizationTraining),
+    (st) => formatDate(st.sensitizationDate),
+    (st) => formatLocation(st.location),
+    (st) => getCategoryLabel(st.category),
+    (st) => getModulesLabel(st.modules),
+    (st) => renderParticipants(st),
+    (st) => renderValidationStatus(st),
   ];
 
   const onDoubleClick = (sensitizationTraining) => openSensitizationTraining(sensitizationTraining);
