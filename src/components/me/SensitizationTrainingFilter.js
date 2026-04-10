@@ -1,13 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { injectIntl } from 'react-intl';
 import { useSelector } from 'react-redux';
-import { TextInput, PublishedComponent, formatMessage } from '@openimis/fe-core';
+import { PublishedComponent, formatMessage } from '@openimis/fe-core';
 import { Grid, FormControl, InputLabel, Select, MenuItem } from '@material-ui/core';
 import { withTheme, withStyles } from '@material-ui/core/styles';
-import _debounce from 'lodash/debounce';
-import {
-  CONTAINS_LOOKUP, DEFAULT_DEBOUNCE_TIME, EMPTY_STRING,
-} from '../../constants';
 
 const styles = (theme) => ({
   form: {
@@ -18,34 +14,70 @@ const styles = (theme) => ({
   },
 });
 
+// Theme choices per category (matches KoBo form structure)
+const THEMES_BY_CATEGORY = {
+  module_mach__mesures_d_accompa: [
+    'introduction_au_projet_d_appui_aux_filet',
+    'communication_pour_le_changement_de_comp',
+    'la_sant__maternelle_et_infantile___hygi_',
+    'la_nutrition',
+    'la_stimulation_du_jeune_enfant',
+    'la_protection_de_l_enfant',
+  ],
+  module_mip__mesures_d_inclusio: [
+    'vsla__village_savings_and_loan_associati',
+    'micro_entrepreneuriat_et_connaissance_du',
+    'elaboration_des_plans_d_affaires',
+    'comp_tences_de_vie',
+    'formation_sur_les_techniques_d_agricultu',
+  ],
+};
+
+const ALL_CATEGORIES = Object.keys(THEMES_BY_CATEGORY);
+
 function SensitizationTrainingFilter({
   intl, classes, filters, onChangeFilters,
 }) {
-  const debouncedOnChangeFilters = _debounce(onChangeFilters, DEFAULT_DEBOUNCE_TIME);
   const userProvinces = useSelector((state) => state.loc?.userL0s ?? []);
   const hasRestrictedProvinces = userProvinces.length > 0;
+  const [facilitators, setFacilitators] = useState([]);
 
-  const filterTextFieldValue = (filterName) => filters?.[filterName]?.value ?? EMPTY_STRING;
   const filterValue = (filterName) => filters?.[filterName]?.value;
 
-  const onChangeStringFilter = (filterName, lookup = null) => (value) => {
-    if (lookup) {
-      debouncedOnChangeFilters([
-        {
-          id: filterName,
-          value,
-          filter: `${filterName}_${lookup}: "${value}"`,
-        },
-      ]);
-    } else {
-      onChangeFilters([
-        {
-          id: filterName,
-          value,
-          filter: `${filterName}: "${value}"`,
-        },
-      ]);
-    }
+  const selectedCategory = filterValue('category');
+  const availableThemes = selectedCategory
+    ? (THEMES_BY_CATEGORY[selectedCategory] || [])
+    : Object.values(THEMES_BY_CATEGORY).flat();
+
+  // Fetch distinct facilitators on mount
+  useEffect(() => {
+    fetch('/api/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query: `{
+          sensitizationTraining(first: 1000, orderBy: ["facilitator"]) {
+            edges { node { facilitator } }
+          }
+        }`,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const edges = data?.data?.sensitizationTraining?.edges || [];
+        const unique = [...new Set(
+          edges.map((e) => e.node.facilitator?.trim()).filter(Boolean),
+        )].sort();
+        setFacilitators(unique);
+      })
+      .catch(() => {});
+  }, []);
+
+  const getLabel = (key) => {
+    const translationKey = `sensitizationTraining.category.${key.toLowerCase()}`;
+    if (intl.messages[translationKey]) return intl.formatMessage({ id: translationKey });
+    return key.replace(/__/g, ' — ').replace(/_/g, ' ');
   };
 
   return (
@@ -122,20 +154,88 @@ function SensitizationTrainingFilter({
         </FormControl>
       </Grid>
       <Grid item xs={2} className={classes.item}>
-        <TextInput
-          module="socialProtection"
-          label="sensitizationTraining.category"
-          value={filterTextFieldValue('category')}
-          onChange={onChangeStringFilter('category', CONTAINS_LOOKUP)}
-        />
+        <FormControl fullWidth>
+          <InputLabel shrink>
+            {formatMessage(intl, 'merankabandi', 'sensitizationTraining.category')}
+          </InputLabel>
+          <Select
+            value={filterValue('category') ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Clear theme filter when category changes
+              onChangeFilters([
+                {
+                  id: 'category',
+                  value: value || null,
+                  filter: value ? `category: "${value}"` : null,
+                },
+                {
+                  id: 'theme',
+                  value: null,
+                  filter: null,
+                },
+              ]);
+            }}
+            displayEmpty
+          >
+            <MenuItem value="">{formatMessage(intl, 'socialProtection', 'any')}</MenuItem>
+            {ALL_CATEGORIES.map((c) => (
+              <MenuItem key={c} value={c}>{getLabel(c)}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Grid>
       <Grid item xs={2} className={classes.item}>
-        <TextInput
-          module="socialProtection"
-          label="sensitizationTraining.facilitator"
-          value={filterTextFieldValue('facilitator')}
-          onChange={onChangeStringFilter('facilitator', CONTAINS_LOOKUP)}
-        />
+        <FormControl fullWidth>
+          <InputLabel shrink>
+            {formatMessage(intl, 'merankabandi', 'sensitizationTraining.topics')}
+          </InputLabel>
+          <Select
+            value={filterValue('theme') ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onChangeFilters([
+                {
+                  id: 'theme',
+                  value: value || null,
+                  filter: value ? `modules_Icontains: "${value}"` : null,
+                },
+              ]);
+            }}
+            displayEmpty
+          >
+            <MenuItem value="">{formatMessage(intl, 'socialProtection', 'any')}</MenuItem>
+            {availableThemes.map((t) => (
+              <MenuItem key={t} value={t}>{getLabel(t)}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={2} className={classes.item}>
+        <FormControl fullWidth>
+          <InputLabel shrink>
+            {formatMessage(intl, 'merankabandi', 'validation.facilitator')}
+          </InputLabel>
+          <Select
+            value={filterValue('facilitator') ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onChangeFilters([
+                {
+                  id: 'facilitator',
+                  value: value || null,
+                  filter: value ? `facilitator: "${value}"` : null,
+                },
+              ]);
+            }}
+            displayEmpty
+          >
+            <MenuItem value="">{formatMessage(intl, 'socialProtection', 'any')}</MenuItem>
+            {facilitators.map((f) => (
+              <MenuItem key={f} value={f}>{f}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Grid>
     </Grid>
   );

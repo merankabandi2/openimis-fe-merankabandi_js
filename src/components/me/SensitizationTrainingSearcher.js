@@ -72,8 +72,14 @@ function SensitizationTrainingSearcher({
 
   // Helper function to get human-readable modules/topics labels
   const getModulesLabel = (modules) => {
-    if (!modules || !Array.isArray(modules) || modules.length === 0) return '';
-    return modules.map((m) => {
+    if (!modules) return '';
+    // Handle both array and JSON string
+    let items = modules;
+    if (typeof modules === 'string') {
+      try { items = JSON.parse(modules); } catch (e) { items = [modules]; }
+    }
+    if (!Array.isArray(items) || items.length === 0) return '';
+    return items.map((m) => {
       const key = `sensitizationTraining.category.${m.toLowerCase()}`;
       if (intl.messages[key]) {
         return intl.formatMessage({ id: key });
