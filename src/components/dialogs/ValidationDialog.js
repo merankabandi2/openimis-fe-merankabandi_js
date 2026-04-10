@@ -64,7 +64,7 @@ function ValidationDialog({
   const mutationMap = {
     sensitization: 'validateSensitizationTraining',
     behavior_change: 'validateBehaviorChange',
-    microproject: 'validateMicroproject',
+    microproject: 'validateMicroProject',
   };
 
   // Helper function to get category display label
@@ -111,7 +111,7 @@ function ValidationDialog({
     const inputTypeMap = {
       validateSensitizationTraining: 'ValidateSensitizationTrainingMutationInput',
       validateBehaviorChange: 'ValidateBehaviorChangeMutationInput',
-      validateMicroproject: 'ValidateMicroProjectMutationInput',
+      validateMicroProject: 'ValidateMicroProjectMutationInput',
     };
 
     const inputType = inputTypeMap[mutationName];
