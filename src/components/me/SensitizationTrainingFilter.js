@@ -64,6 +64,11 @@ function SensitizationTrainingFilter({
     return key.replace(/__/g, ' — ').replace(/_/g, ' ');
   };
 
+  // Title-case facilitator names: "action_aid_international_burundi" → "Action Aid International Burundi"
+  const humanizeName = (name) => name
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
   return (
     <Grid container className={classes.form}>
       {/* Location: Province → Commune → Colline cascade */}
@@ -146,7 +151,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'category',
                   value: value || null,
-                  filter: value ? `category: ${value.toUpperCase()}` : null,
+                  filter: value ? `category_Icontains: "${value}"` : null,
                 },
                 {
                   id: 'theme',
@@ -177,7 +182,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'theme',
                   value: value || null,
-                  filter: value ? `modules_Icontains: "${value}"` : null,
+                  filter: value ? `modules_Contains: "${value}"` : null,
                 },
               ]);
             }}
@@ -203,7 +208,7 @@ function SensitizationTrainingFilter({
                 {
                   id: 'facilitator',
                   value: value || null,
-                  filter: value ? `facilitator: "${value}"` : null,
+                  filter: value ? `facilitator_Icontains: "${value}"` : null,
                 },
               ]);
             }}
@@ -211,7 +216,7 @@ function SensitizationTrainingFilter({
           >
             <MenuItem value="">{formatMessage(intl, 'socialProtection', 'any')}</MenuItem>
             {facilitators.map((f) => (
-              <MenuItem key={f} value={f}>{f}</MenuItem>
+              <MenuItem key={f} value={f}>{humanizeName(f)}</MenuItem>
             ))}
           </Select>
         </FormControl>
