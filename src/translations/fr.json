@@ -1409,6 +1409,7 @@
   "socialProtection.sensitizationTraining.category": "Catégorie",
   "socialProtection.sensitizationTraining.facilitator": "Facilitateur",
   "sensitizationTraining.sensitization_date": "Date",
+  "sensitizationTraining.category": "Catégorie",
   "sensitizationTraining.topics": "Thèmes",
   "sensitizationTraining.delete.confirm.title": "Supprimer la sensibilisation/formation {label}",
   "sensitizationTraining.delete.confirm.message": "Êtes-vous sûr de vouloir supprimer cette sensibilisation/formation ?",
