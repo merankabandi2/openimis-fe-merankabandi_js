@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { injectIntl } from 'react-intl';
-import { useSelector } from 'react-redux';
-import { PublishedComponent, formatMessage } from '@openimis/fe-core';
+import { PublishedComponent, formatMessage, useGraphqlQuery } from '@openimis/fe-core';
 import { Grid, FormControl, InputLabel, Select, MenuItem } from '@material-ui/core';
 import { withTheme, withStyles } from '@material-ui/core/styles';
 
@@ -38,8 +37,6 @@ const ALL_CATEGORIES = Object.keys(THEMES_BY_CATEGORY);
 function SensitizationTrainingFilter({
   intl, classes, filters, onChangeFilters,
 }) {
-  const userProvinces = useSelector((state) => state.loc?.userL0s ?? []);
-  const hasRestrictedProvinces = userProvinces.length > 0;
   const [facilitators, setFacilitators] = useState([]);
 
   const filterValue = (filterName) => filters?.[filterName]?.value;
@@ -57,7 +54,7 @@ function SensitizationTrainingFilter({
       credentials: 'include',
       body: JSON.stringify({
         query: `{
-          sensitizationTraining(first: 1000, orderBy: ["facilitator"]) {
+          sensitizationTraining(first: 500, orderBy: ["facilitator"]) {
             edges { node { facilitator } }
           }
         }`,
@@ -67,11 +64,11 @@ function SensitizationTrainingFilter({
       .then((data) => {
         const edges = data?.data?.sensitizationTraining?.edges || [];
         const unique = [...new Set(
-          edges.map((e) => e.node.facilitator?.trim()).filter(Boolean),
+          edges.map((e) => (e.node.facilitator || '').trim()).filter(Boolean),
         )].sort();
         setFacilitators(unique);
       })
-      .catch(() => {});
+      .catch((err) => console.warn('Failed to load facilitators:', err));
   }, []);
 
   const getLabel = (key) => {
@@ -82,21 +79,17 @@ function SensitizationTrainingFilter({
 
   return (
     <Grid container className={classes.form}>
-      <Grid item xs={3} className={classes.item}>
+      {/* Location: Province → Commune → Colline cascade */}
+      <Grid item xs={12}>
         <PublishedComponent
-          pubRef="location.LocationPicker"
-          value={filterValue('location')}
-          onChange={(value) => onChangeFilters([
-            {
-              id: 'location',
-              value,
-              filter: value ? `location_Parent_Parent_Id: "${value.id}"` : null,
-            },
-          ])}
-          label={formatMessage(intl, 'socialProtection', 'MicroProjectFilter.location')}
-          restrictedOptions={hasRestrictedProvinces}
+          pubRef="location.DetailedLocationFilter"
+          withNull
+          filters={filters}
+          onChangeFilters={onChangeFilters}
+          anchor="parentLocation"
         />
       </Grid>
+
       <Grid item xs={2} className={classes.item}>
         <PublishedComponent
           pubRef="core.DatePicker"
@@ -162,7 +155,6 @@ function SensitizationTrainingFilter({
             value={filterValue('category') ?? ''}
             onChange={(e) => {
               const value = e.target.value;
-              // Clear theme filter when category changes
               onChangeFilters([
                 {
                   id: 'category',
