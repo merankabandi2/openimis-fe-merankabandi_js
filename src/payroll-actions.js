@@ -66,7 +66,7 @@ function isBase64Encoded(str) {
   return base64RegExp.test(str);
 }
 
-export const PAYMENT_POINT_PROJECTION = (modulesManager) => {
+export const MERA_PAYMENT_POINT_PROJECTION = (modulesManager) => {
   const locationProj = modulesManager.getProjection('location.Location.FlatProjection');
   const ppmProj = modulesManager.getProjection('admin.UserPicker.projection');
   return [
@@ -79,7 +79,7 @@ export const PAYMENT_POINT_PROJECTION = (modulesManager) => {
 };
 
 const PAYROLL_PROJECTION = (modulesManager) => {
-  const ppFields = PAYMENT_POINT_PROJECTION(modulesManager);
+  const ppFields = MERA_PAYMENT_POINT_PROJECTION(modulesManager);
   return [
     'id',
     'name',
@@ -88,6 +88,7 @@ const PAYROLL_PROJECTION = (modulesManager) => {
     `paymentPoint { ${ppFields.join(', ')} }`,
     'paymentCycle { code, startDate, endDate }',
     'benefitConsumption{status, benefitAttachment{bill{amountTotal}}}',
+    'meraLocation { id uuid code name type parent { id uuid code name type parent { id uuid code name type } } }',
     'jsonExt',
     'status',
     'dateValidFrom',
@@ -97,7 +98,7 @@ const PAYROLL_PROJECTION = (modulesManager) => {
 };
 
 const PAYROLL_SEARCHER_PROJECTION = (modulesManager) => {
-  const ppFields = PAYMENT_POINT_PROJECTION(modulesManager);
+  const ppFields = MERA_PAYMENT_POINT_PROJECTION(modulesManager);
   return [
     'id',
     'name',
@@ -144,7 +145,15 @@ export function fetchPayrolls(modulesManager, params) {
 }
 
 export function fetchPayroll(modulesManager, params) {
-  const payload = formatPageQueryWithCount('payroll', params, PAYROLL_PROJECTION(modulesManager));
+  // Use meraPayroll with GQL alias 'payroll' so the upstream reducer handles it
+  const projection = PAYROLL_PROJECTION(modulesManager);
+  const filters = params.map((p) => p).join(', ');
+  const payload = `{
+    payroll: meraPayroll(${filters}, first: 1) {
+      totalCount
+      edges { node { ${projection.join(' ')} } }
+    }
+  }`;
   return graphql(payload, PAYROLL_ACTION_TYPE.GET_PAYROLL);
 }
 

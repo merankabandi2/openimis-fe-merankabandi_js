@@ -32,12 +32,13 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
     // Location (commune) is the primary user input — stored in jsonExt on save.
     // On create: user picks commune via picker, stored in payroll.location (local form state).
     // On read: parse from jsonExt.location_uuid to recover the saved commune.
-    let payrollLocation = payroll?.location || null;
+    // meraLocation is resolved by the BE from json_ext.location_uuid
+    let payrollLocation = payroll?.location || payroll?.meraLocation || null;
     if (!payrollLocation && payroll?.jsonExt) {
       try {
         const ext = typeof payroll.jsonExt === 'string' ? JSON.parse(payroll.jsonExt) : payroll.jsonExt;
         if (ext?.location_uuid) {
-          payrollLocation = { uuid: ext.location_uuid, id: ext.location_id };
+          payrollLocation = { uuid: ext.location_uuid };
         }
       } catch (e) { /* ignore parse errors */ }
     }

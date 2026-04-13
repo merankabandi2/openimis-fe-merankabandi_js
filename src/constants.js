@@ -29,7 +29,7 @@ export const ALL_PAYMENT_REQUEST_LIST_TAB_VALUE = 'paymentRequestTab-ALL';
 export const PAYMENTREQUEST_TABS_LABEL_CONTRIBUTION_KEY = 'paymentRequest.TabPanel.label';
 export const PAYMENTREQUEST_TABS_PANEL_CONTRIBUTION_KEY = 'paymentRequest.TabPanel.panel';
 export const PAYMENT_MAIN_MENU_CONTRIBUTION_KEY = 'payment.MainMenu';
-export const BENEFIT_CONSUMPTION_LIST_TAB_VALUE = 'payrollTab-BenefitConsumptions';
+export const BENEFIT_CONSUMPTION_LIST_TAB_VALUE = 'benefitConsumptionsTab';
 export const PAYROLL_TABS_LABEL_CONTRIBUTION_KEY = 'payroll.TabPanel.label';
 export const PAYROLL_TABS_PANEL_CONTRIBUTION_KEY = 'payroll.TabPanel.panel';
 
