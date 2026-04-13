@@ -163,18 +163,20 @@ function Dashboard() {
   const grievanceData = grievances?.summary || {};
 
   // Separate data for different entities
+  const householdData = breakdown?.householdBreakdown || {};
   const totalBeneficiaries = summaryData.totalBeneficiaries || 0; // groupbeneficiary count
-  const totalIndividuals = genderData.total || 0; // individual_individual count
-  const maleCount = genderData.male || 0;
-  const femaleCount = genderData.female || 0;
+  const totalIndividuals = genderData.collectedTotal || genderData.total || 0; // all collected individuals
+  const maleCount = genderData.collectedMale || genderData.male || 0;
+  const femaleCount = genderData.collectedFemale || genderData.female || 0;
   const twaCount = genderData.twa || 0;
 
   // Gender percentages for individuals (from breakdown data)
   const femaleBeneficiaries = genderData.femaleBeneficiaries || 0;
   const femaleBeneficiariesPercentage = genderData.femaleBeneficiariesPercentage || 0;
 
+  const beneficiaryIndividuals = genderData.total || 0; // individuals from beneficiary households only
   const genderSubtitle = totalBeneficiaries > 0
-    ? `${formatNumber(totalIndividuals)} ind. · ♀ ${Math.round(femaleBeneficiariesPercentage)}%`
+    ? `${formatNumber(beneficiaryIndividuals)} ind. · ♀ ${Math.round(femaleBeneficiariesPercentage)}%`
     : '';
 
   // Twa minority group subtitle (separate from gender)
