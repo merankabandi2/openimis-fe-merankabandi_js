@@ -2,7 +2,7 @@
 import React from 'react';
 import { injectIntl } from 'react-intl';
 
-import { Grid, LinearProgress } from '@material-ui/core';
+import { Grid, LinearProgress, TextField } from '@material-ui/core';
 import { withStyles, withTheme } from '@material-ui/core/styles';
 
 import {
@@ -12,6 +12,7 @@ import {
   withModulesManager,
 } from '@openimis/fe-core';
 import PayrollStatusPicker from './PayrollStatusPicker';
+import PaymentVerifyApproveForPaymentDialog from './dialogs/PaymentVerifyApproveForPaymentDialog';
 import { PAYROLL_STATUS } from '../../payroll-actions';
 
 const styles = (theme) => ({
@@ -97,15 +98,33 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
             />
           </Grid>
           <Grid item xs={3} className={classes.item}>
-            <PublishedComponent
-              pubRef="payroll.PaymentPointPicker"
-              withLabel
-              withPlaceholder
-              filterLabels={false}
-              onChange={(paymentPoint) => this.updateAttribute('paymentPoint', paymentPoint)}
-              value={payroll?.paymentPoint}
-              readOnly={readOnly}
-            />
+            {(() => {
+              const ext = typeof payroll?.jsonExt === 'string'
+                ? (() => { try { return JSON.parse(payroll.jsonExt); } catch { return {}; } })()
+                : (payroll?.jsonExt || {});
+              const agencyCode = ext?.agency_code;
+              if (readOnly && agencyCode) {
+                return (
+                  <TextField
+                    label="Agence de paiement"
+                    value={agencyCode}
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                  />
+                );
+              }
+              return (
+                <PublishedComponent
+                  pubRef="payroll.PaymentPointPicker"
+                  withLabel
+                  withPlaceholder
+                  filterLabels={false}
+                  onChange={(paymentPoint) => this.updateAttribute('paymentPoint', paymentPoint)}
+                  value={payroll?.paymentPoint}
+                  readOnly={readOnly}
+                />
+              );
+            })()}
           </Grid>
           <Grid item xs={3} className={classes.item}>
             <PublishedComponent
@@ -140,6 +159,16 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
               />
             </Grid>
           )}
+          <Grid item xs={12} className={classes.item}>
+            <div style={{ float: 'right', paddingRight: '16px' }}>
+              <PaymentVerifyApproveForPaymentDialog
+                classes={classes}
+                payrollDetail={payroll}
+                task={this.props.task}
+                user={this.props.user}
+              />
+            </div>
+          </Grid>
         </Grid>
         {payroll?.status === PAYROLL_STATUS.GENERATING && (
           <div style={{ padding: '0 16px 16px 16px' }}>

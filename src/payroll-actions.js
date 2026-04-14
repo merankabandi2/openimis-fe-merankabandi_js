@@ -204,8 +204,8 @@ const formatPayrollGQL = (payroll) => `
   ${payroll?.paymentPoint ? `paymentPointId: "${decodeId(payroll.paymentPoint.id)}"` : ''}
   ${payroll?.paymentPlan ? `paymentPlanId: "${decodeId(payroll.paymentPlan.id)}"` : ''}
   ${payroll?.paymentCycle ? `paymentCycleId: "${decodeId(payroll.paymentCycle.id)}"` : ''}
-  ${payroll?.paymentMethod ? `paymentMethod: "${payroll.paymentMethod}"` : ''}
-  ${`status: ${PAYROLL_STATUS.GENERATING}`}
+  ${`paymentMethod: "${payroll?.paymentMethod || 'ONLINE'}"`}
+  ${`status: "${PAYROLL_STATUS.GENERATING}"`}
   ${(() => {
     const ext = typeof payroll?.jsonExt === 'string' ? JSON.parse(payroll.jsonExt || '{}') : (payroll?.jsonExt || {});
     if (payroll?.location) {
@@ -216,7 +216,7 @@ const formatPayrollGQL = (payroll) => `
     return extStr !== '{}' ? `jsonExt: "${extStr.replace(/"/g, '\\"')}"` : '';
   })()}
   ${payroll?.dateValidFrom ? `dateValidFrom: "${payroll.dateValidFrom}"` : ''}
-  ${payroll?.dateValidTo ? `dateValidTo: "${payroll.dateValidTo}"` : ''}
+  ${payroll?.dateValidTo ? `dateValidTo: "${payroll.dateValidTo.split('T')[0]}"` : ''}
   ${payroll?.fromFailedInvoicesPayrollId
     ? `fromFailedInvoicesPayrollId: "${payroll.fromFailedInvoicesPayrollId}"`
     : ''

@@ -127,6 +127,7 @@ function PaymentVerifyApproveForPaymentDialog({
         [PAYROLL_STATUS.PENDING_VERIFICATION, PAYROLL_STATUS.PENDING_APPROVAL].includes(payroll?.status) &&
         (
         <Button
+          type="button"
           onClick={handleOpen}
           variant="contained"
           color="primary"
@@ -254,6 +255,8 @@ function PaymentVerifyApproveForPaymentDialog({
 
 const mapStateToProps = (state) => ({
   rights: !!state.core && !!state.core.user && !!state.core.user.i_user ? state.core.user.i_user.rights : [],
+  user: state.core?.user ?? null,
+  task: state.merankabandi?.task ?? null,
   confirmed: state.core.confirmed,
   payroll: state.payroll.payroll,
 });

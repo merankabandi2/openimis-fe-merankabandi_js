@@ -266,19 +266,30 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
     const toUpdate = communes.filter((c) => c.status === 'PLANNING' && c.dateValidFrom);
     if (toUpdate.length === 0 || !cycleId) return;
     setLoading(true);
-    await gqlFetch(
-      `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
-        updateCommuneDatesBulk(input: $input) { clientMutationId }
-      }`,
-      {
-        input: {
-          paymentCycleId: cycleId,
-          communeIds: toUpdate.map((c) => c.communeId),
-          dateValidFrom: toUpdate[0].dateValidFrom,
-          clientMutationId: `dates-${Date.now()}`,
+
+    // Group communes by date to minimize requests
+    const byDate = {};
+    toUpdate.forEach((c) => {
+      if (!byDate[c.dateValidFrom]) byDate[c.dateValidFrom] = [];
+      byDate[c.dateValidFrom].push(c.communeId);
+    });
+
+    for (const [date, communeIds] of Object.entries(byDate)) {
+      await gqlFetch(
+        `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
+          updateCommuneDatesBulk(input: $input) { clientMutationId }
+        }`,
+        {
+          input: {
+            paymentCycleId: cycleId,
+            communeIds,
+            dateValidFrom: date,
+            clientMutationId: `dates-${Date.now()}`,
+          },
         },
-      },
-    );
+      );
+    }
+
     setTimeout(() => { refetch(); setLoading(false); }, 1500);
   }, [communes, cycleId, gqlFetch, refetch]);
 

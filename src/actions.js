@@ -293,11 +293,14 @@ export function fetchTask(modulesManager, params) {
   return graphql(payload, ACTION_TYPE.GET_TASK);
 }
 
-export const formatTaskResolveGQL = (task, user, approveOrFail, additionalData) => `
-  ${task?.id ? `id: "${task.id}"` : ''}
+export const formatTaskResolveGQL = (task, user, approveOrFail, additionalData) => {
+  const taskId = task?.id ? decodeId(task.id) : null;
+  return `
+  ${taskId ? `id: "${taskId}"` : ''}
   ${user && approveOrFail ? `businessStatus: "{\\"${user.id}\\": \\"${approveOrFail}\\"}"` : ''}
   ${additionalData ? `additionalData: "${additionalData}"` : ''}
   `;
+};
 
 export function resolveTask(task, clientMutationLabel, user, approveOrFail, additionalData = null) {
   return PERFORM_MUTATION(
