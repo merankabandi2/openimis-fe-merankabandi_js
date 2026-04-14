@@ -220,7 +220,7 @@ function MerankabandiPayrollPage({
     payroll?.status === PAYROLL_STATUS.FAILED && {
       icon: <ReplayIcon />,
       tooltip: formatMessage('tooltip.retrigger'),
-      onClick: () => {
+      doIt: () => {
         retriggerPayroll(
           payroll,
           formatMessageWithValues('payroll.mutation.retriggerLabel', mutationLabel(payroll)),

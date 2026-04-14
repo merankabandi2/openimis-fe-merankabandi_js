@@ -39,6 +39,8 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
         const ext = typeof payroll.jsonExt === 'string' ? JSON.parse(payroll.jsonExt) : payroll.jsonExt;
         if (ext?.location_uuid) {
           payrollLocation = { uuid: ext.location_uuid };
+        } else if (ext?.commune_id) {
+          payrollLocation = { uuid: ext.commune_id };
         }
       } catch (e) { /* ignore parse errors */ }
     }
@@ -65,8 +67,7 @@ class MerankabandiPayrollHeadPanel extends FormPanel {
               readOnly={readOnly}
               value={provinceValue}
               onChange={(province) => {
-                this.updateAttribute('province', province);
-                this.updateAttribute('location', null);
+                this.updateAttributes({ province, location: null });
               }}
               label={formatMessage(intl, 'merankabandi', 'payroll.province')}
             />

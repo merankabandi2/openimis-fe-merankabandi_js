@@ -9,7 +9,7 @@ import {
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import SaveIcon from '@material-ui/icons/Save';
 import {
-  withModulesManager, formatMessage, useGraphqlQuery,
+  withModulesManager, formatMessage, useGraphqlQuery, PublishedComponent, decodeId, useHistory,
 } from '@openimis/fe-core';
 import { MODULE_NAME } from '../../constants';
 
@@ -39,12 +39,14 @@ const styles = (theme) => ({
 
 function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
   const cycleId = paymentCycle?.id || paymentCycle?.uuid;
+  const history = useHistory();
   const [selectedVagues, setSelectedVagues] = useState([]);
   const [selectedProvinces, setSelectedProvinces] = useState([]);
   const [topupActive, setTopupActive] = useState(false);
   const [topupAmount, setTopupAmount] = useState(0);
   const [communes, setCommunes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPaymentPlan, setSelectedPaymentPlan] = useState(null);
 
   // Load commune schedules linked to this cycle
   const scheduleQuery = `
@@ -78,29 +80,52 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
           province: n.commune?.parent?.name || '',
           roundNumber: n.roundNumber,
           status: n.status,
-          dateValidFrom: n.dateValidFrom || '',
+          dateValidFrom: n.dateValidFrom || paymentCycle?.startDate || paymentCycle?.start_date || '',
           topupAmount: parseFloat(n.topupAmount) || 0,
           beneficiaries: n.totalBeneficiaries || 0,
+          payrollId: n.payroll?.uuid,
           payrollStatus: n.payroll?.status,
-          selected: true,
+          selected: n.status === 'PLANNING' && (n.totalBeneficiaries || 0) > 0,
         };
       }));
     }
   }, [scheduleData]);
 
-  // Load cycle json_ext config
+  // Load cycle json_ext config (not in standard projection, fetch separately)
   useEffect(() => {
-    if (paymentCycle?.jsonExt) {
+    if (!cycleId) return;
+    gqlFetch(
+      `query($id: ID) {
+        paymentCycle(id: $id, first: 1) {
+          edges { node { id jsonExt } }
+        }
+      }`,
+      { id: cycleId },
+    ).then((res) => {
+      const raw = res?.data?.paymentCycle?.edges?.[0]?.node?.jsonExt;
+      if (!raw) return;
       try {
-        const ext = typeof paymentCycle.jsonExt === 'string'
-          ? JSON.parse(paymentCycle.jsonExt)
-          : paymentCycle.jsonExt;
+        const ext = typeof raw === 'string' ? JSON.parse(raw) : raw;
         setTopupActive(ext.topup_active || false);
         setTopupAmount(ext.topup_amount || 0);
         if (ext.vagues) setSelectedVagues(ext.vagues);
+        // Restore saved payment plan
+        if (ext.payment_plan_id) {
+          gqlFetch(
+            `query($uuid: ID) {
+              paymentPlan(id: $uuid, first: 1) {
+                edges { node { id code name benefitPlan } }
+              }
+            }`,
+            { uuid: ext.payment_plan_id },
+          ).then((ppRes) => {
+            const pp = ppRes?.data?.paymentPlan?.edges?.[0]?.node;
+            if (pp) setSelectedPaymentPlan(pp);
+          });
+        }
       } catch { /* ignore */ }
-    }
-  }, [paymentCycle]);
+    });
+  }, [cycleId]);
 
   // Derive provinces from selected vagues
   useEffect(() => {
@@ -135,26 +160,38 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
   }, []);
 
   const initializeCommunes = useCallback(async () => {
-    if (!cycleId || selectedProvinces.length === 0) return;
+    if (!cycleId || selectedProvinces.length === 0 || !selectedPaymentPlan) return;
     setLoading(true);
 
-    // Resolve province UUIDs from names
+    // Resolve province UUIDs from names (fetch all provinces, filter client-side)
     const provResult = await gqlFetch(
-      `query($names: [String]!) {
-        location(name_In: $names, type: "D", first: 20) {
+      `query {
+        locations(type: "D", first: 20) {
           edges { node { uuid name } }
         }
       }`,
-      { names: selectedProvinces },
-    );
-    const provIds = (provResult?.data?.location?.edges || []).map((e) => e.node.uuid);
-
-    // Find benefit plan 1.2
-    const bpResult = await gqlFetch(
-      `query { benefitPlan(code: "1.2", isDeleted: false, first: 1) { edges { node { uuid } } } }`,
       {},
     );
-    const bpId = bpResult?.data?.benefitPlan?.edges?.[0]?.node?.uuid;
+    const provIds = (provResult?.data?.locations?.edges || [])
+      .filter((e) => selectedProvinces.includes(e.node.name))
+      .map((e) => e.node.uuid);
+
+    // Resolve benefit plan UUID from payment plan
+    const ppUuid = decodeId(selectedPaymentPlan.id);
+    const ppResult = await gqlFetch(
+      `query($uuid: ID) {
+        paymentPlan(id: $uuid, first: 1) {
+          edges { node { id benefitPlan } }
+        }
+      }`,
+      { uuid: ppUuid },
+    );
+    let bpParsed = ppResult?.data?.paymentPlan?.edges?.[0]?.node?.benefitPlan;
+    // benefitPlan is double-JSON-encoded: parse until we get an object
+    while (typeof bpParsed === 'string') {
+      try { bpParsed = JSON.parse(bpParsed); } catch { break; }
+    }
+    const bpId = (bpParsed && typeof bpParsed === 'object') ? bpParsed.id : null;
 
     if (!bpId || provIds.length === 0) {
       setLoading(false);
@@ -172,6 +209,8 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
           provinceIds: provIds,
           topupActive: topupActive,
           topupAmount: topupActive ? topupAmount : 0,
+          paymentPlanId: decodeId(selectedPaymentPlan.id),
+          vagues: selectedVagues,
           clientMutationId: `init-${Date.now()}`,
         },
       },
@@ -179,18 +218,18 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
 
     // Wait for async mutation then refetch
     setTimeout(() => { refetch(); setLoading(false); }, 2000);
-  }, [cycleId, selectedProvinces, topupActive, topupAmount, gqlFetch, refetch]);
+  }, [cycleId, selectedProvinces, selectedPaymentPlan, topupActive, topupAmount, gqlFetch, refetch]);
 
   const generatePayrolls = useCallback(async () => {
-    if (!cycleId) return;
-    setLoading(true);
+    if (!cycleId || !selectedPaymentPlan) return;
 
-    // Find payment plan for 1.2
-    const ppResult = await gqlFetch(
-      `query { paymentPlan(benefitPlan_Code: "1.2", isDeleted: false, first: 1) { edges { node { id } } } }`,
-      {},
+    const eligible = communes.filter(
+      (c) => c.selected && c.status === 'PLANNING' && c.beneficiaries > 0,
     );
-    const ppId = ppResult?.data?.paymentPlan?.edges?.[0]?.node?.id;
+    if (eligible.length === 0) return;
+
+    setLoading(true);
+    const ppId = decodeId(selectedPaymentPlan.id);
 
     await gqlFetch(
       `mutation($input: BatchGeneratePayrollsMutationInput!) {
@@ -199,14 +238,15 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
       {
         input: {
           paymentCycleId: cycleId,
-          paymentPlanId: ppId || cycleId,
+          paymentPlanId: ppId,
+          scheduleIds: eligible.map((c) => c.id),
           clientMutationId: `gen-${Date.now()}`,
         },
       },
     );
 
     setTimeout(() => { refetch(); setLoading(false); }, 3000);
-  }, [cycleId, gqlFetch, refetch]);
+  }, [cycleId, selectedPaymentPlan, communes, gqlFetch, refetch]);
 
   // Filter communes by selected province
   const filteredCommunes = communes.filter((c) =>
@@ -216,12 +256,43 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
   // Build preview table from selected provinces (before Initialize)
   const previewCommunes = selectedProvinces.length > 0 && communes.length === 0;
 
-  const eligibleCount = filteredCommunes.filter((c) => c.status === 'PLANNING').length;
+  const updateCommuneDate = useCallback((communeId, date) => {
+    setCommunes((prev) =>
+      prev.map((c) => (c.id === communeId ? { ...c, dateValidFrom: date } : c))
+    );
+  }, []);
+
+  const saveDates = useCallback(async () => {
+    const toUpdate = communes.filter((c) => c.status === 'PLANNING' && c.dateValidFrom);
+    if (toUpdate.length === 0 || !cycleId) return;
+    setLoading(true);
+    await gqlFetch(
+      `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
+        updateCommuneDatesBulk(input: $input) { clientMutationId }
+      }`,
+      {
+        input: {
+          paymentCycleId: cycleId,
+          communeIds: toUpdate.map((c) => c.communeId),
+          dateValidFrom: toUpdate[0].dateValidFrom,
+          clientMutationId: `dates-${Date.now()}`,
+        },
+      },
+    );
+    setTimeout(() => { refetch(); setLoading(false); }, 1500);
+  }, [communes, cycleId, gqlFetch, refetch]);
+
+  const eligibleCount = filteredCommunes.filter(
+    (c) => c.selected && c.status === 'PLANNING' && c.beneficiaries > 0,
+  ).length;
   const blockedCount = filteredCommunes.filter((c) =>
     c.status !== 'PLANNING' && c.status !== 'RECONCILED'
   ).length;
+  const noBeneficiariesCount = filteredCommunes.filter(
+    (c) => c.status === 'PLANNING' && c.beneficiaries === 0,
+  ).length;
 
-  // Cycle date for display
+  // Cycle date for display and as default payment date
   const cycleStartDate = paymentCycle?.startDate || paymentCycle?.start_date || '';
 
   if (!cycleId) return null;
@@ -264,8 +335,19 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
             ))}
           </Grid>
 
+          {/* Payment plan picker */}
+          <Grid item xs={4}>
+            <PublishedComponent
+              pubRef="contributionPlan.PaymentPlanPicker"
+              required
+              filterLabels={false}
+              onChange={(pp) => setSelectedPaymentPlan(pp)}
+              value={selectedPaymentPlan}
+            />
+          </Grid>
+
           {/* Top-up config + Initialize button */}
-          <Grid item xs={3}>
+          <Grid item xs={2}>
             <FormControlLabel
               control={
                 <Switch
@@ -289,7 +371,7 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
               />
             </Grid>
           )}
-          <Grid item xs={topupActive ? 6 : 9}>
+          <Grid item xs={topupActive ? 3 : 6}>
             <div className={classes.actionButtons}>
               {loading && <CircularProgress size={20} />}
               <Button
@@ -298,7 +380,7 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
                 size="small"
                 startIcon={<SaveIcon />}
                 onClick={initializeCommunes}
-                disabled={loading || selectedProvinces.length === 0}
+                disabled={loading || selectedProvinces.length === 0 || !selectedPaymentPlan}
               >
                 Initialiser les communes
               </Button>
@@ -314,11 +396,32 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
             <TableHead>
               <TableRow>
                 <TableCell className={classes.headerCell} padding="checkbox">
-                  <Checkbox size="small" style={{ color: '#fff' }} />
+                  <Checkbox
+                    size="small"
+                    style={{ color: '#fff' }}
+                    checked={filteredCommunes.filter((c) => c.status === 'PLANNING' && c.beneficiaries > 0).length > 0
+                      && filteredCommunes.filter((c) => c.status === 'PLANNING' && c.beneficiaries > 0).every((c) => c.selected)}
+                    indeterminate={
+                      filteredCommunes.filter((c) => c.status === 'PLANNING' && c.beneficiaries > 0).some((c) => c.selected)
+                      && !filteredCommunes.filter((c) => c.status === 'PLANNING' && c.beneficiaries > 0).every((c) => c.selected)
+                    }
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setCommunes((prev) =>
+                        prev.map((c) =>
+                          (selectedProvinces.length === 0 || selectedProvinces.includes(c.province))
+                          && c.status === 'PLANNING' && c.beneficiaries > 0
+                            ? { ...c, selected: checked }
+                            : c
+                        )
+                      );
+                    }}
+                  />
                 </TableCell>
                 <TableCell className={classes.headerCell}>Province</TableCell>
                 <TableCell className={classes.headerCell}>Commune</TableCell>
                 <TableCell className={classes.headerCell}>Tranche</TableCell>
+                <TableCell className={classes.headerCell}>Date de paiement</TableCell>
                 <TableCell className={classes.headerCell}>Bénéf.</TableCell>
                 <TableCell className={classes.headerCell}>Statut</TableCell>
               </TableRow>
@@ -334,12 +437,26 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
                         onChange={() => setCommunes((prev) =>
                           prev.map((x) => x.id === c.id ? { ...x, selected: !x.selected } : x)
                         )}
-                        disabled={c.status !== 'PLANNING'}
+                        disabled={c.status !== 'PLANNING' || c.beneficiaries === 0}
                       />
                     </TableCell>
                     <TableCell className={classes.cell}>{c.province}</TableCell>
                     <TableCell className={classes.cell}>{c.commune}</TableCell>
                     <TableCell className={classes.cell}>T{c.roundNumber}</TableCell>
+                    <TableCell className={classes.cell}>
+                      {c.status === 'PLANNING' ? (
+                        <TextField
+                          type="date"
+                          size="small"
+                          value={c.dateValidFrom || ''}
+                          onChange={(e) => updateCommuneDate(c.id, e.target.value)}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{ style: { fontSize: '0.85rem', padding: '4px 8px' } }}
+                        />
+                      ) : (
+                        c.dateValidFrom || '—'
+                      )}
+                    </TableCell>
                     <TableCell className={classes.cell}>{c.beneficiaries}</TableCell>
                     <TableCell className={classes.cell}>
                       <Chip
@@ -350,13 +467,15 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
                             : c.status === 'PLANNING' ? 'default'
                               : 'secondary'
                         }
+                        clickable={!!c.payrollId}
+                        onClick={c.payrollId ? () => history.push(`/payrolls/payroll/${c.payrollId}`) : undefined}
                       />
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className={classes.emptyTable}>
+                  <TableCell colSpan={7} className={classes.emptyTable}>
                     {selectedProvinces.length} province(s) sélectionnée(s).
                     Cliquez "Initialiser les communes" pour créer les entrées de planification.
                   </TableCell>
@@ -369,19 +488,31 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
           {communes.length > 0 && (
             <div className={classes.summaryBar}>
               <Typography variant="body2">
-                {eligibleCount}/{filteredCommunes.length} éligibles
+                {eligibleCount}/{filteredCommunes.length} sélectionnées
+                {noBeneficiariesCount > 0 && <span className={classes.blocked}> · {noBeneficiariesCount} sans bénéficiaires</span>}
                 {blockedCount > 0 && <span className={classes.blocked}> · {blockedCount} bloquées</span>}
                 {cycleStartDate && ` · Date début cycle: ${cycleStartDate}`}
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<PlayArrowIcon />}
-                onClick={generatePayrolls}
-                disabled={loading || eligibleCount === 0}
-              >
-                Générer les payrolls ({eligibleCount})
-              </Button>
+              <div className={classes.actionButtons}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<SaveIcon />}
+                  onClick={saveDates}
+                  disabled={loading || communes.filter((c) => c.status === 'PLANNING' && c.dateValidFrom).length === 0}
+                >
+                  Enregistrer les dates
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<PlayArrowIcon />}
+                  onClick={generatePayrolls}
+                  disabled={loading || eligibleCount === 0 || !selectedPaymentPlan}
+                >
+                  Générer les payrolls ({eligibleCount})
+                </Button>
+              </div>
             </div>
           )}
         </>
