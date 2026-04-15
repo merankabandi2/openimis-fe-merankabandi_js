@@ -151,9 +151,19 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
   }, []);
 
   const gqlFetch = useCallback(async (query, variables) => {
+    // Get CSRF token from cookie
+    const csrfToken = document.cookie.split('; ')
+      .find((c) => c.startsWith('csrftoken='))?.split('=')[1] || '';
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('token') || '';
     const resp = await fetch('/api/graphql', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ query, variables }),
     });
     return resp.json();

@@ -31,9 +31,9 @@ function ProvincePaymentPointChips({ location, benefitPlan, refresh }) {
 
   const { isLoading, data, error, refetch } = useGraphqlQuery(
     `
-    query ($provinceId: ID!, $isActive: Boolean) {
-      provincePaymentPoint(
-        provinceId: $provinceId,
+    query ($provinceId: String, $isActive: Boolean) {
+      provincePaymentAgency(
+        province_Uuid: $provinceId,
         isActive: $isActive
       ) {
         edges {
@@ -43,11 +43,12 @@ function ProvincePaymentPointChips({ location, benefitPlan, refresh }) {
               id
               name
             }
-            paymentPoint {
+            paymentAgency {
               id
+              code
               name
             }
-            paymentPlan {
+            benefitPlan {
               id
               code
               name
@@ -58,7 +59,7 @@ function ProvincePaymentPointChips({ location, benefitPlan, refresh }) {
       }
     }
     `,
-    { provinceId: Number.parseInt(location?.id, 10), isActive: true },
+    { provinceId: location?.uuid, isActive: true },
   );
 
   useEffect(() => {
@@ -83,10 +84,10 @@ function ProvincePaymentPointChips({ location, benefitPlan, refresh }) {
   };
 
   const groupedPaymentPoints = {};
-  if (data?.provincePaymentPoint?.edges) {
-    data.provincePaymentPoint.edges.forEach(({ node }) => {
-      const planId = node.paymentPlan?.benefitPlan?.id || 'all';
-      const planName = node.paymentPlan?.benefitPlan?.name || 'All Plans';
+  if (data?.provincePaymentAgency?.edges) {
+    data.provincePaymentAgency.edges.forEach(({ node }) => {
+      const planId = node.benefitPlan?.id || 'all';
+      const planName = node.benefitPlan?.name || 'All Plans';
 
       if (!groupedPaymentPoints[planId]) {
         groupedPaymentPoints[planId] = {
@@ -124,7 +125,7 @@ function ProvincePaymentPointChips({ location, benefitPlan, refresh }) {
             {paymentPoints.map((pp) => (
               <Chip
                 key={pp.id}
-                label={pp.paymentPoint.name}
+                label={pp.paymentAgency?.name || pp.paymentAgency?.code}
                 className={classes.chip}
                 onDelete={() => handleDelete(pp)}
                 deleteIcon={<DeleteIcon />}

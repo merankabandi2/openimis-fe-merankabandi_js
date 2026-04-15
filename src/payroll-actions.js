@@ -205,7 +205,6 @@ const formatPayrollGQL = (payroll) => `
   ${payroll?.paymentPlan ? `paymentPlanId: "${decodeId(payroll.paymentPlan.id)}"` : ''}
   ${payroll?.paymentCycle ? `paymentCycleId: "${decodeId(payroll.paymentCycle.id)}"` : ''}
   ${`paymentMethod: "${payroll?.paymentMethod || 'ONLINE'}"`}
-  ${`status: "${PAYROLL_STATUS.GENERATING}"`}
   ${(() => {
     const ext = typeof payroll?.jsonExt === 'string' ? JSON.parse(payroll.jsonExt || '{}') : (payroll?.jsonExt || {});
     if (payroll?.location) {

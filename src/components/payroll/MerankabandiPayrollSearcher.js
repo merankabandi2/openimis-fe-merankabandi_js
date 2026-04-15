@@ -42,6 +42,7 @@ function MerankabandiPayrollSearcher({
   submittingMutation,
   mutation,
   paymentRequestStatus,
+  paymentCycleUuid,
 }) {
   const history = useHistory();
   const modulesManager = useModulesManager();
@@ -116,6 +117,12 @@ function MerankabandiPayrollSearcher({
         value: true,
         filter:
         `status: ${paymentRequestStatus}`,
+      };
+    }
+    if (paymentCycleUuid) {
+      filters.paymentCycle = {
+        value: paymentCycleUuid,
+        filter: `paymentCycle_Id: "${paymentCycleUuid}"`,
       };
     }
     return filters;
