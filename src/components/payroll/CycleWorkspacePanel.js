@@ -234,6 +234,34 @@ function CycleWorkspacePanel({ classes, intl, edited: paymentCycle }) {
     if (eligible.length === 0) return;
 
     setLoading(true);
+
+    // Save payment dates for selected communes before generating
+    const withDates = eligible.filter((c) => c.dateValidFrom);
+    if (withDates.length > 0) {
+      const byDate = {};
+      withDates.forEach((c) => {
+        if (!byDate[c.dateValidFrom]) byDate[c.dateValidFrom] = [];
+        byDate[c.dateValidFrom].push(c.communeId);
+      });
+      for (const [date, communeIds] of Object.entries(byDate)) {
+        await gqlFetch(
+          `mutation($input: UpdateCommuneDatesBulkMutationInput!) {
+            updateCommuneDatesBulk(input: $input) { clientMutationId }
+          }`,
+          {
+            input: {
+              paymentCycleId: cycleId,
+              communeIds,
+              dateValidFrom: date,
+              clientMutationId: `dates-${Date.now()}`,
+            },
+          },
+        );
+      }
+      // Wait for date mutations to settle before generating
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
     const ppId = decodeId(selectedPaymentPlan.id);
 
     await gqlFetch(
