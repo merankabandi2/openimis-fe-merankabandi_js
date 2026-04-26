@@ -267,6 +267,15 @@ function MerankabandiPayrollPage({
     return () => confirmed && clearConfirm(false);
   }, [pendingRecovery, confirmed]);
 
+  // Recovery actions only apply to payrolls dispatched through the
+  // push strategy (IBB / Lumicash). Pull / offline payrolls don't go
+  // through the gateway connectors that recovery walks through.
+  const isOnlinePushPayroll = payroll?.paymentMethod === 'StrategyOnlinePaymentPush';
+  const canShowRecovery = (
+    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT
+    && isOnlinePushPayroll
+  );
+
   const actions = [
     payroll?.status === PAYROLL_STATUS.FAILED && {
       icon: <ReplayIcon />,
@@ -278,20 +287,17 @@ function MerankabandiPayrollPage({
         );
       },
     },
-    // Recovery actions only relevant when payroll has been approved for
-    // payment — i.e. dispatch has happened (or was attempted) and we may
-    // have ACCEPTED zombies / partial dispatch / pending reconciliation.
-    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+    canShowRecovery && {
       icon: <SyncIcon />,
       tooltip: formatMessage('tooltip.recovery.partial'),
       doIt: () => triggerRecovery('partial', formatMessage('payroll.recovery.label.partial')),
     },
-    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+    canShowRecovery && {
       icon: <SyncProblemIcon />,
       tooltip: formatMessage('tooltip.recovery.partialRetry'),
       doIt: () => triggerRecovery('partial_retry', formatMessage('payroll.recovery.label.partialRetry')),
     },
-    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+    canShowRecovery && {
       icon: <DoneAllIcon />,
       tooltip: formatMessage('tooltip.recovery.full'),
       doIt: () => triggerRecovery('full', formatMessage('payroll.recovery.label.full')),
