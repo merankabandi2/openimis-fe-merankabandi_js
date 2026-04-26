@@ -4,6 +4,9 @@ import { connect } from 'react-redux';
 
 import { makeStyles } from '@material-ui/styles';
 import ReplayIcon from '@material-ui/icons/Replay';
+import SyncIcon from '@material-ui/icons/Sync';
+import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+import DoneAllIcon from '@material-ui/icons/DoneAll';
 
 import {
   Form,
@@ -50,6 +53,7 @@ function MerankabandiPayrollPage({
   createPayroll,
   retriggerPayroll,
   clearPayroll,
+  coreConfirm,
   clearConfirm,
   createPayrollFromFailedInvoices,
   journalize,
@@ -216,6 +220,53 @@ function MerankabandiPayrollPage({
     }
   };
 
+  // Recovery flow trigger — opens the core confirm dialog, then on confirmation
+  // (caught by the useEffect below watching `confirmed`) fires the
+  // merankabandi.runPayrollRecoveryFlow GQL mutation directly via fetch with
+  // CSRF header (same pattern as CycleWorkspacePanel / AgencyFeeConfigPanel).
+  const [pendingRecovery, setPendingRecovery] = useState(null); // {mode, label}
+
+  const triggerRecovery = (mode, label) => {
+    if (!payroll?.id) return;
+    setPendingRecovery({ mode, label });
+    coreConfirm(
+      formatMessage('payroll.recovery.confirmTitle'),
+      formatMessage(`payroll.recovery.confirm.${mode}`),
+    );
+  };
+
+  useEffect(() => {
+    if (pendingRecovery && confirmed) {
+      const { mode, label } = pendingRecovery;
+      const csrfToken = localStorage.getItem('csrfToken') || '';
+      fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+          query: `mutation($input: RunPayrollRecoveryFlowMutationInput!) {
+            runPayrollRecoveryFlow(input: $input) { clientMutationId }
+          }`,
+          variables: {
+            input: {
+              payrollId: payroll.id,
+              mode,
+              clientMutationId: `recovery-${mode}-${Date.now()}`,
+              clientMutationLabel: label,
+            },
+          },
+        }),
+      });
+    }
+    if (pendingRecovery && confirmed !== null) {
+      setPendingRecovery(null);
+    }
+    return () => confirmed && clearConfirm(false);
+  }, [pendingRecovery, confirmed]);
+
   const actions = [
     payroll?.status === PAYROLL_STATUS.FAILED && {
       icon: <ReplayIcon />,
@@ -226,6 +277,24 @@ function MerankabandiPayrollPage({
           formatMessageWithValues('payroll.mutation.retriggerLabel', mutationLabel(payroll)),
         );
       },
+    },
+    // Recovery actions only relevant when payroll has been approved for
+    // payment — i.e. dispatch has happened (or was attempted) and we may
+    // have ACCEPTED zombies / partial dispatch / pending reconciliation.
+    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+      icon: <SyncIcon />,
+      tooltip: formatMessage('tooltip.recovery.partial'),
+      doIt: () => triggerRecovery('partial', formatMessage('payroll.recovery.label.partial')),
+    },
+    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+      icon: <SyncProblemIcon />,
+      tooltip: formatMessage('tooltip.recovery.partialRetry'),
+      doIt: () => triggerRecovery('partial_retry', formatMessage('payroll.recovery.label.partialRetry')),
+    },
+    payroll?.status === PAYROLL_STATUS.APPROVE_FOR_PAYMENT && {
+      icon: <DoneAllIcon />,
+      tooltip: formatMessage('tooltip.recovery.full'),
+      doIt: () => triggerRecovery('full', formatMessage('payroll.recovery.label.full')),
     },
   ].filter(Boolean);
 

@@ -108,20 +108,38 @@ function AgencyFeeConfigPanel({ classes, intl, edited }) {
     setDirty(true);
   }, []);
 
+  // Shared GraphQL fetch helper. The backend's CSRF guard
+  // (core/schema._check_csrf_token) reads request.META['HTTP_X_CSRFTOKEN']
+  // and raises KeyError when the header is absent — the resulting GraphQL
+  // error surfaces as `'HTTP_X_CSRFTOKEN'`. We mirror the same pattern used
+  // in CycleWorkspacePanel: pull the token from localStorage and send it
+  // alongside X-Requested-With.
+  const gqlFetch = useCallback(async (query, variables) => {
+    const csrfToken = localStorage.getItem('csrfToken') || '';
+    const resp = await fetch('/api/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrfToken,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+    return resp.json();
+  }, []);
+
   const deleteRow = useCallback((idx) => {
     const row = configs[idx];
     if (row.id && !row.isNew) {
-      // TODO: call deleteAgencyFeeConfig mutation
-      fetch('/api/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `mutation { deleteAgencyFeeConfig(input: { ids: ["${row.id}"], clientMutationId: "del" }) { clientMutationId } }`,
-        }),
-      }).then(() => refetch());
+      gqlFetch(
+        `mutation($input: DeleteAgencyFeeConfigMutationInput!) {
+          deleteAgencyFeeConfig(input: $input) { clientMutationId }
+        }`,
+        { input: { ids: [row.id], clientMutationId: `del-${Date.now()}` } },
+      ).then(() => refetch());
     }
     setConfigs((prev) => prev.filter((_, i) => i !== idx));
-  }, [configs, refetch]);
+  }, [configs, refetch, gqlFetch]);
 
   const saveAll = useCallback(async () => {
     for (const row of configs) {
@@ -135,32 +153,24 @@ function AgencyFeeConfigPanel({ classes, intl, edited }) {
       if (row.provinceId) input.provinceId = row.provinceId;
 
       if (row.isNew) {
-        await fetch('/api/graphql', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `mutation($input: CreateAgencyFeeConfigMutationInput!) {
-              createAgencyFeeConfig(input: $input) { clientMutationId }
-            }`,
-            variables: { input: { ...input, clientMutationId: `create-${Date.now()}` } },
-          }),
-        });
+        await gqlFetch(
+          `mutation($input: CreateAgencyFeeConfigMutationInput!) {
+            createAgencyFeeConfig(input: $input) { clientMutationId }
+          }`,
+          { input: { ...input, clientMutationId: `create-${Date.now()}` } },
+        );
       } else if (row.id) {
-        await fetch('/api/graphql', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `mutation($input: UpdateAgencyFeeConfigMutationInput!) {
-              updateAgencyFeeConfig(input: $input) { clientMutationId }
-            }`,
-            variables: { input: { ...input, id: row.id, clientMutationId: `update-${Date.now()}` } },
-          }),
-        });
+        await gqlFetch(
+          `mutation($input: UpdateAgencyFeeConfigMutationInput!) {
+            updateAgencyFeeConfig(input: $input) { clientMutationId }
+          }`,
+          { input: { ...input, id: row.id, clientMutationId: `update-${Date.now()}` } },
+        );
       }
     }
     setDirty(false);
     refetch();
-  }, [configs, agencyId, refetch]);
+  }, [configs, agencyId, refetch, gqlFetch]);
 
   if (!agencyId) return null;
 
