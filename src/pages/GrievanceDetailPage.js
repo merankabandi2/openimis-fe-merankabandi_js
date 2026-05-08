@@ -242,7 +242,7 @@ function GrievanceDetailPage({
   // Path 1: social_id → Group (code=social_id) → GroupIndividual → Individual
   const { data: groupData } = useGraphqlQuery(
     `query GroupBySocialId($code: String!) {
-      groups(code: $code, first: 1) {
+      group(code_Iexact: $code, first: 1) {
         edges { node {
           id code jsonExt
           location { id name parent { name parent { name } } }
@@ -260,7 +260,7 @@ function GrievanceDetailPage({
   // Path 2: CNI → Individual (json_ext contains CNI) → GroupIndividual → Group
   const { data: individualByCniData } = useGraphqlQuery(
     `query IndByCni($cni: String!) {
-      individuals(jsonExt_Icontains: $cni, first: 1) {
+      individual(jsonExt_Icontains: $cni, first: 1) {
         edges { node {
           id firstName lastName dob jsonExt
           groupindividuals(first: 1) { edges { node {
@@ -281,8 +281,8 @@ function GrievanceDetailPage({
 
   // Resolve group and primary individual from either path
   const group = useMemo(() => {
-    if (socialId) return groupData?.groups?.edges?.[0]?.node || null;
-    if (cniNumber) return individualByCniData?.individuals?.edges?.[0]?.node?.groupindividuals?.edges?.[0]?.node?.group || null;
+    if (socialId) return groupData?.group?.edges?.[0]?.node || null;
+    if (cniNumber) return individualByCniData?.individual?.edges?.[0]?.node?.groupindividuals?.edges?.[0]?.node?.group || null;
     return null;
   }, [groupData, individualByCniData, socialId, cniNumber]);
 
