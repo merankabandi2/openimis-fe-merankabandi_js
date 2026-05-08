@@ -185,6 +185,20 @@ function GrievanceDetailPage({
       { key: 'referral_details', label: 'Détails' },
     ],
     provide_information: [{ key: 'information_provided', label: 'Information fournie', required: true }],
+    create_mobile_account: [
+      {
+        key: 'account_type',
+        label: 'Agence de paiement',
+        required: true,
+        options: [
+          { value: 'LUMICASH', label: 'LUMICASH' },
+          { value: 'INTERBANK', label: 'INTERBANK' },
+          { value: 'FINBANK', label: 'FINBANK' },
+          { value: 'BANCOBU', label: 'BANCOBU' },
+        ],
+      },
+      { key: 'phone_number', label: 'Numéro de téléphone', required: true },
+    ],
   };
   const [prevSub, setPrevSub] = useState(false);
 
@@ -611,20 +625,44 @@ function GrievanceDetailPage({
                                     </Box>
                                   )}
                                   {/* Render action-specific fields */}
-                                  {fields.map(field => (
-                                    <TextField
-                                      key={field.key}
-                                      size="small" variant="outlined" fullWidth
-                                      label={field.label}
-                                      required={field.required}
-                                      value={formData[field.key] || ''}
-                                      onChange={e => updateTaskField(task.id, field.key, e.target.value)}
-                                      style={{ marginBottom: 4 }}
-                                      inputProps={{ style: { fontSize: '0.8rem', padding: '6px 8px' } }}
-                                      InputLabelProps={{ style: { fontSize: '0.8rem' } }}
-                                      error={field.required && task.result?.error && !formData[field.key]}
-                                    />
-                                  ))}
+                                  {fields.map(field => {
+                                    // Pre-fill phone_number from replacement.new_telephone for create_mobile_account
+                                    let value = formData[field.key];
+                                    if (value === undefined && task.actionType === 'create_mobile_account' && field.key === 'phone_number') {
+                                      value = replacementRequests?.[0]?.newTelephone || '';
+                                    }
+                                    if (field.options) {
+                                      return (
+                                        <FormControl key={field.key} size="small" variant="outlined" fullWidth required={field.required} style={{ marginBottom: 4 }}>
+                                          <InputLabel style={{ fontSize: '0.8rem' }}>{field.label}</InputLabel>
+                                          <Select
+                                            value={value || ''}
+                                            label={field.label}
+                                            onChange={e => updateTaskField(task.id, field.key, e.target.value)}
+                                            style={{ fontSize: '0.8rem' }}
+                                          >
+                                            {field.options.map(opt => (
+                                              <MenuItem key={opt.value} value={opt.value} style={{ fontSize: '0.8rem' }}>{opt.label}</MenuItem>
+                                            ))}
+                                          </Select>
+                                        </FormControl>
+                                      );
+                                    }
+                                    return (
+                                      <TextField
+                                        key={field.key}
+                                        size="small" variant="outlined" fullWidth
+                                        label={field.label}
+                                        required={field.required}
+                                        value={value || ''}
+                                        onChange={e => updateTaskField(task.id, field.key, e.target.value)}
+                                        style={{ marginBottom: 4 }}
+                                        inputProps={{ style: { fontSize: '0.8rem', padding: '6px 8px' } }}
+                                        InputLabelProps={{ style: { fontSize: '0.8rem' } }}
+                                        error={field.required && task.result?.error && !formData[field.key]}
+                                      />
+                                    );
+                                  })}
                                   {/* Always show a notes field for manual resolution handlers */}
                                   {fields.length === 0 && (
                                     <TextField
