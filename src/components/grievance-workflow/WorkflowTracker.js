@@ -90,7 +90,9 @@ function WorkflowTracker({
   return (
     <div>
       {grievanceWorkflows.map((workflow) => {
-        const tasks = workflow.tasks?.edges?.map((e) => e.node) || [];
+        const tasks = (workflow.tasks?.edges?.map((e) => e.node) || [])
+          .slice()
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         const activeStep = tasks.findIndex((t) => t.status === 'IN_PROGRESS');
 
         return (

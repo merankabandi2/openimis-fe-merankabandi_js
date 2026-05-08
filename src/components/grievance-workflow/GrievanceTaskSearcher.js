@@ -58,6 +58,10 @@ function GrievanceTaskSearcher({
     if (assignedUserId) filters.push(`assignedUser_Id: "${assignedUserId}"`);
     if (ticketId) filters.push(`ticket_Id: "${ticketId}"`);
     if (statusFilter) filters.push(`status_In: [${statusFilter.map((s) => s).join(',')}]`);
+    // Default to ordering by step order so workflow steps display in the correct sequence
+    if (!filters.some((f) => f.includes('orderBy'))) {
+      filters.push('orderBy: ["order"]');
+    }
     fetchGrievanceTasks(filters);
   }, [assignedUserId, ticketId, statusFilter]);
 

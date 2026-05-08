@@ -776,11 +776,11 @@ export function fetchGrievanceConfiguration(params) {
 
 const GRIEVANCE_WORKFLOW_PROJECTION = () => [
   'id', 'status', 'startedAt', 'completedAt', 'templateName', 'templateLabel',
-  'tasks{edges{node{id,stepName,stepLabel,actionType,status,assignedRole,assignedUserName,startedAt,completedAt,dueDate,result,isAutomated,requiredFields,blockedById,jsonExt}}}',
+  'tasks{edges{node{id,order,stepName,stepLabel,actionType,status,assignedRole,assignedUserName,startedAt,completedAt,dueDate,result,isAutomated,requiredFields,blockedById,jsonExt}}}',
 ];
 
 const GRIEVANCE_TASK_PROJECTION = () => [
-  'id', 'stepName', 'stepLabel', 'actionType', 'status',
+  'id', 'order', 'stepName', 'stepLabel', 'actionType', 'status',
   'assignedRole', 'assignedUserName', 'startedAt', 'completedAt',
   'dueDate', 'result', 'isAutomated', 'requiredFields', 'blockedById',
   'ticket{id,title,code,status,category}',
