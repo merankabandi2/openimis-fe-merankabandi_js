@@ -479,7 +479,13 @@ function GrievanceDetailPage({
           {(replacementRequests?.length > 0 || replacement.motif) && (
             <Paper className={classes.card}>
               <Typography className={classes.cardTitle}><Person fontSize="small" /> Remplacement</Typography>
-              {replacementRequests?.map(rr => (
+              {replacementRequests?.map(rr => {
+                let matched = null;
+                try {
+                  const ext = typeof rr.jsonExt === 'string' ? JSON.parse(rr.jsonExt) : (rr.jsonExt || {});
+                  matched = ext.matched_existing || null;
+                } catch { /* ignore */ }
+                return (
                 <div key={rr.id} className={classes.replCard}>
                   <div className={classes.fieldRow}>
                     <F label="Social ID remplacé" value={rr.replacedSocialId} classes={classes} />
@@ -492,8 +498,26 @@ function GrievanceDetailPage({
                     <F label="Téléphone" value={rr.newTelephone} classes={classes} />
                     <F label="CNI" value={rr.newCni} classes={classes} />
                   </div>
+                  {matched && (
+                    <Box mt={1} p={1} style={{ background: '#fff8e1', borderLeft: '3px solid #ffc107', borderRadius: 4 }}>
+                      <Typography variant="caption" style={{ fontWeight: 600, color: '#795548' }}>
+                        ⚠ Membre déjà présent dans le ménage — sera promu PRIMARY (au lieu de créer un doublon)
+                      </Typography>
+                      <Typography variant="caption" display="block" style={{ marginTop: 4 }}>
+                        <strong>{matched.first_name} {matched.last_name}</strong>
+                        {' · '}
+                        <span style={{ color: '#666' }}>rôle: {matched.role}</span>
+                        {' · '}
+                        <span style={{ color: '#666' }}>similarité: {Math.round((matched.score || 0) * 100)}%</span>
+                      </Typography>
+                      <Typography variant="caption" display="block" style={{ marginTop: 4, fontStyle: 'italic', color: '#666' }}>
+                        Si vous pensez que c'est une personne différente, cochez "Forcer création" lors de l'étape "Créer le nouveau bénéficiaire".
+                      </Typography>
+                    </Box>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </Paper>
           )}
 
@@ -555,8 +579,37 @@ function GrievanceDetailPage({
                                 const fields = TASK_FIELDS[task.actionType] || [];
                                 const formData = taskFormData[task.id] || {};
                                 const hasRequired = fields.filter(f => f.required).every(f => formData[f.key]);
+                                // Match-aware UI for beneficiary_replace step
+                                let matchedExisting = null;
+                                if (task.actionType === 'beneficiary_replace') {
+                                  const rr = replacementRequests?.[0];
+                                  if (rr) {
+                                    try {
+                                      const ext = typeof rr.jsonExt === 'string' ? JSON.parse(rr.jsonExt) : (rr.jsonExt || {});
+                                      matchedExisting = ext.matched_existing || null;
+                                    } catch { /* ignore */ }
+                                  }
+                                }
                                 return (
                                 <Box mt={0.5}>
+                                  {/* Match-aware section for beneficiary_replace */}
+                                  {matchedExisting && (
+                                    <Box mb={1} p={1} style={{ background: '#fff8e1', borderRadius: 4, fontSize: '0.75rem' }}>
+                                      <Typography variant="caption" display="block" style={{ fontWeight: 600 }}>
+                                        Membre correspondant trouvé: {matchedExisting.first_name} {matchedExisting.last_name} ({matchedExisting.role})
+                                      </Typography>
+                                      <label style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, cursor: 'pointer' }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={!!formData.override_match}
+                                          onChange={e => updateTaskField(task.id, 'override_match', e.target.checked)}
+                                        />
+                                        <Typography variant="caption">
+                                          Forcer création (personne différente, ne pas réutiliser le membre existant)
+                                        </Typography>
+                                      </label>
+                                    </Box>
+                                  )}
                                   {/* Render action-specific fields */}
                                   {fields.map(field => (
                                     <TextField
