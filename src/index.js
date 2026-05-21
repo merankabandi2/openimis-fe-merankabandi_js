@@ -20,6 +20,10 @@ import FlagPicker from './pickers/FlagPicker';
 
 // Individual module extensions
 import BeneficiaryPhotoPanel from './components/individual/BeneficiaryPhotoPanel';
+import {
+  individualPhotoColumnContrib,
+  groupIndividualPhotoColumnContrib,
+} from './components/individual/BeneficiaryPhotoColumn';
 
 // AppBar contribution (centered title in header)
 import AppBarTitle from './components/AppBarTitle';
@@ -247,9 +251,19 @@ const DEFAULT_CONFIG = {
 
   reducers: [{ key: 'merankabandi', reducer }],
 
-  // Head panel contribution for beneficiary photo.
-  // Requires upstream PR: activate headPanelContributionsKey in IndividualPage.jsx
+  // Head panel contribution for beneficiary photo (detail page).
+  // Consumed via headPanelContributionsKey wired in openimis-fe-individual_js
+  // (merankabandi2 fork, feature/head-panel-contributions-key).
   'individual.Individual.headPanel': [BeneficiaryPhotoPanel],
+
+  // Searcher column contributions for beneficiary photo (listing pages).
+  // Consumed via columnsContributionKey on the fe-core Searcher
+  // (merankabandi2 fork, feature/searcher-column-contributions). The
+  // upstream IndividualSearcher / GroupIndividualSearcher pass the matching
+  // contribution key down so we plug in the photo column here without
+  // touching the upstream individual module.
+  'individual.IndividualSearcher.columns':      [individualPhotoColumnContrib],
+  'individual.GroupIndividualSearcher.columns': [groupIndividualPhotoColumnContrib],
 
   // Centered app title in the header bar
   'core.AppBar': [AppBarOverrides],
