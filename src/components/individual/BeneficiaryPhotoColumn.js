@@ -62,3 +62,21 @@ export const groupIndividualPhotoColumnContrib = {
       : ''
   ),
 };
+
+/**
+ * Contribution for `socialProtection.BenefitPlanGroupBeneficiariesSearcher.columns`
+ * — formatter receives a `groupBeneficiary` row, whose group's PRIMARY
+ * recipient is found via the nested `group.groupIndividuals.edges` collection
+ * (one PRIMARY per household).
+ */
+export const benefitPlanGroupBeneficiaryPhotoColumnContrib = {
+  header: 'Photo',
+  formatter: (groupBeneficiary) => {
+    const edges = groupBeneficiary?.group?.groupIndividuals?.edges
+      || groupBeneficiary?.group?.groupindividuals?.edges  // GraphQL casing fallback
+      || [];
+    const primary = edges.find((e) => e?.node?.recipientType === 'PRIMARY');
+    if (!primary) return '';
+    return <PhotoCell individualId={primary.node.individual.id} />;
+  },
+};

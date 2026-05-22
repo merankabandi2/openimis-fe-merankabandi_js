@@ -23,6 +23,7 @@ import BeneficiaryPhotoPanel from './components/individual/BeneficiaryPhotoPanel
 import {
   individualPhotoColumnContrib,
   groupIndividualPhotoColumnContrib,
+  benefitPlanGroupBeneficiaryPhotoColumnContrib,
 } from './components/individual/BeneficiaryPhotoColumn';
 
 // AppBar contribution (centered title in header)
@@ -264,6 +265,12 @@ const DEFAULT_CONFIG = {
   // touching the upstream individual module.
   'individual.IndividualSearcher.columns':      [individualPhotoColumnContrib],
   'individual.GroupIndividualSearcher.columns': [groupIndividualPhotoColumnContrib],
+  // Benefit-plan beneficiary listings — actually used by users browsing
+  // beneficiaries within a benefit plan (the "Ménages bénéficiaires" page).
+  // Key is defined by the merankabandi2 fork of openimis-fe-social_protection_js
+  // (configurable-loc-levels branch) and consumed by fe-core's <Searcher>.
+  'socialProtection.BenefitPlanGroupBeneficiariesSearcher.columns':
+    [benefitPlanGroupBeneficiaryPhotoColumnContrib],
 
   // Centered app title in the header bar
   'core.AppBar': [AppBarOverrides],
