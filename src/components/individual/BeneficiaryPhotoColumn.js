@@ -65,18 +65,23 @@ export const groupIndividualPhotoColumnContrib = {
 
 /**
  * Contribution for `socialProtection.BenefitPlanGroupBeneficiariesSearcher.columns`
- * — formatter receives a `groupBeneficiary` row, whose group's PRIMARY
- * recipient is found via the nested `group.groupIndividuals.edges` collection
- * (one PRIMARY per household).
+ *
+ * The existing GROUP_BENEFICIARY_PROJECTION in social_protection's actions.js
+ * fetches `group { id, code, head { uuid, firstName, lastName, dob }, location }`
+ * but NOT `groupIndividuals` — so we use the group's head individual for the
+ * photo source. In Merankabandi households the head is the conventional
+ * recipient (PRIMARY recipient_type), so the photo URL matches.
+ *
+ * The BE photo view returns the head's photo if uploaded; if no photo file
+ * exists, the BE serves a transparent placeholder (or 404, depending on
+ * implementation), so we always render the <img> rather than guarding.
  */
 export const benefitPlanGroupBeneficiaryPhotoColumnContrib = {
   header: 'Photo',
   formatter: (groupBeneficiary) => {
-    const edges = groupBeneficiary?.group?.groupIndividuals?.edges
-      || groupBeneficiary?.group?.groupindividuals?.edges  // GraphQL casing fallback
-      || [];
-    const primary = edges.find((e) => e?.node?.recipientType === 'PRIMARY');
-    if (!primary) return '';
-    return <PhotoCell individualId={primary.node.individual.id} />;
+    const headUuid = groupBeneficiary?.group?.head?.uuid
+      || groupBeneficiary?.group?.head?.id;
+    if (!headUuid) return '';
+    return <PhotoCell individualId={headUuid} />;
   },
 };
