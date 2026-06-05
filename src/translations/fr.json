@@ -2301,5 +2301,13 @@
   "ticket.anonymous": "Anonyme",
   "grievance.status.ESCALATED": "Escaladé",
   "CategoryPicker.label": "Catégorie",
-  "CategoryPicker.placeholder": "Sélectionner une catégorie"
+  "CategoryPicker.placeholder": "Sélectionner une catégorie",
+  "report.accountCreation.button": "Rapport comptes Finbank",
+  "report.accountCreation.dialog.title": "Exporter le rapport des comptes (Finbank)",
+  "report.accountCreation.program": "Programme",
+  "report.accountCreation.scope.province": "Province",
+  "report.accountCreation.scope.agency": "Agence de paiement",
+  "report.accountCreation.download": "Télécharger",
+  "report.accountCreation.cancel": "Annuler",
+  "report.accountCreation.error": "Échec du téléchargement du rapport"
 }

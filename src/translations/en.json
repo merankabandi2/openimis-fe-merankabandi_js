@@ -856,5 +856,13 @@
   "merankabandi.workflow.role.create": "New assignment",
   "merankabandi.workflow.role.pageTitle": "Role Assignment",
   "merankabandi.workflow.role.save.create": "Assignment created",
-  "merankabandi.workflow.role.save.update": "Assignment updated"
+  "merankabandi.workflow.role.save.update": "Assignment updated",
+  "report.accountCreation.button": "Finbank accounts report",
+  "report.accountCreation.dialog.title": "Export account-creation report (Finbank)",
+  "report.accountCreation.program": "Program",
+  "report.accountCreation.scope.province": "Province",
+  "report.accountCreation.scope.agency": "Payment agency",
+  "report.accountCreation.download": "Download",
+  "report.accountCreation.cancel": "Cancel",
+  "report.accountCreation.error": "Report download failed"
 }
