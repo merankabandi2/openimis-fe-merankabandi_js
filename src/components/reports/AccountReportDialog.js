@@ -4,7 +4,7 @@ import {
   Snackbar,
 } from '@material-ui/core';
 import { injectIntl } from 'react-intl';
-import { formatMessage } from '@openimis/fe-core';
+import { formatMessage, decodeId } from '@openimis/fe-core';
 import { MODULE_NAME } from '../../constants';
 import ScopeSelector from './ScopeSelector';
 import useAccountReportDownload from '../../hooks/useAccountReportDownload';
@@ -22,7 +22,10 @@ function AccountReportDialog({ intl, open, onClose, lockedScope }) {
   const canSubmit = !!value.benefitPlanId && !!lockedScope && !!lockedScope.id && !loading;
 
   const handleDownload = async () => {
-    const ok = await download({ benefitPlanId: value.benefitPlanId, scope: lockedScope });
+    // The picker stores the relay-encoded benefit plan id; the REST endpoint
+    // filters a UUID column, so decode to the raw UUID before sending.
+    const benefitPlanId = decodeId(value.benefitPlanId);
+    const ok = await download({ benefitPlanId, scope: lockedScope });
     if (ok) onClose();
     else setSnack(true);
   };
