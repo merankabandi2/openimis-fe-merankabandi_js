@@ -12,6 +12,8 @@ import {
   formatMessage,
   formatMessageWithValues,
   journalize,
+  decodeId,
+  PublishedComponent,
 } from '@openimis/fe-core';
 import {
   fetchPaymentAgency,
@@ -79,6 +81,12 @@ function PaymentAgencyPage({
   return (
     <div className={classes.page}>
       <Helmet title={title} />
+      {!isNew && paymentAgency?.id && (
+        <PublishedComponent
+          pubRef="merankabandi.AccountReportButton"
+          scope={{ type: 'agency', id: decodeId(paymentAgency.id), label: paymentAgency.name }}
+        />
+      )}
       <Form
         module={MODULE_NAME}
         title={title}

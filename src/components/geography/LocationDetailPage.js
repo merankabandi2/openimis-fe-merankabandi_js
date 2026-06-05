@@ -29,6 +29,7 @@ import {
   useTranslations,
   useHistory,
   useGraphqlQuery,
+  PublishedComponent,
 } from '@openimis/fe-core';
 import {
   MODULE_NAME,
@@ -588,6 +589,12 @@ function LocationDetailPage({ locationUuid }) {
             </Typography>
           )}
         </Typography>
+        {locationType === BURUNDI_LOC_TYPE_PROVINCE && locationId && (
+          <PublishedComponent
+            pubRef="merankabandi.AccountReportButton"
+            scope={{ type: 'province', id: locationId, label: location?.name || resolvedLocation?.name || '' }}
+          />
+        )}
         {locationType === BURUNDI_LOC_TYPE_COMMUNE && (
           <Button
             variant="contained"

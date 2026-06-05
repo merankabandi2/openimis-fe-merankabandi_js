@@ -39,6 +39,7 @@ import BurundiLocationHierarchyPanel from './components/social-protection/Burund
 import BurundiLocationFilter from './components/BurundiLocationFilter';
 import WizardLaunchButton from './components/social-protection/WizardLaunchButton';
 import MerankabaniBenefitPlanSearcher from './components/social-protection/MerankabaniBenefitPlanSearcher';
+import AccountReportButton from './components/reports/AccountReportButton';
 
 // Payroll / Payment Request extensions
 import PaymentMainMenu from './menu/PaymentMainMenu';
@@ -642,6 +643,7 @@ const DEFAULT_CONFIG = {
     { key: 'merankabandi.HierarchicalCategoryPicker', ref: HierarchicalCategoryPicker },
     { key: 'merankabandi.MultiChannelPicker', ref: MultiChannelPicker },
     { key: 'merankabandi.BeneficiaryPhotoPanel', ref: BeneficiaryPhotoPanel },
+    { key: 'merankabandi.AccountReportButton', ref: AccountReportButton },
     { key: 'merankabandi.MerankabandiPayrollSearcher', ref: MerankabandiPayrollSearcher },
     { key: 'merankabandi.route.selectionWizard', ref: ROUTE_BENEFICIARY_SELECTION_WIZARD },
     { key: 'merankabandi.route.indicator', ref: ROUTE_RESULTS_FRAMEWORK_INDICATOR },
