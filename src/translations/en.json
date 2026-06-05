@@ -864,5 +864,10 @@
   "report.accountCreation.scope.agency": "Payment agency",
   "report.accountCreation.download": "Download",
   "report.accountCreation.cancel": "Cancel",
-  "report.accountCreation.error": "Report download failed"
+  "report.accountCreation.error": "Report download failed",
+  "report.accountCreation.queued": "The report is being generated. You will be notified by email and notification when it is ready.",
+  "report.accountCreation.download.title": "Account report download",
+  "report.accountCreation.download.done": "The download has started. Check your downloads.",
+  "report.accountCreation.download.error": "Report not found or expired.",
+  "report.accountCreation.download.retry": "Retry download"
 }

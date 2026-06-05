@@ -155,6 +155,7 @@ import RoleAssignmentPage from './pages/RoleAssignmentPage';
 // Geography Pages
 import ProvincesPage from './pages/ProvincesPage';
 import ProvinceDetailPage from './pages/ProvinceDetailPage';
+import ReportDownloadPage from './pages/ReportDownloadPage';
 import CommuneDetailPage from './pages/CommuneDetailPage';
 import CollineDetailPage from './pages/CollineDetailPage';
 
@@ -219,6 +220,7 @@ import {
   ROUTE_PAYROLLS_APPROVED,
   ROUTE_PAYROLLS_PENDING,
   ROUTE_PAYROLLS_RECONCILED,
+  ROUTE_ACCOUNT_REPORT_DOWNLOAD,
   ROUTE_GEOGRAPHY_PROVINCES,
   ROUTE_GEOGRAPHY_PROVINCE,
   ROUTE_GEOGRAPHY_COMMUNE,
@@ -376,6 +378,7 @@ const DEFAULT_CONFIG = {
     { path: ROUTE_PAYMENT_SCHEDULE, component: PaymentSchedulePage },
     { path: ROUTE_GEOGRAPHY_PROVINCES, component: ProvincesPage },
     { path: `${ROUTE_GEOGRAPHY_PROVINCE}/:uuid`, component: ProvinceDetailPage },
+    { path: `${ROUTE_ACCOUNT_REPORT_DOWNLOAD}/:filename`, component: ReportDownloadPage },
     { path: `${ROUTE_GEOGRAPHY_COMMUNE}/:uuid`, component: CommuneDetailPage },
     { path: `${ROUTE_GEOGRAPHY_COLLINE}/:uuid`, component: CollineDetailPage },
     // Grievance custom pages — all under grievance/* prefix

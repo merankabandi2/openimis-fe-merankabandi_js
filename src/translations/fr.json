@@ -2309,5 +2309,10 @@
   "report.accountCreation.scope.agency": "Agence de paiement",
   "report.accountCreation.download": "Télécharger",
   "report.accountCreation.cancel": "Annuler",
-  "report.accountCreation.error": "Échec du téléchargement du rapport"
+  "report.accountCreation.error": "Échec du téléchargement du rapport",
+  "report.accountCreation.queued": "Le rapport est en cours de génération. Vous serez notifié(e) par email et notification quand il sera prêt.",
+  "report.accountCreation.download.title": "Téléchargement du rapport des comptes",
+  "report.accountCreation.download.done": "Le téléchargement a démarré. Vérifiez vos téléchargements.",
+  "report.accountCreation.download.error": "Le rapport est introuvable ou a expiré.",
+  "report.accountCreation.download.retry": "Réessayer le téléchargement"
 }

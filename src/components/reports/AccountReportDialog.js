@@ -17,7 +17,7 @@ import useAccountReportDownload from '../../hooks/useAccountReportDownload';
 function AccountReportDialog({ intl, open, onClose, lockedScope }) {
   const [value, setValue] = useState({ benefitPlanId: null });
   const { download, loading, error } = useAccountReportDownload();
-  const [snack, setSnack] = useState(false);
+  const [snack, setSnack] = useState({ open: false, message: '', isError: false });
 
   const canSubmit = !!value.benefitPlanId && !!lockedScope && !!lockedScope.id && !loading;
 
@@ -25,9 +25,22 @@ function AccountReportDialog({ intl, open, onClose, lockedScope }) {
     // The picker stores the relay-encoded benefit plan id; the REST endpoint
     // filters a UUID column, so decode to the raw UUID before sending.
     const benefitPlanId = decodeId(value.benefitPlanId);
-    const ok = await download({ benefitPlanId, scope: lockedScope });
-    if (ok) onClose();
-    else setSnack(true);
+    const result = await download({ benefitPlanId, scope: lockedScope });
+    if (!result.ok) {
+      setSnack({ open: true, isError: true, message: '' });
+      return;
+    }
+    // Large scope: queued -> tell the user they'll be notified.
+    if (result.async) {
+      setSnack({
+        open: true,
+        isError: false,
+        message: result.message
+          || formatMessage(intl, MODULE_NAME, 'report.accountCreation.queued'),
+      });
+    }
+    // Sync scope already downloaded; either way close the dialog.
+    onClose();
   };
 
   return (
@@ -55,10 +68,12 @@ function AccountReportDialog({ intl, open, onClose, lockedScope }) {
         </DialogActions>
       </Dialog>
       <Snackbar
-        open={snack}
-        autoHideDuration={6000}
-        onClose={() => setSnack(false)}
-        message={`${formatMessage(intl, MODULE_NAME, 'report.accountCreation.error')}${error ? `: ${error}` : ''}`}
+        open={snack.open}
+        autoHideDuration={snack.isError ? 6000 : 10000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        message={snack.isError
+          ? `${formatMessage(intl, MODULE_NAME, 'report.accountCreation.error')}${error ? `: ${error}` : ''}`
+          : snack.message}
       />
     </>
   );

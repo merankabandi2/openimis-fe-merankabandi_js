@@ -15,7 +15,9 @@ export const CARD_GENERATION_URL = '/api/merankabandi/location';
 
 // Account-creation report API
 export const ACCOUNT_REPORT_URL = '/api/merankabandi/reports/account-creation';
+export const ACCOUNT_REPORT_DOWNLOAD_URL = '/api/merankabandi/reports/account-creation/download';
 export const RIGHT_ACCOUNT_REPORT = 170001; // beneficiary search — held by payment-ops roles
+export const ROUTE_ACCOUNT_REPORT_DOWNLOAD = 'reports/download';
 
 // Head panel contribution keys (requires upstream PR to Individual module)
 export const INDIVIDUAL_HEAD_PANEL_CONTRIBUTION_KEY = 'individual.Individual.headPanel';
