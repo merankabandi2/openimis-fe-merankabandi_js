@@ -34,6 +34,10 @@ function ScopeSelector({
           pubRef="socialProtection.BenefitPlanPicker"
           withNull
           required
+          // The report targets group beneficiaries; BenefitPlanPicker defaults to
+          // INDIVIDUAL and filters out GROUP plans, so the Merankabandi programs
+          // (1.1/1.2/1.4, all GROUP) would otherwise show "No options".
+          type="GROUP"
           value={v.benefitPlanId || null}
           onChange={setBenefitPlan}
           label={formatMessage(intl, MODULE_NAME, 'report.accountCreation.program')}

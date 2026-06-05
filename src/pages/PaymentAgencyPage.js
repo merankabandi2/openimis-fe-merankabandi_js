@@ -12,7 +12,6 @@ import {
   formatMessage,
   formatMessageWithValues,
   journalize,
-  decodeId,
   PublishedComponent,
 } from '@openimis/fe-core';
 import {
@@ -84,7 +83,7 @@ function PaymentAgencyPage({
       {!isNew && paymentAgency?.id && (
         <PublishedComponent
           pubRef="merankabandi.AccountReportButton"
-          scope={{ type: 'agency', id: decodeId(paymentAgency.id), label: paymentAgency.name }}
+          scope={{ type: 'agency', id: paymentAgency.id, label: paymentAgency.name }}
         />
       )}
       <Form
