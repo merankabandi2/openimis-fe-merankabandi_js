@@ -580,7 +580,7 @@ export function fetchIndicatorAchievements(params) {
 }
 
 const formatIndicatorAchievementGQL = (achievement) => `
-  ${achievement?.id ? `id: "${achievement.id}"` : ''}
+  ${achievement?.id ? `id: ${achievement.id}` : ''}
   ${achievement?.indicator?.id ? `indicatorId: ${achievement.indicator.id}` : ''}
   ${achievement?.achieved !== undefined && achievement?.achieved !== null ? `achieved: "${achievement.achieved}"` : ''}
   ${achievement?.date ? `date: "${achievement.date}"` : ''}

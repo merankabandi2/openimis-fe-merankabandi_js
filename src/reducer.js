@@ -1073,6 +1073,10 @@ function reducer(state = STORE_STATE, action) {
       return dispatchMutationReq(state, action);
     case ERROR(ACTION_TYPE.MUTATION):
       return dispatchMutationErr(state, action);
+    case SUCCESS(ACTION_TYPE.MUTATION):
+      // Without this, generic ACTION_TYPE.MUTATION callers (e.g. addTaskToWorkflow)
+      // leave submittingMutation=true forever on success — the dialog spinner hangs.
+      return dispatchMutationResp(state, 'mutation', action);
     case SUCCESS(ACTION_TYPE.RESOLVE_TASK):
       return dispatchMutationResp(state, 'resolveTask', action);
 

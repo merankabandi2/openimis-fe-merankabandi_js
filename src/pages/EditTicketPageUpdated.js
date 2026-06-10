@@ -194,7 +194,6 @@ const ACCOUNT_SUBCATEGORY_OPTIONS = [
 class EditTicketPageUpdated extends Component {
   constructor(props) {
     super(props);
-    console.log('EditTicketPageUpdated constructor called with props:', props);
     this.state = {
       stateEdited: props.ticket || {},
       comments: props.comments || [],
@@ -224,18 +223,9 @@ class EditTicketPageUpdated extends Component {
     // Try to get ticket UUID from various sources
     const ticketId = edited_id || ticket_uuid || match?.params?.ticket_uuid || this.props.history?.location?.state?.ticket_uuid;
     
-    console.log('EditTicketPageUpdated mounted with:', { 
-      edited_id, 
-      ticket_uuid, 
-      matchParams: match?.params,
-      ticketId,
-      props: this.props 
-    });
-    
     if (ticketId) {
       // Fetch the ticket data with proper filter format
       const filters = [`id: "${ticketId}"`];
-      console.log('Fetching ticket with filters:', filters);
       this.props.fetchTicket(modulesManager, filters);
     } else {
       console.error('No ticket ID found!');
@@ -250,7 +240,6 @@ class EditTicketPageUpdated extends Component {
     
     // Update state when ticket data is loaded
     if (!prevProps.ticket && this.props.ticket && this.props.ticket.id) {
-      console.log('Ticket loaded:', this.props.ticket);
       this.setState({ 
         stateEdited: this.props.ticket,
         grievanceConfig: this.props.grievanceConfig 
@@ -275,7 +264,6 @@ class EditTicketPageUpdated extends Component {
     
     // Also check if the ticket changed (e.g., different ticket selected)
     if (prevProps.ticket?.id !== this.props.ticket?.id && this.props.ticket?.id) {
-      console.log('Ticket changed:', this.props.ticket);
       this.setState({ 
         stateEdited: this.props.ticket,
         grievanceConfig: this.props.grievanceConfig 
@@ -350,17 +338,6 @@ class EditTicketPageUpdated extends Component {
     const {
       stateEdited, reporter, comments, showSubcategories,
     } = this.state;
-    
-    // Debug: log current state
-    console.log('Render state:', { 
-      stateEdited, 
-      ticket: this.props.ticket,
-      fetchingTicket,
-      fetchedTicket: this.props.fetchedTicket,
-      errorTicket: this.props.errorTicket,
-      ticket_uuid: this.props.ticket_uuid,
-      edited_id: this.props.edited_id
-    });
     
     // Show loading state while fetching ticket
     if (fetchingTicket) {
@@ -1048,8 +1025,6 @@ class EditTicketPageUpdated extends Component {
 const mapStateToProps = (state, props) => {
   // Extract ticket_uuid from props (React Router)
   const ticket_uuid = props.match?.params?.ticket_uuid || props.ticket_uuid;
-  console.log('MapStateToProps - props:', props);
-  console.log('MapStateToProps - ticket_uuid:', ticket_uuid);
   
   return {
     submittingMutation: state.grievanceSocialProtection.submittingMutation,

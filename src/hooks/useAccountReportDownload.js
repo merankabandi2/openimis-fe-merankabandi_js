@@ -25,7 +25,7 @@ export default function useAccountReportDownload() {
       const params = new URLSearchParams({ benefit_plan_id: benefitPlanId });
       params.set(scope.type === 'agency' ? 'payment_agency_id' : 'province_id', scope.id);
       const url = `${window.location.origin}${ACCOUNT_REPORT_URL}/?${params.toString()}`;
-      const resp = await fetch(url, { headers: { ...apiHeaders } });
+      const resp = await fetch(url, { headers: { ...apiHeaders() } });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
       // Async path: queued build, returns JSON with a message.

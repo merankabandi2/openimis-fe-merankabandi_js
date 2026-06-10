@@ -58,6 +58,11 @@ import {
 import { useLocations } from '@openimis/fe-location';
 import { useBenefitPlans } from '@openimis/fe-social_protection';
 
+// Null/NaN-safe percentage formatter — materialized-view rows can return null
+// (e.g. a location/program with 0 beneficiaries -> NULL avg), and a bare
+// null.toFixed() would throw and blank the whole dashboard.
+const safeFixed = (v, digits = 1) => (Number.isFinite(Number(v)) ? Number(v) : 0).toFixed(digits);
+
 // Create custom theme
 const theme = createTheme({
   typography: {
@@ -644,7 +649,7 @@ function PaymentReportingDashboard() {
                       Inclusion Féminine
                     </Typography>
                     <Typography className={classes.kpiValue} style={{ color: '#1976d2' }}>
-                      {kpis.femaleInclusion.toFixed(1)}%
+                      {safeFixed(kpis.femaleInclusion)}%
                     </Typography>
                     {targets && (
                       <Typography className={classes.kpiTarget}>
@@ -667,7 +672,7 @@ function PaymentReportingDashboard() {
                       Inclusion TWA
                     </Typography>
                     <Typography className={classes.kpiValue} style={{ color: '#7b1fa2' }}>
-                      {kpis.twaInclusion.toFixed(1)}%
+                      {safeFixed(kpis.twaInclusion)}%
                     </Typography>
                     {targets && (
                       <Typography className={classes.kpiTarget}>
@@ -706,7 +711,7 @@ function PaymentReportingDashboard() {
                       Score d'Efficacité
                     </Typography>
                     <Typography className={classes.kpiValue} style={{ color: '#f57c00' }}>
-                      {kpis.efficiencyScore.toFixed(0)}%
+                      {safeFixed(kpis.efficiencyScore, 0)}%
                     </Typography>
                     {targets && (
                       <Typography className={classes.kpiTarget}>
@@ -760,7 +765,7 @@ function PaymentReportingDashboard() {
                         dataLabels: {
                           formatter: (val, opts) => {
                             const amount = chartData.sourceChart.series[opts.seriesIndex];
-                            return `${val.toFixed(1)}%\n${formatCurrency(amount)}`;
+                            return `${safeFixed(val)}%\n${formatCurrency(amount)}`;
                           },
                         },
                       }}
@@ -854,10 +859,10 @@ function PaymentReportingDashboard() {
                               {formatCurrency(row.paymentAmount)}
                             </TableCell>
                             <TableCell align="right">
-                              {row.femalePercentage.toFixed(1)}%
+                              {safeFixed(row.femalePercentage)}%
                             </TableCell>
                             <TableCell align="right">
-                              {row.twaPercentage.toFixed(1)}%
+                              {safeFixed(row.twaPercentage)}%
                             </TableCell>
                           </TableRow>
                         ))}
@@ -929,10 +934,10 @@ function PaymentReportingDashboard() {
                               {formatCurrency(loc.avgPayment)}
                             </TableCell>
                             <TableCell align="right">
-                              {loc.femalePercentage.toFixed(1)}%
+                              {safeFixed(loc.femalePercentage)}%
                             </TableCell>
                             <TableCell align="right">
-                              {loc.twaPercentage.toFixed(1)}%
+                              {safeFixed(loc.twaPercentage)}%
                             </TableCell>
                           </TableRow>
                         ))}
@@ -996,10 +1001,10 @@ function PaymentReportingDashboard() {
                               {formatCurrency(prog.avgPayment)}
                             </TableCell>
                             <TableCell align="right">
-                              {prog.femalePercentage.toFixed(1)}%
+                              {safeFixed(prog.femalePercentage)}%
                             </TableCell>
                             <TableCell align="right">
-                              {prog.twaPercentage.toFixed(1)}%
+                              {safeFixed(prog.twaPercentage)}%
                             </TableCell>
                             <TableCell align="right">
                               {prog.provincesCovered}

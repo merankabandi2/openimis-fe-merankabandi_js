@@ -22,7 +22,7 @@ function ReportDownloadPage({ intl, match, modulesManager, history }) {
     setStatus('loading');
     try {
       const url = `${window.location.origin}${ACCOUNT_REPORT_DOWNLOAD_URL}/${encodeURIComponent(filename)}`;
-      const resp = await fetch(url, { headers: { ...apiHeaders } });
+      const resp = await fetch(url, { headers: { ...apiHeaders() } });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       const link = document.createElement('a');
